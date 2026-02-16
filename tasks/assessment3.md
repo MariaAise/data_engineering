@@ -40,14 +40,22 @@ You are hired by **StreamWave** (same company as Assessment 2).
 
 The company now wants to:
 
-1. Detect abnormal streaming behaviour in near real-time.
-2. Identify shared accounts across regions.
-3. Monitor subscription churn risk.
-4. Reduce warehouse cost while scaling.
+1. Detect abnormal streaming and usage behaviour in near real-time.
+(Spikes, bots, duplicate events, late data, burst activity)
+
+2. Identify account-sharing and coordinated usage patterns across devices and regions.
+(Graph-based cluster detection, device/IP connections)
+
+3. Ensure streaming data reliability and correctness under disorder and duplication.
+(Late events, idempotency, event-time handling)
+
+4. Control warehouse cost while scaling to high event volumes.
+(Streaming vs batch trade-offs, partitioning, lifecycle policies)
 
 You must design a **modern data architecture** to support these goals.
 
 You are not required to implement a full production system.
+
 You must design and prototype selected components.
 
 ---
