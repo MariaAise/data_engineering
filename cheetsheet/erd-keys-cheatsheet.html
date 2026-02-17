@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Database Keys — Cheatsheet</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap');
+
+*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:       #f8fafc;
+  --surface:  #ffffff;
+  --surface2: #f1f5f9;
+  --surface3: #e8f4f8;
+  --border:   #e2e8f0;
+  --border2:  #cbd5e1;
+
+  --ink:      #0c1e2e;
+  --body:     #2d4a5a;
+  --muted:    #5a7a8a;
+  --faint:    #8aa5b0;
+
+  /* Primary — deep cyan-teal */
+  --cyan:     #0369a1;
+  --cyan-md:  #0891b2;
+  --cyan-lt:  #ecfeff;
+  --cyan-bd:  #a5f3fc;
+
+  /* Secondary — cobalt blue */
+  --blue:     #1d4ed8;
+  --blue-lt:  #eff6ff;
+  --blue-bd:  #bfdbfe;
+
+  /* Tertiary — slate teal */
+  --teal:     #0f766e;
+  --teal-lt:  #f0fdfa;
+  --teal-bd:  #99f6e4;
+
+  /* Accent — periwinkle */
+  --violet:   #4338ca;
+  --violet-lt:#eef2ff;
+  --violet-bd:#c7d2fe;
+
+  /* Highlight — sky */
+  --sky:      #0284c7;
+  --sky-lt:   #f0f9ff;
+  --sky-bd:   #bae6fd;
+
+  /* Semantic — error/warning (cool) */
+  --warn:     #0369a1;
+  --warn-lt:  #f0f9ff;
+  --warn-bd:  #bae6fd;
+
+  /* Table highlight colours */
+  --hl-pk:    rgba(3,105,161,.13);
+  --hl-fk:    rgba(15,118,110,.13);
+  --hl-ak:    rgba(67,56,202,.11);
+  --hl-comp:  rgba(8,145,178,.1);
+  --hl-nat:   rgba(2,132,199,.09);
+  --hl-bad:   rgba(153,27,27,.07);
+
+  --mono: 'Fira Code', monospace;
+  --sans: 'Outfit', sans-serif;
+  --r: 10px;
+  --shadow: 0 1px 3px rgba(12,30,46,.05), 0 4px 18px rgba(12,30,46,.07);
+}
+
+html { font-size: 14px; }
+body {
+  background: var(--bg);
+  color: var(--body);
+  font-family: var(--sans);
+  line-height: 1.55;
+  padding: 36px 28px 52px;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+h1 { font-size: 2rem; font-weight: 800; color: var(--ink); letter-spacing: -.4px; line-height: 1.1; }
+h2 { font-size: .92rem; font-weight: 700; color: var(--ink); margin-bottom: 12px; }
+h3 { font-family: var(--mono); font-size: .66rem; font-weight: 500; color: var(--muted); letter-spacing: .15em; text-transform: uppercase; margin-bottom: 10px; }
+p  { font-size: .8rem; line-height: 1.65; color: var(--body); }
+
+/* ── Header ────────────────────────────────────── */
+.page-header {
+  margin-bottom: 30px;
+  padding-bottom: 22px;
+  border-bottom: 2px solid var(--border);
+}
+.eyebrow {
+  font-family: var(--mono);
+  font-size: .66rem;
+  font-weight: 500;
+  color: var(--cyan-md);
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.header-sub {
+  font-size: .78rem;
+  color: var(--muted);
+  margin-top: 6px;
+  font-weight: 400;
+}
+.companion-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--mono);
+  font-size: .63rem;
+  color: var(--muted);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  padding: 3px 10px;
+  border-radius: 6px;
+  margin-top: 8px;
+}
+.companion-tag::before { content: '↗'; color: var(--cyan-md); }
+
+/* ── Layout ────────────────────────────────────── */
+.layout { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.span2  { grid-column: 1 / -1; }
+
+/* ── Card ──────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 18px 20px;
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+}
+.card-accent {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  border-radius: var(--r) var(--r) 0 0;
+}
+.acc-cyan   { background: linear-gradient(90deg, var(--cyan), #22d3ee); }
+.acc-blue   { background: linear-gradient(90deg, var(--blue), #60a5fa); }
+.acc-teal   { background: linear-gradient(90deg, var(--teal), #2dd4bf); }
+.acc-violet { background: linear-gradient(90deg, var(--violet), #818cf8); }
+.acc-sky    { background: linear-gradient(90deg, var(--sky), #7dd3fc); }
+.acc-mixed  { background: linear-gradient(90deg, var(--cyan), var(--blue) 50%, var(--teal)); }
+
+/* ── Badge ─────────────────────────────────────── */
+.badge {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .63rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 5px;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.b-cyan   { background: var(--cyan-lt);   color: var(--cyan);   border: 1px solid var(--cyan-bd); }
+.b-blue   { background: var(--blue-lt);   color: var(--blue);   border: 1px solid var(--blue-bd); }
+.b-teal   { background: var(--teal-lt);   color: var(--teal);   border: 1px solid var(--teal-bd); }
+.b-violet { background: var(--violet-lt); color: var(--violet); border: 1px solid var(--violet-bd); }
+.b-sky    { background: var(--sky-lt);    color: var(--sky);    border: 1px solid var(--sky-bd); }
+.b-muted  { background: var(--surface2);  color: var(--muted);  border: 1px solid var(--border2); }
+
+/* ── Callout ───────────────────────────────────── */
+.callout {
+  border-radius: 7px;
+  padding: 10px 13px;
+  font-size: .75rem;
+  line-height: 1.55;
+  margin-top: 12px;
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+}
+.callout-icon { font-size: .95rem; flex-shrink: 0; margin-top: 1px; }
+.c-cyan   { background: var(--cyan-lt);   border: 1px solid var(--cyan-bd);   color: #0c4a6e; }
+.c-blue   { background: var(--blue-lt);   border: 1px solid var(--blue-bd);   color: #1e3a8a; }
+.c-teal   { background: var(--teal-lt);   border: 1px solid var(--teal-bd);   color: #134e4a; }
+.c-violet { background: var(--violet-lt); border: 1px solid var(--violet-bd); color: #3730a3; }
+.c-sky    { background: var(--sky-lt);    border: 1px solid var(--sky-bd);    color: #0c4a6e; }
+
+/* ── Data tables ───────────────────────────────── */
+.data-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin: 10px 0;
+}
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--mono);
+  font-size: .72rem;
+}
+.data-table thead tr { background: var(--surface2); }
+.data-table th {
+  padding: 6px 10px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--muted);
+  border-bottom: 2px solid var(--border);
+  white-space: nowrap;
+  font-size: .67rem;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+.data-table td {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  color: var(--body);
+}
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover td { background: var(--surface2); }
+
+/* Column highlight classes */
+.col-pk     { background: var(--hl-pk)   !important; color: var(--cyan)   !important; font-weight: 600; }
+.col-fk     { background: var(--hl-fk)   !important; color: var(--teal)   !important; font-weight: 600; font-style: italic; }
+.col-ak     { background: var(--hl-ak)   !important; color: var(--violet) !important; font-weight: 600; }
+.col-comp   { background: var(--hl-comp) !important; color: var(--sky)    !important; font-weight: 600; }
+.col-nat    { background: var(--hl-nat)  !important; color: var(--blue)   !important; font-weight: 600; }
+.col-bad    { background: var(--hl-bad)  !important; color: #991b1b       !important; font-weight: 600; text-decoration: line-through; }
+.col-plain  { color: var(--faint); }
+
+/* TH highlight */
+th.col-pk   { background: rgba(3,105,161,.1)  !important; color: var(--cyan)   !important; }
+th.col-fk   { background: rgba(15,118,110,.1) !important; color: var(--teal)   !important; }
+th.col-ak   { background: rgba(67,56,202,.08) !important; color: var(--violet) !important; }
+th.col-comp { background: rgba(8,145,178,.08) !important; color: var(--sky)    !important; }
+th.col-nat  { background: rgba(2,132,199,.07) !important; color: var(--blue)   !important; }
+
+/* ── SQL snippet ───────────────────────────────── */
+.sql-block {
+  background: #0c1e2e;
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin: 10px 0;
+  overflow-x: auto;
+}
+.sql-block code {
+  font-family: var(--mono);
+  font-size: .72rem;
+  line-height: 1.7;
+  color: #cbd5e1;
+  white-space: pre;
+  display: block;
+}
+.sql-kw   { color: #7dd3fc; }   /* keywords — sky blue */
+.sql-name { color: #e2e8f0; }   /* identifiers */
+.sql-type { color: #99f6e4; }   /* data types — teal */
+.sql-pk   { color: #67e8f9; font-weight: 600; }  /* PK col — cyan */
+.sql-fk   { color: #6ee7b7; font-weight: 600; }  /* FK col — teal */
+.sql-ak   { color: #a5b4fc; font-weight: 600; }  /* AK col — violet */
+.sql-com  { color: #4a6272; font-style: italic; } /* comments */
+.sql-str  { color: #fde68a; }   /* strings */
+
+/* ── Key anatomy overview strip ────────────────── */
+.key-strip {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  overflow: hidden;
+  margin-top: 14px;
+}
+.key-strip-item {
+  padding: 13px 14px;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.key-strip-item:last-child { border-right: none; }
+.ks-tag {
+  font-family: var(--mono);
+  font-size: .75rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  width: fit-content;
+}
+.ks-name { font-size: .78rem; font-weight: 600; color: var(--ink); }
+.ks-rule { font-size: .69rem; color: var(--muted); line-height: 1.45; }
+
+/* ── Key card layout ───────────────────────────── */
+.key-card-body { display: flex; flex-direction: column; gap: 10px; }
+
+.key-rule-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+.rule-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: .69rem;
+  font-family: var(--mono);
+  padding: 3px 9px;
+  border-radius: 5px;
+  border: 1px solid var(--border2);
+  background: var(--surface2);
+  color: var(--body);
+}
+.rule-chip.yes { background: var(--teal-lt); border-color: var(--teal-bd); color: var(--teal); }
+.rule-chip.no  { background: #fef2f2;        border-color: #fecaca;        color: #991b1b; }
+
+/* ── Comparison table ──────────────────────────── */
+.comp-table { width: 100%; border-collapse: collapse; font-size: .76rem; }
+.comp-table th {
+  font-family: var(--mono);
+  font-size: .63rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 6px 10px;
+  border-bottom: 2px solid var(--border);
+  text-align: left;
+  background: var(--surface2);
+}
+.comp-table td {
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.comp-table tr:last-child td { border-bottom: none; }
+.comp-table tr:hover td { background: var(--surface2); }
+.comp-table td:first-child { font-family: var(--mono); font-size: .72rem; }
+
+/* ── Decision tree ─────────────────────────────── */
+.decision-box {
+  background: var(--surface2);
+  border: 1.5px solid var(--border2);
+  border-radius: 8px;
+  padding: 11px 14px;
+  font-size: .76rem;
+  line-height: 1.5;
+  position: relative;
+}
+.decision-box strong { color: var(--ink); font-weight: 600; }
+.decision-box .result {
+  margin-top: 6px;
+  padding: 5px 9px;
+  border-radius: 5px;
+  font-family: var(--mono);
+  font-size: .69rem;
+}
+
+/* ── Footer ────────────────────────────────────── */
+footer {
+  margin-top: 30px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+footer span { font-size: .67rem; color: var(--faint); font-family: var(--mono); }
+
+/* ── Responsive ────────────────────────────────── */
+@media (max-width: 740px) {
+  .layout { grid-template-columns: 1fr; }
+  .span2  { grid-column: 1; }
+  .key-strip { grid-template-columns: 1fr 1fr; }
+}
+@media print {
+  body { padding: 0; max-width: 100%; background: white; }
+  .card { box-shadow: none; break-inside: avoid; }
+  .sql-block { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  footer { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══════════════════════════════════════════════════════ -->
+<header class="page-header">
+  <div class="eyebrow">Relational Database Design</div>
+  <h1>Database Keys</h1>
+  <p class="header-sub">Primary · Foreign · Candidate · Alternate · Surrogate · Natural · Composite · Super · Partial — with real table examples</p>
+  <span class="companion-tag">Companion to the Crow's Foot &amp; ERD Design cheatsheets</span>
+</header>
+
+<!-- ═══ LAYOUT ════════════════════════════════════════════════════════ -->
+<div class="layout">
+
+<!-- ── S0: OVERVIEW STRIP ───────────────────────────────────────────── -->
+<div class="card span2">
+  <div class="card-accent acc-mixed"></div>
+  <h3>00 &nbsp;/&nbsp; At a Glance — All Key Types</h3>
+  <p>A <strong>key</strong> is any column (or set of columns) that identifies or links rows. Every key type solves a different problem. The same column can simultaneously be multiple key types.</p>
+
+  <div class="key-strip">
+    <div class="key-strip-item" style="background:var(--cyan-lt);">
+      <span class="ks-tag" style="background:rgba(3,105,161,.12);color:var(--cyan);">PK</span>
+      <div class="ks-name">Primary Key</div>
+      <div class="ks-rule">The chosen unique row identifier. NOT NULL + UNIQUE. One per table.</div>
+    </div>
+    <div class="key-strip-item" style="background:var(--teal-lt);">
+      <span class="ks-tag" style="background:rgba(15,118,110,.12);color:var(--teal);">FK</span>
+      <div class="ks-name">Foreign Key</div>
+      <div class="ks-rule">References a PK in another table. Creates the relationship link.</div>
+    </div>
+    <div class="key-strip-item" style="background:var(--violet-lt);">
+      <span class="ks-tag" style="background:rgba(67,56,202,.1);color:var(--violet);">AK</span>
+      <div class="ks-name">Alternate Key</div>
+      <div class="ks-rule">A candidate key not chosen as PK. Still unique — enforce with UNIQUE constraint.</div>
+    </div>
+    <div class="key-strip-item" style="background:var(--sky-lt);">
+      <span class="ks-tag" style="background:rgba(2,132,199,.1);color:var(--sky);">CPK</span>
+      <div class="ks-name">Composite Key</div>
+      <div class="ks-rule">Two or more columns together form the PK. Standard in junction tables.</div>
+    </div>
+    <div class="key-strip-item" style="background:var(--blue-lt);">
+      <span class="ks-tag" style="background:rgba(29,78,216,.1);color:var(--blue);">SK/NK</span>
+      <div class="ks-name">Surrogate / Natural</div>
+      <div class="ks-rule">SK = system-generated ID. NK = real-world identifier. Choose wisely as your PK.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── S1: PRIMARY KEY ────────────────────────────────────────────────-->
+<div class="card">
+  <div class="card-accent acc-cyan"></div>
+  <h3>01 &nbsp;/&nbsp; Primary Key <span class="badge b-cyan" style="margin-left:4px;">PK</span></h3>
+  <h2>The one unique identifier chosen for every row</h2>
+
+  <div class="key-rule-row">
+    <span class="rule-chip yes">✓ Unique</span>
+    <span class="rule-chip yes">✓ Not NULL</span>
+    <span class="rule-chip no">✗ Max 1 per table</span>
+    <span class="rule-chip yes">✓ Indexed automatically</span>
+  </div>
+
+  <p>Every table must have exactly one primary key. It physically identifies each row and is referenced by foreign keys in other tables. It is always indexed automatically by the database engine.</p>
+
+  <div class="data-table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th class="col-pk">studentID ← PK</th>
+          <th>firstName</th>
+          <th>lastName</th>
+          <th>email</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="col-pk">1001</td><td>Alice</td><td>Chen</td><td class="col-plain">alice@uni.edu</td></tr>
+        <tr><td class="col-pk">1002</td><td>Bob</td><td>Patel</td><td class="col-plain">bob@uni.edu</td></tr>
+        <tr><td class="col-pk">1003</td><td>Cara</td><td>Muñoz</td><td class="col-plain">cara@uni.edu</td></tr>
+        <tr><td class="col-pk">1004</td><td>Dan</td><td>Okafor</td><td class="col-plain">dan@uni.edu</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="sql-block"><code><span class="sql-com">-- Primary key: single column, auto-increment</span>
+<span class="sql-kw">CREATE TABLE</span> <span class="sql-name">student</span> (
+  <span class="sql-pk">studentID</span>  <span class="sql-type">INT</span>          <span class="sql-kw">PRIMARY KEY AUTO_INCREMENT</span>,
+  <span class="sql-name">firstName</span>  <span class="sql-type">VARCHAR(80)</span>  <span class="sql-kw">NOT NULL</span>,
+  <span class="sql-name">lastName</span>   <span class="sql-type">VARCHAR(80)</span>  <span class="sql-kw">NOT NULL</span>,
+  <span class="sql-name">email</span>      <span class="sql-type">VARCHAR(120)</span>
+);</code></div>
+
+  <div class="callout c-cyan">
+    <span class="callout-icon">💡</span>
+    <div><strong>Rule:</strong> studentID = 1001 never changes, even if Alice changes her name or email. The PK is the stable anchor everything else hangs off.</div>
+  </div>
+</div>
+
+<!-- ── S2: FOREIGN KEY ────────────────────────────────────────────────-->
+<div class="card">
+  <div class="card-accent acc-teal"></div>
+  <h3>02 &nbsp;/&nbsp; Foreign Key <span class="badge b-teal" style="margin-left:4px;">FK</span></h3>
+  <h2>The column that links a row to a row in another table</h2>
+
+  <div class="key-rule-row">
+    <span class="rule-chip">Can repeat</span>
+    <span class="rule-chip">Can be NULL (optional)</span>
+    <span class="rule-chip yes">✓ Must reference a PK/UQ</span>
+    <span class="rule-chip">Multiple per table</span>
+  </div>
+
+  <p>A foreign key is how relationships are physically implemented. It holds the PK value of the related row. Referential integrity means the database rejects a value that doesn't exist in the referenced table.</p>
+
+  <div class="data-table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>enrollmentID</th>
+          <th class="col-fk">studentID ← FK</th>
+          <th class="col-fk">courseID ← FK</th>
+          <th>grade</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>5001</td><td class="col-fk">1001</td><td class="col-fk">CS101</td><td>A</td></tr>
+        <tr><td>5002</td><td class="col-fk">1001</td><td class="col-fk">MA201</td><td>B+</td></tr>
+        <tr><td>5003</td><td class="col-fk">1002</td><td class="col-fk">CS101</td><td>A−</td></tr>
+        <tr><td>5004</td><td class="col-fk">1003</td><td class="col-fk">PH301</td><td>B</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="sql-block"><code><span class="sql-com">-- Two FKs linking enrollment to student + course</span>
+<span class="sql-kw">CREATE TABLE</span> <span class="sql-name">enrollment</span> (
+  <span class="sql-pk">enrollmentID</span> <span class="sql-type">INT</span> <span class="sql-kw">PRIMARY KEY AUTO_INCREMENT</span>,
+  <span class="sql-fk">studentID</span>    <span class="sql-type">INT</span> <span class="sql-kw">NOT NULL</span>,
+  <span class="sql-fk">courseID</span>     <span class="sql-type">CHAR(6)</span> <span class="sql-kw">NOT NULL</span>,
+  <span class="sql-name">grade</span>        <span class="sql-type">VARCHAR(3)</span>,
+  <span class="sql-kw">FOREIGN KEY</span> (<span class="sql-fk">studentID</span>) <span class="sql-kw">REFERENCES</span> <span class="sql-name">student</span>(<span class="sql-pk">studentID</span>)
+    <span class="sql-kw">ON DELETE RESTRICT</span>,
+  <span class="sql-kw">FOREIGN KEY</span> (<span class="sql-fk">courseID</span>)  <span class="sql-kw">REFERENCES</span> <span class="sql-name">course</span>(<span class="sql-pk">courseID</span>)
+    <span class="sql-kw">ON DELETE RESTRICT</span>
+);</code></div>
+
+  <div class="callout c-teal">
+    <span class="callout-icon">💡</span>
+    <div><strong>Read it:</strong> enrollment.studentID = 1001 means "this row belongs to Alice Chen." The FK is a pointer to another table's row.</div>
+  </div>
+</div>
+
+<!-- ── S3: CANDIDATE + ALTERNATE KEY ─────────────────────────────────-->
+<div class="card">
+  <div class="card-accent acc-violet"></div>
+  <h3>03 &nbsp;/&nbsp; Candidate &amp; Alternate Keys <span class="badge b-violet" style="margin-left:4px;">CK / AK</span></h3>
+  <h2>All eligible PKs — and the runners-up</h2>
+
+  <div class="key-rule-row">
+    <span class="rule-chip yes">✓ Unique</span>
+    <span class="rule-chip yes">✓ Not NULL</span>
+    <span class="rule-chip">Multiple candidates possible</span>
+    <span class="rule-chip">AK needs UNIQUE constraint</span>
+  </div>
+
+  <p>A <strong>Candidate Key</strong> is any column that <em>could</em> serve as the PK — unique and not null. You pick one to be the PK. Every remaining candidate becomes an <strong>Alternate Key</strong>, enforced with a UNIQUE constraint.</p>
+
+  <div class="data-table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th class="col-pk">studentID ← PK (chosen)</th>
+          <th class="col-ak">email ← AK (candidate not chosen)</th>
+          <th class="col-ak">nationalID ← AK (candidate not chosen)</th>
+          <th>firstName</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="col-pk">1001</td><td class="col-ak">alice@uni.edu</td><td class="col-ak">AU-4829301</td><td>Alice</td></tr>
+        <tr><td class="col-pk">1002</td><td class="col-ak">bob@uni.edu</td><td class="col-ak">AU-5571023</td><td>Bob</td></tr>
+        <tr><td class="col-pk">1003</td><td class="col-ak">cara@uni.edu</td><td class="col-ak">AU-3398814</td><td>Cara</td></tr>
+        <tr><td class="col-pk">1004</td><td class="col-ak">dan@uni.edu</td><td class="col-ak">AU-9901245</td><td>Dan</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="sql-block"><code><span class="sql-com">-- studentID chosen as PK; email + nationalID become AKs</span>
+<span class="sql-kw">CREATE TABLE</span> <span class="sql-name">student</span> (
+  <span class="sql-pk">studentID</span>   <span class="sql-type">INT</span>          <span class="sql-kw">PRIMARY KEY AUTO_INCREMENT</span>,
+  <span class="sql-ak">email</span>       <span class="sql-type">VARCHAR(120)</span> <span class="sql-kw">NOT NULL UNIQUE</span>,  <span class="sql-com">-- AK</span>
+  <span class="sql-ak">nationalID</span>  <span class="sql-type">VARCHAR(20)</span>  <span class="sql-kw">NOT NULL UNIQUE</span>,  <span class="sql-com">-- AK</span>
+  <span class="sql-name">firstName</span>   <span class="sql-type">VARCHAR(80)</span>  <span class="sql-kw">NOT NULL</span>
+);</code></div>
+
+  <div class="callout c-violet">
+    <span class="callout-icon">💡</span>
+    <div><strong>All three columns uniquely identify a student</strong> — they are all candidates. We chose studentID as PK because it's stable. Email could change; nationalID can be politically sensitive to store. Both still need UNIQUE constraints.</div>
+  </div>
+</div>
+
+<!-- ── S4: COMPOSITE KEY ──────────────────────────────────────────────-->
+<div class="card">
+  <div class="card-accent acc-sky"></div>
+  <h3>04 &nbsp;/&nbsp; Composite Key <span class="badge b-sky" style="margin-left:4px;">CPK</span></h3>
+  <h2>Two or more columns whose combination is the PK</h2>
+
+  <div class="key-rule-row">
+    <span class="rule-chip">Neither col alone is unique</span>
+    <span class="rule-chip yes">✓ Combination is unique</span>
+    <span class="rule-chip yes">✓ Standard in junction tables</span>
+  </div>
+
+  <p>When no single column uniquely identifies a row, two (or more) columns together can form the primary key. This is the correct and expected pattern for <strong>junction / bridge tables</strong> that resolve M:N relationships.</p>
+
+  <div class="data-table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th class="col-comp">studentID ← CPK part 1</th>
+          <th class="col-comp">courseID ← CPK part 2</th>
+          <th>enrollDate</th>
+          <th>grade</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="col-comp">1001</td><td class="col-comp">CS101</td><td>2024-02-01</td><td>A</td></tr>
+        <tr><td class="col-comp">1001</td><td class="col-comp">MA201</td><td>2024-02-01</td><td>B+</td></tr>
+        <tr><td class="col-comp">1002</td><td class="col-comp">CS101</td><td>2024-02-03</td><td>A−</td></tr>
+        <tr><td class="col-comp">1003</td><td class="col-comp">CS101</td><td>2024-02-03</td><td>B</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="font-size:.71rem;color:var(--muted);margin-top:4px;">↑ studentID 1001 appears 2× and courseID CS101 appears 3× — neither is unique alone. But (1001, CS101) only appears once.</p>
+
+  <div class="sql-block"><code><span class="sql-com">-- Composite PK: (studentID, courseID) together</span>
+<span class="sql-kw">CREATE TABLE</span> <span class="sql-name">enrollment</span> (
+  <span class="sql-pk">studentID</span>   <span class="sql-type">INT</span>     <span class="sql-kw">NOT NULL</span>,
+  <span class="sql-pk">courseID</span>    <span class="sql-type">CHAR(6)</span> <span class="sql-kw">NOT NULL</span>,
+  <span class="sql-name">enrollDate</span>  <span class="sql-type">DATE</span>,
+  <span class="sql-name">grade</span>       <span class="sql-type">VARCHAR(3)</span>,
+  <span class="sql-kw">PRIMARY KEY</span> (<span class="sql-pk">studentID</span>, <span class="sql-pk">courseID</span>),  <span class="sql-com">-- composite</span>
+  <span class="sql-kw">FOREIGN KEY</span> (<span class="sql-pk">studentID</span>) <span class="sql-kw">REFERENCES</span> <span class="sql-name">student</span>(<span class="sql-pk">studentID</span>),
+  <span class="sql-kw">FOREIGN KEY</span> (<span class="sql-pk">courseID</span>)  <span class="sql-kw">REFERENCES</span> <span class="sql-name">course</span>(<span class="sql-pk">courseID</span>)
+);</code></div>
+
+  <div class="callout c-sky">
+    <span class="callout-icon">💡</span>
+    <div><strong>Don't add a surrogate key to a junction table</strong> unless you have a specific reason (e.g. you need to reference enrollment rows from a third table). The composite PK is the correct, natural design.</div>
+  </div>
+</div>
+
+<!-- ── S5: SURROGATE vs NATURAL KEY ──────────────────────────────────-->
+<div class="card span2">
+  <div class="card-accent acc-blue"></div>
+  <h3>05 &nbsp;/&nbsp; Surrogate Key vs. Natural Key <span class="badge b-blue" style="margin-left:4px;">SK vs NK</span></h3>
+  <h2>System-generated stability versus real-world meaning</h2>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:4px;">
+    <!-- Surrogate -->
+    <div>
+      <div style="font-family:var(--mono);font-size:.68rem;font-weight:600;color:var(--cyan);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">Surrogate Key (SK) — preferred</div>
+      <p style="margin-bottom:10px;">A meaningless, system-generated identifier. The database creates it — the real world never sees it or cares about it. Auto-increment integers and UUIDs are the most common forms.</p>
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th class="col-pk">instructorID ← SK (PK)</th>
+              <th>name</th>
+              <th>email</th>
+              <th>department</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="col-pk">301</td><td>Dr. Yuen</td><td class="col-plain">yuen@uni.edu</td><td>CompSci</td></tr>
+            <tr><td class="col-pk">302</td><td>Prof. Ibarra</td><td class="col-plain">ibarra@uni.edu</td><td>Maths</td></tr>
+            <tr><td class="col-pk">303</td><td>Dr. Nilsson</td><td class="col-plain">nilsson@uni.edu</td><td>Physics</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="sql-block"><code><span class="sql-com">-- Surrogate PK: auto-increment integer</span>
+<span class="sql-pk">instructorID</span> <span class="sql-type">INT</span> <span class="sql-kw">PRIMARY KEY AUTO_INCREMENT</span>
+
+<span class="sql-com">-- Or UUID (distributed systems)</span>
+<span class="sql-pk">instructorID</span> <span class="sql-type">CHAR(36)</span> <span class="sql-kw">PRIMARY KEY</span>
+  <span class="sql-kw">DEFAULT</span> (<span class="sql-name">UUID</span>())</code></div>
+      <div style="margin-top:10px;display:flex;flex-direction:column;gap:5px;">
+        <div style="font-size:.72rem;padding:5px 9px;background:var(--teal-lt);border:1px solid var(--teal-bd);border-radius:6px;color:#134e4a;">✓ Stable — never changes even if the row's data changes</div>
+        <div style="font-size:.72rem;padding:5px 9px;background:var(--teal-lt);border:1px solid var(--teal-bd);border-radius:6px;color:#134e4a;">✓ Short — integers are fast to index and join on</div>
+        <div style="font-size:.72rem;padding:5px 9px;background:var(--teal-lt);border:1px solid var(--teal-bd);border-radius:6px;color:#134e4a;">✓ No business logic — decoupled from the domain</div>
+        <div style="font-size:.72rem;padding:5px 9px;background:var(--violet-lt);border:1px solid var(--violet-bd);border-radius:6px;color:#3730a3;">⚠ No human meaning — debugging requires a JOIN to read</div>
+      </div>
+    </div>
+
+    <!-- Natural -->
+    <div>
+      <div style="font-family:var(--mono);font-size:.68rem;font-weight:600;color:var(--blue);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">Natural Key (NK) — use with caution</div>
+      <p style="margin-bottom:10px;">An identifier that exists in the real world. Meaningful to humans and domain experts. Safe only when the value is guaranteed to be stable, unique, and will never be reused or reassigned.</p>
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th class="col-nat">ISBN ← NK (PK)</th>
+              <th>title</th>
+              <th>author</th>
+              <th>year</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="col-nat">978-0-13-468599-1</td><td>Clean Code</td><td>Martin</td><td>2008</td></tr>
+            <tr><td class="col-nat">978-0-13-235088-4</td><td>The Pragmatic…</td><td>Hunt</td><td>1999</td></tr>
+            <tr><td class="col-nat">978-0-596-51774-8</td><td>JavaScript: TDG</td><td>Flanagan</td><td>2011</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="sql-block"><code><span class="sql-com">-- Natural PK: ISBN is globally unique &amp; stable</span>
+<span class="sql-kw">CREATE TABLE</span> <span class="sql-name">book</span> (
+  <span class="sql-pk">isbn</span>    <span class="sql-type">CHAR(17)</span> <span class="sql-kw">PRIMARY KEY</span>,
+  <span class="sql-name">title</span>   <span class="sql-type">VARCHAR(200)</span> <span class="sql-kw">NOT NULL</span>,
+  <span class="sql-name">author</span>  <span class="sql-type">VARCHAR(100)</span>,
+  <span class="sql-name">year</span>    <span class="sql-type">SMALLINT</span>
+);</code></div>
+      <div style="margin-top:10px;display:flex;flex-direction:column;gap:5px;">
+        <div style="font-size:.72rem;padding:5px 9px;background:var(--teal-lt);border:1px solid var(--teal-bd);border-radius:6px;color:#134e4a;">✓ Human-readable — JOIN-free debugging</div>
+        <div style="font-size:.72rem;padding:5px 9px;background:var(--teal-lt);border:1px solid var(--teal-bd);border-radius:6px;color:#134e4a;">✓ Meaningful in exports, APIs, and logs</div>
+        <div style="font-size:.72rem;padding:5px 9px;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;color:#991b1b;">✗ Real-world values sometimes change (email, username, phone)</div>
+        <div style="font-size:.72rem;padding:5px 9px;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;color:#991b1b;">✗ Long strings make FK joins slower and FK columns bloated</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout c-blue" style="margin-top:14px;">
+    <span class="callout-icon">⚖️</span>
+    <div><strong>Decision rule:</strong> Use a natural key as PK only when it is <em>externally standardised</em> (ISBN, IATA airport code, ISO country code), guaranteed globally unique, and will provably never change or be reused. For every other case — people, orders, accounts, products — use a surrogate key and apply UNIQUE + NOT NULL to the business identifier separately.</div>
+  </div>
+</div>
+
+<!-- ── S6: SUPER KEY & PARTIAL KEY ────────────────────────────────────-->
+<div class="card">
+  <div class="card-accent acc-cyan"></div>
+  <h3>06 &nbsp;/&nbsp; Super Key &amp; Partial Key</h3>
+  <h2>The theoretical foundations</h2>
+
+  <!-- Super Key -->
+  <div style="margin-bottom:14px;">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+      <span class="badge b-cyan">Super Key</span>
+      <span style="font-size:.78rem;font-weight:600;color:var(--ink);">Any set of columns that uniquely identifies a row</span>
+    </div>
+    <p style="margin-bottom:8px;">A super key can contain "extra" unnecessary columns. Every candidate key is a super key but most super keys are not candidate keys — they include redundant columns.</p>
+    <div class="data-table-wrap">
+      <table class="data-table">
+        <thead><tr><th>Super Key combination</th><th>Is it a Candidate Key?</th><th>Why / Why not</th></tr></thead>
+        <tbody>
+          <tr><td class="col-pk">{studentID}</td><td><span class="badge b-teal">✓ Yes</span></td><td style="font-size:.72rem;color:var(--muted);">Minimal — nothing removable, still unique</td></tr>
+          <tr><td class="col-ak">{email}</td><td><span class="badge b-teal">✓ Yes</span></td><td style="font-size:.72rem;color:var(--muted);">Minimal — still uniquely identifies the row</td></tr>
+          <tr><td class="col-comp">{studentID, email}</td><td><span class="badge b-muted">✗ No</span></td><td style="font-size:.72rem;color:var(--muted);">Can remove email — still unique. Not minimal.</td></tr>
+          <tr><td class="col-comp">{studentID, firstName}</td><td><span class="badge b-muted">✗ No</span></td><td style="font-size:.72rem;color:var(--muted);">Can remove firstName — still unique. Not minimal.</td></tr>
+          <tr><td style="color:var(--faint);">{studentID, email, lastName}</td><td><span class="badge b-muted">✗ No</span></td><td style="font-size:.72rem;color:var(--muted);">Multiple redundant columns — definitely not minimal.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout c-cyan" style="margin-top:8px;">
+      <span class="callout-icon">📐</span>
+      <div><strong>Candidate Key = Minimal Super Key.</strong> A super key is a candidate key only if removing any column from it makes it no longer unique.</div>
+    </div>
+  </div>
+
+  <!-- Partial Key -->
+  <div style="border-top:1px solid var(--border);padding-top:14px;">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+      <span class="badge b-sky">Partial Key</span>
+      <span style="font-size:.78rem;font-weight:600;color:var(--ink);">Only meaningful alongside a parent entity's PK</span>
+    </div>
+    <p style="margin-bottom:8px;">Partial keys exist only on <strong>weak entities</strong> — entities that cannot be uniquely identified without their owning parent. The partial key + the parent's PK together form the full identifier.</p>
+    <div class="data-table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th class="col-fk">orderID (from ORDER — owner)</th>
+            <th class="col-comp">lineNum ← Partial Key</th>
+            <th>productID</th>
+            <th>qty</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="col-fk">ORD-500</td><td class="col-comp">1</td><td>PRD-88</td><td>2</td></tr>
+          <tr><td class="col-fk">ORD-500</td><td class="col-comp">2</td><td>PRD-91</td><td>1</td></tr>
+          <tr><td class="col-fk">ORD-501</td><td class="col-comp">1</td><td>PRD-45</td><td>3</td></tr>
+          <tr><td class="col-fk">ORD-501</td><td class="col-comp">2</td><td>PRD-88</td><td>1</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:.71rem;color:var(--muted);margin-top:4px;">lineNum 1 appears twice — not unique alone. But (ORD-500, 1) is unique. lineNum is the partial key; the full PK is (orderID, lineNum).</p>
+  </div>
+</div>
+
+<!-- ── S7: KEY HIERARCHY DIAGRAM ─────────────────────────────────────-->
+<div class="card">
+  <div class="card-accent acc-violet"></div>
+  <h3>07 &nbsp;/&nbsp; Key Hierarchy &amp; Relationships</h3>
+  <h2>How all key types relate to each other</h2>
+
+  <!-- SVG hierarchy -->
+  <svg width="100%" viewBox="0 0 400 280" font-family="'Outfit',sans-serif" font-size="11" style="display:block;margin:8px 0;">
+
+    <!-- Super Key (root) -->
+    <rect x="130" y="8" width="140" height="32" rx="6" fill="#ecfeff" stroke="#a5f3fc" stroke-width="1.5"/>
+    <text x="200" y="29" text-anchor="middle" fill="#0369a1" font-weight="700" font-size="12">Super Key</text>
+
+    <!-- Arrow down -->
+    <line x1="200" y1="40" x2="200" y2="60" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="3,2"/>
+    <text x="210" y="56" fill="#94a3b8" font-size="9">minimal</text>
+
+    <!-- Candidate Key -->
+    <rect x="110" y="62" width="180" height="32" rx="6" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1.5"/>
+    <text x="200" y="83" text-anchor="middle" fill="#1d4ed8" font-weight="700" font-size="12">Candidate Key</text>
+
+    <!-- Two arrows from Candidate -->
+    <line x1="160" y1="94" x2="100" y2="128" stroke="#cbd5e1" stroke-width="1.5"/>
+    <text x="105" y="118" fill="#94a3b8" font-size="9">one chosen</text>
+    <line x1="240" y1="94" x2="300" y2="128" stroke="#cbd5e1" stroke-width="1.5"/>
+    <text x="248" y="118" fill="#94a3b8" font-size="9">rest become</text>
+
+    <!-- Primary Key -->
+    <rect x="30" y="130" width="140" height="32" rx="6" fill="#ecfeff" stroke="#67e8f9" stroke-width="2"/>
+    <text x="100" y="151" text-anchor="middle" fill="#0369a1" font-weight="700" font-size="12">Primary Key</text>
+
+    <!-- Alternate Key -->
+    <rect x="228" y="130" width="140" height="32" rx="6" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1.5"/>
+    <text x="298" y="151" text-anchor="middle" fill="#4338ca" font-weight="700" font-size="12">Alternate Key</text>
+
+    <!-- PK can be... -->
+    <line x1="60" y1="162" x2="40" y2="192" stroke="#cbd5e1" stroke-width="1.5"/>
+    <line x1="100" y1="162" x2="100" y2="192" stroke="#cbd5e1" stroke-width="1.5"/>
+    <line x1="140" y1="162" x2="160" y2="192" stroke="#cbd5e1" stroke-width="1.5"/>
+
+    <!-- Surrogate -->
+    <rect x="4" y="194" width="88" height="28" rx="5" fill="#f0f9ff" stroke="#bae6fd" stroke-width="1.3"/>
+    <text x="48" y="212" text-anchor="middle" fill="#0284c7" font-weight="600" font-size="10">Surrogate</text>
+
+    <!-- Natural -->
+    <rect x="60" y="194" width="80" height="28" rx="5" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1.3"/>
+    <text x="100" y="212" text-anchor="middle" fill="#1d4ed8" font-weight="600" font-size="10">Natural</text>
+
+    <!-- Composite -->
+    <rect x="118" y="194" width="84" height="28" rx="5" fill="#f0fdfa" stroke="#99f6e4" stroke-width="1.3"/>
+    <text x="160" y="212" text-anchor="middle" fill="#0f766e" font-weight="600" font-size="10">Composite</text>
+
+    <!-- Foreign Key (separate branch) -->
+    <rect x="228" y="194" width="140" height="28" rx="5" fill="#f0fdfa" stroke="#99f6e4" stroke-width="1.5"/>
+    <text x="298" y="212" text-anchor="middle" fill="#0f766e" font-weight="600" font-size="10">Foreign Key</text>
+    <line x1="298" y1="162" x2="298" y2="194" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="3,2"/>
+    <text x="308" y="183" fill="#94a3b8" font-size="9">references PK</text>
+
+    <!-- Partial Key (special) -->
+    <rect x="100" y="242" width="200" height="28" rx="5" fill="#f5f3ff" stroke="#ddd6fe" stroke-width="1.3"/>
+    <text x="200" y="261" text-anchor="middle" fill="#4338ca" font-weight="600" font-size="10">Partial Key (weak entities only)</text>
+
+    <!-- Legend -->
+    <rect x="4" y="248" width="88" height="28" rx="5" fill="none" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3,2"/>
+    <text x="48" y="261" text-anchor="middle" fill="#94a3b8" font-size="9.5">special / other</text>
+
+    <!-- Labels -->
+    <text x="200" y="278" text-anchor="middle" fill="#94a3b8" font-size="8.5" font-family="'Fira Code',monospace">Every PK is a Candidate Key · Every Candidate Key is a Super Key</text>
+  </svg>
+
+  <div class="callout c-violet">
+    <span class="callout-icon">🔑</span>
+    <div><strong>The containment rule:</strong> Super Key ⊃ Candidate Key ⊃ Primary Key. Every PK is automatically a candidate key and a super key. The reverse is not true — not every super key is a candidate key, and only one candidate key becomes the PK.</div>
+  </div>
+</div>
+
+<!-- ── S8: FULL COMPARISON TABLE ─────────────────────────────────────-->
+<div class="card span2">
+  <div class="card-accent acc-mixed"></div>
+  <h3>08 &nbsp;/&nbsp; Full Comparison — All Key Types Side by Side</h3>
+
+  <table class="comp-table">
+    <thead>
+      <tr>
+        <th>Key Type</th>
+        <th>Unique?</th>
+        <th>Null allowed?</th>
+        <th>How many per table?</th>
+        <th>SQL enforcement</th>
+        <th>Best used for</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="badge b-cyan">PK</span> Primary</td>
+        <td style="color:var(--teal);font-weight:600;">Always</td>
+        <td style="color:#991b1b;font-weight:600;">Never</td>
+        <td>Exactly one</td>
+        <td><code style="font-size:.69rem;background:var(--surface2);padding:1px 5px;border-radius:3px;">PRIMARY KEY</code></td>
+        <td style="font-size:.75rem;color:var(--body);">Main row identifier — stable anchor for all FKs</td>
+      </tr>
+      <tr>
+        <td><span class="badge b-teal">FK</span> Foreign</td>
+        <td style="color:var(--muted);">No (can repeat)</td>
+        <td style="color:var(--muted);">Yes (if optional)</td>
+        <td>Many</td>
+        <td><code style="font-size:.69rem;background:var(--surface2);padding:1px 5px;border-radius:3px;">FOREIGN KEY … REFERENCES</code></td>
+        <td style="font-size:.75rem;color:var(--body);">Linking tables — enforcing referential integrity</td>
+      </tr>
+      <tr>
+        <td><span class="badge b-muted">CK</span> Candidate</td>
+        <td style="color:var(--teal);font-weight:600;">Always</td>
+        <td style="color:#991b1b;font-weight:600;">Never</td>
+        <td>One or more</td>
+        <td>Conceptual — one becomes PK, rest become AK</td>
+        <td style="font-size:.75rem;color:var(--body);">Identifying all possible PKs during design phase</td>
+      </tr>
+      <tr>
+        <td><span class="badge b-violet">AK</span> Alternate</td>
+        <td style="color:var(--teal);font-weight:600;">Always</td>
+        <td style="color:#991b1b;font-weight:600;">Never</td>
+        <td>Many</td>
+        <td><code style="font-size:.69rem;background:var(--surface2);padding:1px 5px;border-radius:3px;">UNIQUE NOT NULL</code></td>
+        <td style="font-size:.75rem;color:var(--body);">Business identifiers (email, username, code) that aren't the PK</td>
+      </tr>
+      <tr>
+        <td><span class="badge b-sky">CPK</span> Composite</td>
+        <td style="color:var(--teal);font-weight:600;">Always (combined)</td>
+        <td style="color:#991b1b;font-weight:600;">Never</td>
+        <td>One (the PK)</td>
+        <td><code style="font-size:.69rem;background:var(--surface2);padding:1px 5px;border-radius:3px;">PRIMARY KEY (col1, col2)</code></td>
+        <td style="font-size:.75rem;color:var(--body);">Junction tables — M:N resolution</td>
+      </tr>
+      <tr>
+        <td><span class="badge b-cyan">SK</span> Surrogate</td>
+        <td style="color:var(--teal);font-weight:600;">Always</td>
+        <td style="color:#991b1b;font-weight:600;">Never</td>
+        <td>One (is the PK)</td>
+        <td><code style="font-size:.69rem;background:var(--surface2);padding:1px 5px;border-radius:3px;">AUTO_INCREMENT / UUID()</code></td>
+        <td style="font-size:.75rem;color:var(--body);">Stable PK for any entity where the natural ID might change</td>
+      </tr>
+      <tr>
+        <td><span class="badge b-blue">NK</span> Natural</td>
+        <td style="color:var(--teal);font-weight:600;">Always</td>
+        <td style="color:#991b1b;font-weight:600;">Never</td>
+        <td>One (is the PK)</td>
+        <td>Part of table definition — inherent to the column</td>
+        <td style="font-size:.75rem;color:var(--body);">Externally standardised IDs (ISBN, IATA, ISO codes)</td>
+      </tr>
+      <tr>
+        <td><span class="badge b-muted">SK</span> Super</td>
+        <td style="color:var(--teal);font-weight:600;">Always</td>
+        <td style="color:#991b1b;font-weight:600;">Never</td>
+        <td>Many (any combo)</td>
+        <td>Conceptual only — no direct SQL construct</td>
+        <td style="font-size:.75rem;color:var(--body);">Normalization theory — proving candidate key minimality</td>
+      </tr>
+      <tr>
+        <td><span class="badge b-violet">PK</span> Partial</td>
+        <td style="color:var(--muted);">Only with owner PK</td>
+        <td style="color:#991b1b;font-weight:600;">Never</td>
+        <td>One (on weak entity)</td>
+        <td>Part of composite PK with parent FK</td>
+        <td style="font-size:.75rem;color:var(--body);">Weak entities that can't exist independently (order lines)</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ── S9: PRACTICAL RULES ────────────────────────────────────────────-->
+<div class="card span2">
+  <div class="card-accent acc-teal"></div>
+  <h3>09 &nbsp;/&nbsp; Practical Rules — What to Use When</h3>
+
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+    <div style="padding:12px 14px;background:var(--cyan-lt);border:1px solid var(--cyan-bd);border-radius:8px;font-size:.76rem;line-height:1.55;border-left:3px solid var(--cyan);">
+      <strong style="display:block;font-size:.71rem;color:var(--cyan);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Always do</strong>
+      Every table gets a PK. If no natural stable unique key exists, create a surrogate. Apply NOT NULL to every column that must have a value. Add UNIQUE constraints to all business identifiers (email, username, code).
+    </div>
+    <div style="padding:12px 14px;background:var(--teal-lt);border:1px solid var(--teal-bd);border-radius:8px;font-size:.76rem;line-height:1.55;border-left:3px solid var(--teal);">
+      <strong style="display:block;font-size:.71rem;color:var(--teal);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Junction tables</strong>
+      Always use a composite PK (FK₁ + FK₂). Don't add a surrogate key to a junction unless you need to reference its rows from a third table. Add ON DELETE CASCADE if child rows have no meaning without the parent.
+    </div>
+    <div style="padding:12px 14px;background:var(--violet-lt);border:1px solid var(--violet-bd);border-radius:8px;font-size:.76rem;line-height:1.55;border-left:3px solid var(--violet);">
+      <strong style="display:block;font-size:.71rem;color:var(--violet);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Never do</strong>
+      Never use email, phone, or username as a PK — they change. Never leave a candidate key without a UNIQUE constraint. Never use a composite PK of more than 3 columns — if you need more, you likely have a modelling error.
+    </div>
+    <div style="padding:12px 14px;background:var(--sky-lt);border:1px solid var(--sky-bd);border-radius:8px;font-size:.76rem;line-height:1.55;border-left:3px solid var(--sky);">
+      <strong style="display:block;font-size:.71rem;color:var(--sky);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">FK actions</strong>
+      Choose ON DELETE RESTRICT (default — safest) for most FKs. Use ON DELETE CASCADE only for "child owns nothing without parent" (e.g. order items). Use ON DELETE SET NULL for optional relationships (nullable FK columns).
+    </div>
+    <div style="padding:12px 14px;background:var(--blue-lt);border:1px solid var(--blue-bd);border-radius:8px;font-size:.76rem;line-height:1.55;border-left:3px solid var(--blue);">
+      <strong style="display:block;font-size:.71rem;color:var(--blue);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Indexes</strong>
+      PKs are automatically indexed. FK columns are <em>not</em> — always add an index on FK columns manually or queries joining across them will do full table scans. AK columns get an index automatically via UNIQUE constraint.
+    </div>
+    <div style="padding:12px 14px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;font-size:.76rem;line-height:1.55;border-left:3px solid var(--border2);">
+      <strong style="display:block;font-size:.71rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Int vs UUID</strong>
+      INT AUTO_INCREMENT PKs are faster to join and smaller on disk. UUID PKs are better for distributed systems (no central sequence). UUID v7 (time-ordered) avoids index fragmentation. Never use UUID v4 as a clustered PK at scale.
+    </div>
+  </div>
+</div>
+
+</div><!-- /layout -->
+
+<!-- ═══ FOOTER ════════════════════════════════════════════════════════ -->
+<footer>
+  <span>Database Keys Cheatsheet · Companion to Crow's Foot &amp; ERD Design sheets</span>
+  <span>Fonts: Outfit + Fira Code</span>
+  <span>Print-ready: Ctrl/Cmd+P</span>
+</footer>
+
+</body>
+</html>
