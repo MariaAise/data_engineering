@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ERD Design & Normalization — Cheatsheet</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,700;1,9..144,300;1,9..144,400&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root {
+  /* Cool slate palette */
+  --bg:        #f8fafc;
+  --surface:   #ffffff;
+  --surface2:  #f1f5f9;
+  --surface3:  #e8eef7;
+  --border:    #e2e8f0;
+  --border2:   #cbd5e1;
+
+  --ink:       #0f172a;
+  --body:      #334155;
+  --muted:     #64748b;
+  --faint:     #94a3b8;
+
+  /* Accent palette — cool tones */
+  --green:     #0369a1;
+  --green-md:  #0ea5e9;
+  --green-lt:  #f0f9ff;
+  --green-bd:  #bae6fd;
+
+  --rust:      #6d28d9;
+  --rust-md:   #8b5cf6;
+  --rust-lt:   #f5f3ff;
+  --rust-bd:   #ddd6fe;
+
+  --gold:      #0f766e;
+  --gold-lt:   #f0fdfa;
+  --gold-bd:   #99f6e4;
+
+  --navy:      #1e40af;
+  --navy-lt:   #eff6ff;
+  --navy-bd:   #bfdbfe;
+
+  --red:       #3730a3;
+  --red-lt:    #f0f4ff;
+  --red-bd:    #c7d2fe;
+
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'IBM Plex Sans', sans-serif;
+  --serif: 'Fraunces', serif;
+
+  --r: 10px;
+  --shadow: 0 1px 4px rgba(15,23,42,.06), 0 4px 20px rgba(15,23,42,.06);
+}
+
+html { font-size: 14px; }
+body {
+  background: var(--bg);
+  color: var(--body);
+  font-family: var(--sans);
+  line-height: 1.6;
+  padding: 36px 28px 52px;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+/* ── Typography ── */
+h1 {
+  font-family: var(--serif);
+  font-size: 2.1rem;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -.3px;
+  line-height: 1.1;
+}
+h1 em { font-style: italic; font-weight: 300; color: var(--green); }
+h2 {
+  font-family: var(--serif);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 14px;
+}
+h3 {
+  font-family: var(--mono);
+  font-size: .68rem;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+p { font-size: .82rem; line-height: 1.65; color: var(--body); }
+code { font-family: var(--mono); font-size: .78rem; }
+
+/* ── Header ── */
+.page-header {
+  margin-bottom: 32px;
+  padding-bottom: 22px;
+  border-bottom: 2px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.header-eyebrow {
+  font-family: var(--mono);
+  font-size: .68rem;
+  font-weight: 500;
+  color: var(--green-md);
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+.header-sub {
+  font-family: var(--sans);
+  font-size: .78rem;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.companion-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: .64rem;
+  color: var(--muted);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  padding: 3px 10px;
+  border-radius: 6px;
+  width: fit-content;
+  margin-top: 4px;
+}
+.companion-tag::before {
+  content: '↗';
+  color: var(--green-md);
+  font-size: .7rem;
+}
+
+/* ── Layout ── */
+.layout { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.span2  { grid-column: 1 / -1; }
+.col3   { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
+
+/* ── Card ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 20px 22px;
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+}
+.card-accent {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  border-radius: var(--r) var(--r) 0 0;
+}
+.acc-green  { background: linear-gradient(90deg, var(--green), #38bdf8); }
+.acc-rust   { background: linear-gradient(90deg, var(--rust), #a78bfa); }
+.acc-gold   { background: linear-gradient(90deg, var(--gold), #2dd4bf); }
+.acc-navy   { background: linear-gradient(90deg, var(--navy), #93c5fd); }
+.acc-red    { background: linear-gradient(90deg, var(--red), #f87171); }
+
+/* ── Badges ── */
+.badge {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .64rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 5px;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.b-green  { background: var(--green-lt);  color: var(--green);  border: 1px solid var(--green-bd); }
+.b-rust   { background: var(--rust-lt);   color: var(--rust);   border: 1px solid var(--rust-bd); }
+.b-gold   { background: var(--gold-lt);   color: var(--gold);   border: 1px solid var(--gold-bd); }
+.b-navy   { background: var(--navy-lt);   color: var(--navy);   border: 1px solid var(--navy-bd); }
+.b-red    { background: var(--red-lt);    color: var(--red);    border: 1px solid var(--red-bd); }
+.b-muted  { background: var(--surface2);  color: var(--muted);  border: 1px solid var(--border2); }
+
+/* ── Callout box ── */
+.callout {
+  border-radius: 8px;
+  padding: 11px 14px;
+  font-size: .76rem;
+  line-height: 1.55;
+  margin-top: 12px;
+}
+.callout strong { font-weight: 600; }
+.c-green  { background: var(--green-lt);  border: 1px solid var(--green-bd); color: #0c4a6e; }
+.c-green strong { color: var(--green); }
+.c-rust   { background: var(--rust-lt);   border: 1px solid var(--rust-bd);  color: #4c1d95; }
+.c-rust strong { color: var(--rust); }
+.c-gold   { background: var(--gold-lt);   border: 1px solid var(--gold-bd);  color: #134e4a; }
+.c-gold strong { color: var(--gold); }
+.c-red    { background: var(--red-lt);    border: 1px solid var(--red-bd);   color: #1e3a5f; }
+.c-red strong { color: var(--red); }
+.c-navy   { background: var(--navy-lt);   border: 1px solid var(--navy-bd);  color: #1e3a5f; }
+.c-navy strong { color: var(--navy); }
+
+/* ── Phase steps ── */
+.phase-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-top: 12px;
+}
+.phase {
+  padding: 14px 16px;
+  border-right: 1px solid var(--border);
+  position: relative;
+}
+.phase:last-child { border-right: none; }
+.phase-num {
+  font-family: var(--serif);
+  font-size: 1.8rem;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.phase-name {
+  font-family: var(--serif);
+  font-size: .88rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+.phase-desc { font-size: .73rem; color: var(--muted); line-height: 1.5; }
+.phase-tag  { font-family: var(--mono); font-size: .62rem; margin-top: 8px; display: block; }
+.phase-arrow {
+  position: absolute;
+  right: -10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .65rem;
+  color: var(--muted);
+  z-index: 2;
+}
+.phase-1 .phase-num { color: var(--green-md); }
+.phase-2 .phase-num { color: var(--gold); }
+.phase-3 .phase-num { color: var(--navy); }
+.phase-1 { background: var(--green-lt); }
+.phase-2 { background: var(--gold-lt); }
+.phase-3 { background: var(--navy-lt); }
+
+/* ── Entity vs Attribute decision table ── */
+.decision-table { width: 100%; border-collapse: collapse; font-size: .78rem; margin-top: 12px; }
+.decision-table th {
+  font-family: var(--mono);
+  font-size: .62rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 6px 10px;
+  border-bottom: 2px solid var(--border);
+  text-align: left;
+  background: var(--surface2);
+}
+.decision-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.decision-table tr:last-child td { border-bottom: none; }
+.decision-table tr:hover td { background: var(--surface2); }
+.decision-table td:first-child { font-family: var(--mono); font-size: .74rem; font-weight: 500; }
+
+/* ── Normalization blocks ── */
+.nf-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
+.nf-block {
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  overflow: hidden;
+}
+.nf-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.nf-num {
+  font-family: var(--serif);
+  font-size: 1.4rem;
+  font-weight: 700;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.nf-title-col { display: flex; flex-direction: column; gap: 1px; }
+.nf-title { font-family: var(--serif); font-size: .9rem; font-weight: 600; color: var(--ink); }
+.nf-rule  { font-size: .72rem; color: var(--muted); }
+.nf-body  { padding: 12px 14px; }
+
+.nf-violation {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  font-size: .74rem;
+}
+.nf-before, .nf-after {
+  border-radius: 6px;
+  padding: 10px 11px;
+}
+.nf-before {
+  background: var(--red-lt);
+  border: 1px solid var(--red-bd);
+}
+.nf-after {
+  background: var(--green-lt);
+  border: 1px solid var(--green-bd);
+}
+.nf-label {
+  font-family: var(--mono);
+  font-size: .62rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  margin-bottom: 7px;
+}
+.nf-before .nf-label { color: var(--red); }
+.nf-after  .nf-label { color: var(--green); }
+
+/* ── Mini table inside nf blocks ── */
+.mini-table { width: 100%; border-collapse: collapse; font-size: .7rem; }
+.mini-table th {
+  background: rgba(15,23,42,.04);
+  padding: 3px 6px;
+  border: 1px solid rgba(0,0,0,.1);
+  font-family: var(--mono);
+  font-size: .64rem;
+  text-align: left;
+  color: var(--body);
+  white-space: nowrap;
+}
+.mini-table td {
+  padding: 3px 6px;
+  border: 1px solid rgba(0,0,0,.07);
+  color: var(--body);
+  white-space: nowrap;
+}
+.mini-table .highlight { background: rgba(109,40,217,.1); }
+.mini-table .fixed     { background: rgba(3,105,161,.1); }
+.mini-table .pk-col    { font-weight: 600; text-decoration: underline; }
+
+/* ── Anomaly cards ── */
+.anomaly-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 2px; }
+.anomaly-item {
+  padding: 12px 13px;
+  border-radius: 8px;
+  border-left: 3px solid;
+}
+.a-insert { background: var(--rust-lt);  border-color: var(--rust-md); }
+.a-update { background: var(--gold-lt);  border-color: var(--gold); }
+.a-delete { background: var(--red-lt);   border-color: var(--red); }
+.anomaly-item strong {
+  display: block;
+  font-size: .72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  margin-bottom: 4px;
+}
+.a-insert strong { color: var(--rust); }
+.a-update strong { color: var(--gold); }
+.a-delete strong { color: var(--red); }
+.anomaly-item p { font-size: .74rem; line-height: 1.5; }
+
+/* ── Dependency types ── */
+.dep-grid { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 2px; }
+.dep-row {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 10px;
+  align-items: start;
+  padding: 9px 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+}
+.dep-name { font-family: var(--mono); font-size: .73rem; font-weight: 500; color: var(--ink); }
+.dep-example { font-family: var(--mono); font-size: .68rem; color: var(--muted); margin-top: 3px; }
+.dep-desc { font-size: .75rem; color: var(--body); line-height: 1.5; }
+
+/* ── Denormalization reasons ── */
+.denorm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 2px; }
+.denorm-item {
+  padding: 10px 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  font-size: .75rem;
+}
+.denorm-item strong { display: block; font-size: .72rem; color: var(--ink); font-weight: 600; margin-bottom: 3px; }
+
+/* ── Constraints reference ── */
+.constraint-list { display: grid; grid-template-columns: 1fr; gap: 1px; margin-top: 2px; }
+.constraint-row {
+  display: grid;
+  grid-template-columns: 120px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+}
+.constraint-row:last-child { border-bottom: none; }
+.constraint-row:hover { background: var(--surface2); border-radius: 6px; }
+.c-keyword { font-family: var(--mono); font-size: .74rem; font-weight: 600; color: var(--green); }
+.c-desc { font-size: .75rem; color: var(--body); }
+.c-example { font-family: var(--mono); font-size: .66rem; color: var(--muted); white-space: nowrap; }
+
+/* ── Design smells ── */
+.smells-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.smell {
+  padding: 10px 13px;
+  background: var(--red-lt);
+  border: 1px solid var(--red-bd);
+  border-radius: 8px;
+  font-size: .75rem;
+  line-height: 1.5;
+}
+.smell strong {
+  display: block;
+  font-size: .71rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--red);
+  margin-bottom: 3px;
+}
+.fix {
+  margin-top: 5px;
+  padding: 5px 8px;
+  background: var(--green-lt);
+  border: 1px solid var(--green-bd);
+  border-radius: 5px;
+  font-size: .7rem;
+  color: #0c4a6e;
+}
+.fix::before { content: '✓ Fix: '; font-weight: 600; color: var(--green); }
+
+/* ── Footer ── */
+footer {
+  margin-top: 32px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+footer span { font-size: .68rem; color: var(--faint); font-family: var(--mono); }
+
+/* ── Responsive ── */
+@media (max-width: 760px) {
+  .layout, .col3, .anomaly-row, .phase-grid { grid-template-columns: 1fr; }
+  .span2 { grid-column: 1; }
+  .nf-violation, .denorm-grid, .smells-grid { grid-template-columns: 1fr; }
+}
+@media print {
+  body { padding: 0; max-width: 100%; background: white; }
+  .card { box-shadow: none; break-inside: avoid; }
+  footer { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══════════════════════════════════════════════════════ -->
+<header class="page-header">
+  <div class="header-eyebrow">Entity-Relationship Design</div>
+  <h1>ERD Design &amp; <em>Normalization</em></h1>
+  <p class="header-sub">Conceptual → Logical → Physical modelling · Functional dependencies · Normal forms 1NF–BCNF · Anomalies &amp; design smells</p>
+  <span class="companion-tag">Companion to the Crow's Foot Notation cheatsheet</span>
+</header>
+
+<!-- ═══ LAYOUT ════════════════════════════════════════════════════════ -->
+<div class="layout">
+
+<!-- ── S1: THREE PHASES OF ERD DESIGN ──────────────────────────────── -->
+<div class="card span2">
+  <div class="card-accent acc-green"></div>
+  <h3>01 &nbsp;/&nbsp; The Three Phases of ERD Design</h3>
+  <p>Every well-designed schema passes through three distinct modelling stages. Skipping straight to physical design is the single most common cause of structural debt and costly schema migrations.</p>
+
+  <div class="phase-grid">
+    <div class="phase phase-1">
+      <div class="phase-num">01</div>
+      <div class="phase-name">Conceptual Model</div>
+      <div class="phase-desc">High-level map of the business domain. Identifies entities and relationships only — no data types, no PKs, no implementation detail. Built with domain experts, not DBAs.</div>
+      <span class="phase-tag b-green badge">Audience: Stakeholders</span>
+      <div class="phase-arrow">→</div>
+    </div>
+    <div class="phase phase-2">
+      <div class="phase-num">02</div>
+      <div class="phase-name">Logical Model</div>
+      <div class="phase-desc">Adds Crow's Foot cardinality, primary keys, foreign keys, and attributes. DBMS-independent. Normalises to at least 3NF. Resolves all M:N relationships into junction tables.</div>
+      <span class="phase-tag b-gold badge">Audience: Architects / DBAs</span>
+      <div class="phase-arrow">→</div>
+    </div>
+    <div class="phase phase-3">
+      <div class="phase-num">03</div>
+      <div class="phase-name">Physical Model</div>
+      <div class="phase-desc">DBMS-specific: chooses data types (VARCHAR(255), BIGINT), indexes, partitioning, storage engines. May intentionally denormalise for performance. Produces actual DDL CREATE TABLE statements.</div>
+      <span class="phase-tag b-navy badge">Audience: DBAs / Engineers</span>
+    </div>
+  </div>
+
+  <div class="callout c-gold" style="margin-top:14px;">
+    <strong>Common mistake:</strong> Teams jump directly from whiteboard sketches to CREATE TABLE statements. The conceptual stage is not optional — it surfaces disagreements about the domain <em>before</em> any code is written.
+  </div>
+</div>
+
+<!-- ── S2: ENTITY vs ATTRIBUTE vs RELATIONSHIP ─────────────────────── -->
+<div class="card">
+  <div class="card-accent acc-rust"></div>
+  <h3>02 &nbsp;/&nbsp; Entity vs. Attribute vs. Relationship</h3>
+  <p>One of the hardest modelling decisions: should this concept be its own entity, an attribute of another entity, or just a relationship?</p>
+
+  <table class="decision-table">
+    <thead>
+      <tr>
+        <th>Make it an…</th>
+        <th>When…</th>
+        <th>Example</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="color:var(--navy);">Entity</td>
+        <td style="font-size:.75rem;color:var(--body);">It has its own attributes, has relationships to multiple other entities, or can exist independently</td>
+        <td><span class="badge b-navy">ADDRESS</span> — has street, city, postcode</td>
+      </tr>
+      <tr>
+        <td style="color:var(--green);">Attribute</td>
+        <td style="font-size:.75rem;color:var(--body);">It is a simple, single-valued property that belongs solely to one entity and has no life of its own</td>
+        <td><span class="badge b-green">email</span> on CUSTOMER</td>
+      </tr>
+      <tr>
+        <td style="color:var(--rust);">Relationship</td>
+        <td style="font-size:.75rem;color:var(--body);">It describes a meaningful association between two entities — especially if it carries payload attributes</td>
+        <td><span class="badge b-rust">ENROLMENT</span> between Student &amp; Course</td>
+      </tr>
+      <tr>
+        <td style="color:var(--gold);">Weak Entity</td>
+        <td style="font-size:.75rem;color:var(--body);">Its existence depends entirely on a parent entity — it cannot be uniquely identified without its owner's PK</td>
+        <td><span class="badge b-gold">ORDER_ITEM</span> needs orderID to exist</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout c-rust">
+    <strong>Address trap:</strong> Storing address as flat columns (street, city, zip) on CUSTOMER works until a Customer has multiple addresses. Model ADDRESS as a separate entity early — migration is painful later.
+  </div>
+</div>
+
+<!-- ── S3: FUNCTIONAL DEPENDENCIES ─────────────────────────────────── -->
+<div class="card">
+  <div class="card-accent acc-gold"></div>
+  <h3>03 &nbsp;/&nbsp; Functional Dependencies</h3>
+  <p>A functional dependency <code style="background:var(--surface2);padding:1px 5px;border-radius:3px;">A → B</code> means: knowing the value of A <em>always</em> determines the value of B. Understanding FDs is the foundation of all normalization.</p>
+
+  <div class="dep-grid">
+    <div class="dep-row">
+      <div>
+        <div class="dep-name">Full FD</div>
+        <div class="dep-example">{A,B} → C</div>
+      </div>
+      <div class="dep-desc">C depends on the <em>entire</em> composite key {A,B}, not just part of it. This is what you want — required for 2NF.</div>
+    </div>
+    <div class="dep-row">
+      <div>
+        <div class="dep-name">Partial FD</div>
+        <div class="dep-example">A → C (in {A,B})</div>
+      </div>
+      <div class="dep-desc">C depends only on part of the composite key. This is a <strong style="color:var(--rust);">2NF violation</strong>. Move C to a table keyed by A alone.</div>
+    </div>
+    <div class="dep-row">
+      <div>
+        <div class="dep-name">Transitive FD</div>
+        <div class="dep-example">A → B → C</div>
+      </div>
+      <div class="dep-desc">C depends on B, which depends on A (the PK). C doesn't depend on A directly. This is a <strong style="color:var(--rust);">3NF violation</strong>. Move B→C to its own table.</div>
+    </div>
+    <div class="dep-row">
+      <div>
+        <div class="dep-name">Multivalued FD</div>
+        <div class="dep-example">A →→ B</div>
+      </div>
+      <div class="dep-desc">A determines a <em>set</em> of B values independently of other attributes. This is a <strong style="color:var(--rust);">4NF violation</strong> — separate into independent tables.</div>
+    </div>
+    <div class="dep-row">
+      <div>
+        <div class="dep-name">Trivial FD</div>
+        <div class="dep-example">{A,B} → A</div>
+      </div>
+      <div class="dep-desc">Every set of attributes determines any subset of itself. Always true, never a violation — just not useful for design decisions.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── S4: NORMALIZATION — FULL SECTION ─────────────────────────────── -->
+<div class="card span2">
+  <div class="card-accent acc-green"></div>
+  <h3>04 &nbsp;/&nbsp; Normalization — Normal Forms with Before &amp; After</h3>
+  <p style="margin-bottom:14px;">Normalization is the process of structuring a relational database to reduce data redundancy and improve data integrity. Each normal form eliminates a specific class of anomaly. Red = violation · Green = fixed.</p>
+
+  <div class="nf-grid">
+
+    <!-- 1NF -->
+    <div class="nf-block">
+      <div class="nf-header" style="background:var(--green-lt);">
+        <div class="nf-num" style="color:var(--green);">1NF</div>
+        <div class="nf-title-col">
+          <div class="nf-title">First Normal Form</div>
+          <div class="nf-rule">Rule: Atomic values only · No repeating groups · Each row uniquely identifiable · Single-valued columns</div>
+        </div>
+        <span class="badge b-green" style="margin-left:auto;flex-shrink:0;">Eliminates: repeating groups</span>
+      </div>
+      <div class="nf-body">
+        <div class="nf-violation">
+          <div class="nf-before">
+            <div class="nf-label">✗ Violates 1NF</div>
+            <table class="mini-table">
+              <thead><tr><th class="pk-col">orderID</th><th class="highlight">products</th></tr></thead>
+              <tbody>
+                <tr><td>101</td><td class="highlight">Pen, Notebook, Ruler</td></tr>
+                <tr><td>102</td><td class="highlight">Laptop, Mouse</td></tr>
+              </tbody>
+            </table>
+            <p style="font-size:.7rem;margin-top:7px;color:var(--red);">Multiple values in one cell. Can't query or index individual products.</p>
+          </div>
+          <div class="nf-after">
+            <div class="nf-label">✓ Satisfies 1NF</div>
+            <table class="mini-table">
+              <thead><tr><th class="pk-col">orderID</th><th class="pk-col fixed">productID</th></tr></thead>
+              <tbody>
+                <tr><td>101</td><td class="fixed">1 (Pen)</td></tr>
+                <tr><td>101</td><td class="fixed">2 (Notebook)</td></tr>
+                <tr><td>101</td><td class="fixed">3 (Ruler)</td></tr>
+                <tr><td>102</td><td class="fixed">4 (Laptop)</td></tr>
+              </tbody>
+            </table>
+            <p style="font-size:.7rem;margin-top:7px;color:var(--green);">One value per cell. Composite PK (orderID + productID) makes each row unique.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2NF -->
+    <div class="nf-block">
+      <div class="nf-header" style="background:var(--gold-lt);">
+        <div class="nf-num" style="color:var(--gold);">2NF</div>
+        <div class="nf-title-col">
+          <div class="nf-title">Second Normal Form</div>
+          <div class="nf-rule">Rule: Must be in 1NF · Every non-key attribute must be fully dependent on the entire primary key (no partial dependencies)</div>
+        </div>
+        <span class="badge b-gold" style="margin-left:auto;flex-shrink:0;">Eliminates: partial deps</span>
+      </div>
+      <div class="nf-body">
+        <div class="nf-violation">
+          <div class="nf-before">
+            <div class="nf-label">✗ Violates 2NF</div>
+            <table class="mini-table">
+              <thead><tr><th class="pk-col">orderID</th><th class="pk-col">prodID</th><th class="highlight">prodName</th><th>qty</th></tr></thead>
+              <tbody>
+                <tr><td>101</td><td>5</td><td class="highlight">Pen</td><td>3</td></tr>
+                <tr><td>102</td><td>5</td><td class="highlight">Pen</td><td>1</td></tr>
+              </tbody>
+            </table>
+            <p style="font-size:.7rem;margin-top:7px;color:var(--red);">prodName depends only on prodID — partial dependency on composite PK.</p>
+          </div>
+          <div class="nf-after">
+            <div class="nf-label">✓ Satisfies 2NF</div>
+            <table class="mini-table">
+              <thead><tr><th class="pk-col">orderID</th><th class="pk-col">prodID</th><th>qty</th></tr></thead>
+              <tbody>
+                <tr><td>101</td><td>5</td><td>3</td></tr>
+                <tr><td>102</td><td>5</td><td>1</td></tr>
+              </tbody>
+            </table>
+            <p style="font-size:.7rem;margin-top:7px;color:var(--green);">prodName moved to a PRODUCT table keyed by prodID alone.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3NF -->
+    <div class="nf-block">
+      <div class="nf-header" style="background:var(--rust-lt);">
+        <div class="nf-num" style="color:var(--rust);">3NF</div>
+        <div class="nf-title-col">
+          <div class="nf-title">Third Normal Form</div>
+          <div class="nf-rule">Rule: Must be in 2NF · No non-key attribute depends on another non-key attribute (no transitive dependencies)</div>
+        </div>
+        <span class="badge b-rust" style="margin-left:auto;flex-shrink:0;">Eliminates: transitive deps</span>
+      </div>
+      <div class="nf-body">
+        <div class="nf-violation">
+          <div class="nf-before">
+            <div class="nf-label">✗ Violates 3NF</div>
+            <table class="mini-table">
+              <thead><tr><th class="pk-col">empID</th><th>deptID</th><th class="highlight">deptName</th></tr></thead>
+              <tbody>
+                <tr><td>E1</td><td>D10</td><td class="highlight">Engineering</td></tr>
+                <tr><td>E2</td><td>D10</td><td class="highlight">Engineering</td></tr>
+                <tr><td>E3</td><td>D20</td><td class="highlight">Marketing</td></tr>
+              </tbody>
+            </table>
+            <p style="font-size:.7rem;margin-top:7px;color:var(--red);">deptName → deptID → empID. Transitive dependency: deptName via deptID.</p>
+          </div>
+          <div class="nf-after">
+            <div class="nf-label">✓ Satisfies 3NF</div>
+            <table class="mini-table">
+              <thead><tr><th class="pk-col">empID</th><th>deptID</th></tr></thead>
+              <tbody>
+                <tr><td>E1</td><td>D10</td></tr>
+                <tr><td>E2</td><td>D10</td></tr>
+              </tbody>
+            </table>
+            <p style="font-size:.7rem;margin-top:7px;color:var(--green);">deptName moved to DEPARTMENT(deptID, deptName). No redundancy.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BCNF -->
+    <div class="nf-block">
+      <div class="nf-header" style="background:var(--navy-lt);">
+        <div class="nf-num" style="color:var(--navy);">BCNF</div>
+        <div class="nf-title-col">
+          <div class="nf-title">Boyce-Codd Normal Form</div>
+          <div class="nf-rule">Rule: Must be in 3NF · For every functional dependency X → Y, X must be a superkey (stricter than 3NF — catches overlapping candidate keys)</div>
+        </div>
+        <span class="badge b-navy" style="margin-left:auto;flex-shrink:0;">Eliminates: non-superkey deps</span>
+      </div>
+      <div class="nf-body">
+        <div class="nf-violation">
+          <div class="nf-before">
+            <div class="nf-label">✗ Violates BCNF</div>
+            <table class="mini-table">
+              <thead><tr><th class="pk-col">student</th><th class="pk-col">subject</th><th class="highlight">teacher</th></tr></thead>
+              <tbody>
+                <tr><td>Alice</td><td>Maths</td><td class="highlight">Dr. Smith</td></tr>
+                <tr><td>Bob</td><td>Maths</td><td class="highlight">Dr. Smith</td></tr>
+                <tr><td>Alice</td><td>Physics</td><td class="highlight">Dr. Lee</td></tr>
+              </tbody>
+            </table>
+            <p style="font-size:.7rem;margin-top:7px;color:var(--red);">teacher → subject (each teacher teaches one subject), but teacher is not a superkey. 3NF is satisfied but BCNF is violated.</p>
+          </div>
+          <div class="nf-after">
+            <div class="nf-label">✓ Satisfies BCNF</div>
+            <table class="mini-table">
+              <thead><tr><th class="pk-col">teacher</th><th class="fixed">subject</th></tr></thead>
+              <tbody>
+                <tr><td>Dr. Smith</td><td class="fixed">Maths</td></tr>
+                <tr><td>Dr. Lee</td><td class="fixed">Physics</td></tr>
+              </tbody>
+            </table>
+            <p style="font-size:.7rem;margin-top:7px;color:var(--green);">Decompose: TEACHER_SUBJECT(teacher, subject) + ENROLMENT(student, teacher). Each determinant is now a superkey.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /nf-grid -->
+
+  <div class="callout c-green" style="margin-top:14px;">
+    <strong>Practical target:</strong> For OLTP systems (apps that read/write frequently), aim for <strong>3NF minimum</strong>. Achieve BCNF where overlapping candidate keys exist. 4NF and 5NF are rarely needed in practice — focus on eliminating multi-valued dependencies if you encounter them.
+  </div>
+</div>
+
+<!-- ── S5: UPDATE / INSERT / DELETE ANOMALIES ───────────────────────── -->
+<div class="card span2">
+  <div class="card-accent acc-rust"></div>
+  <h3>05 &nbsp;/&nbsp; The Three Database Anomalies — Why Normalization Matters</h3>
+  <p style="margin-bottom:12px;">Anomalies are the <em>symptoms</em> of poor normalization — they occur when data is unnecessarily duplicated across rows. All three arise from the same root cause: storing facts about multiple subjects in a single table.</p>
+
+  <div class="anomaly-row">
+    <div class="anomaly-item a-insert">
+      <strong>Insertion Anomaly</strong>
+      <p>You cannot insert a new fact without also inserting unrelated data. Example: can't add a new Department unless at least one Employee exists in it, because department info lives in the EMPLOYEE table.</p>
+    </div>
+    <div class="anomaly-item a-update">
+      <strong>Update Anomaly</strong>
+      <p>Changing a single fact requires updating multiple rows. Example: if "Engineering" renames to "Software Engineering," you must update every single employee row — miss one and the data is inconsistent.</p>
+    </div>
+    <div class="anomaly-item a-delete">
+      <strong>Deletion Anomaly</strong>
+      <p>Deleting one fact unintentionally destroys another. Example: deleting the last employee in a department also deletes all knowledge of that department's existence from the database.</p>
+    </div>
+  </div>
+
+  <div class="callout c-navy" style="margin-top:12px;">
+    <strong>The fix for all three:</strong> Each table should store facts about <em>one subject only</em>. If your EMPLOYEE table stores facts about Departments (deptName, deptBudget), you have two subjects in one table. Separate them — and all three anomalies disappear.
+  </div>
+</div>
+
+<!-- ── S6: DENORMALIZATION ───────────────────────────────────────────── -->
+<div class="card">
+  <div class="card-accent acc-gold"></div>
+  <h3>06 &nbsp;/&nbsp; When to Denormalize</h3>
+  <p>Denormalization is the intentional introduction of redundancy to improve <em>read performance</em>. It is a deliberate trade-off — never a shortcut.</p>
+
+  <div class="denorm-grid">
+    <div class="denorm-item">
+      <strong>✓ Aggregate caching</strong>
+      Store a pre-computed <code>totalOrders</code> count on CUSTOMER to avoid expensive COUNT(*) queries on large ORDER tables at read time.
+    </div>
+    <div class="denorm-item">
+      <strong>✓ Reporting flat tables</strong>
+      OLAP data warehouses (star/snowflake schemas) intentionally denormalise dimensions for fast analytical queries — normalisation hinders columnar scan performance.
+    </div>
+    <div class="denorm-item">
+      <strong>✓ Snapshot / audit rows</strong>
+      Store the product price at time of purchase on ORDER_ITEM even though PRODUCT has a price column — preserving historical state is correct design, not denormalization.
+    </div>
+    <div class="denorm-item">
+      <strong>✓ Lookup columns</strong>
+      Duplicating a frequently-read, rarely-changed value (e.g. <code>customerEmail</code> on ORDER) to avoid a JOIN in hot-path queries is acceptable when the JOIN is measurably slow.
+    </div>
+    <div class="denorm-item">
+      <strong>✗ Never: for laziness</strong>
+      Don't denormalise because joins feel complex. Premature denormalization creates update anomalies and bugs before you've measured any performance problem.
+    </div>
+    <div class="denorm-item">
+      <strong>✗ Never: without documentation</strong>
+      Every denormalized column must be documented with <em>why</em> it's redundant, what it duplicates, and how it stays in sync (trigger, application logic, scheduled job).
+    </div>
+  </div>
+</div>
+
+<!-- ── S7: SQL CONSTRAINTS REFERENCE ────────────────────────────────── -->
+<div class="card">
+  <div class="card-accent acc-navy"></div>
+  <h3>07 &nbsp;/&nbsp; SQL Constraints Quick Reference</h3>
+  <p style="margin-bottom:12px;">Constraints are the physical enforcement of your logical model. Every rule modelled in the ERD should have a corresponding constraint in DDL.</p>
+
+  <div class="constraint-list">
+    <div class="constraint-row">
+      <div class="c-keyword">PRIMARY KEY</div>
+      <div class="c-desc">Uniquely identifies each row. Implies NOT NULL + UNIQUE. Only one per table.</div>
+      <div class="c-example">id INT PRIMARY KEY</div>
+    </div>
+    <div class="constraint-row">
+      <div class="c-keyword">FOREIGN KEY</div>
+      <div class="c-desc">References PK of another table. Enforces referential integrity. Optional: ON DELETE / ON UPDATE actions.</div>
+      <div class="c-example">REFERENCES orders(id)</div>
+    </div>
+    <div class="constraint-row">
+      <div class="c-keyword">NOT NULL</div>
+      <div class="c-desc">Column must always have a value. Maps to mandatory participation (|) in the ERD.</div>
+      <div class="c-example">email VARCHAR NOT NULL</div>
+    </div>
+    <div class="constraint-row">
+      <div class="c-keyword">UNIQUE</div>
+      <div class="c-desc">All values in column must be distinct. Use for alternate keys (email, username, slug).</div>
+      <div class="c-example">UNIQUE (email)</div>
+    </div>
+    <div class="constraint-row">
+      <div class="c-keyword">CHECK</div>
+      <div class="c-desc">Validates that a value meets a logical condition before insert or update.</div>
+      <div class="c-example">CHECK (qty &gt; 0)</div>
+    </div>
+    <div class="constraint-row">
+      <div class="c-keyword">DEFAULT</div>
+      <div class="c-desc">Provides a fallback value when no value is supplied on insert.</div>
+      <div class="c-example">DEFAULT CURRENT_TIMESTAMP</div>
+    </div>
+    <div class="constraint-row">
+      <div class="c-keyword">ON DELETE CASCADE</div>
+      <div class="c-desc">Automatically deletes child rows when the parent row is deleted. Use with care — can trigger mass deletion.</div>
+      <div class="c-example">ON DELETE CASCADE</div>
+    </div>
+    <div class="constraint-row">
+      <div class="c-keyword">ON DELETE SET NULL</div>
+      <div class="c-desc">Sets FK column to NULL when parent is deleted. Maps to optional participation (○) in the ERD.</div>
+      <div class="c-example">ON DELETE SET NULL</div>
+    </div>
+    <div class="constraint-row" style="border-bottom:none;">
+      <div class="c-keyword">ON DELETE RESTRICT</div>
+      <div class="c-desc">Prevents deletion of parent row if child rows exist. The safest default for most FK relationships.</div>
+      <div class="c-example">ON DELETE RESTRICT</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── S8: ERD DESIGN SMELLS ────────────────────────────────────────── -->
+<div class="card span2">
+  <div class="card-accent acc-red"></div>
+  <h3>08 &nbsp;/&nbsp; ERD Design Smells — Common Mistakes &amp; Their Fixes</h3>
+  <p style="margin-bottom:12px;">A "design smell" is a structural pattern that signals poor modelling — even if the schema technically works today, it will cause pain at scale or during change.</p>
+
+  <div class="smells-grid">
+
+    <div class="smell">
+      <strong>Generic "type" column</strong>
+      A single table with a <code>type</code> or <code>category</code> column that causes many columns to be NULL depending on the type (e.g. ASSET with type = "vehicle" | "software").
+      <div class="fix">Use table-per-type inheritance or a polymorphic junction. Move type-specific columns to sub-type tables.</div>
+    </div>
+
+    <div class="smell">
+      <strong>Multi-valued column</strong>
+      Storing comma-separated lists, JSON arrays, or pipe-delimited values in a single column (e.g. <code>tags = "red,sale,new"</code>). Destroys indexability and referential integrity.
+      <div class="fix">Create a separate ENTITY_TAG junction table. Each value gets its own row — 1NF compliance.</div>
+    </div>
+
+    <div class="smell">
+      <strong>God table</strong>
+      A single table with 50+ columns storing data about multiple real-world concepts. Often named ITEM, RECORD, or THING. Impossible to normalise, index effectively, or understand.
+      <div class="fix">Identify distinct subjects within the table. Decompose into focused entities, each representing one concept.</div>
+    </div>
+
+    <div class="smell">
+      <strong>Unresolved M:N</strong>
+      A direct many-to-many relationship left in the logical model without a junction table. Cannot be implemented in any RDBMS directly without data duplication.
+      <div class="fix">Always insert a junction/bridge table. Its composite PK = FK₁ + FK₂. Add payload attributes as needed.</div>
+    </div>
+
+    <div class="smell">
+      <strong>Mutable natural key as PK</strong>
+      Using email, username, phone, or SSN as a primary key. When the value changes, all FK references must be updated — cascading across the entire schema.
+      <div class="fix">Use a surrogate key (AUTO_INCREMENT or UUID) as PK. Apply UNIQUE + NOT NULL to the business identifier.</div>
+    </div>
+
+    <div class="smell">
+      <strong>Status as boolean flag</strong>
+      Using <code>isActive</code>, <code>isDeleted</code>, <code>isPaid</code> columns. Boolean flags can't represent history and rapidly multiply (3 flags = 8 states, many invalid).
+      <div class="fix">Use an ENUM status column or a separate STATUS_LOG table for auditable state transitions with timestamps.</div>
+    </div>
+
+    <div class="smell">
+      <strong>Missing timestamps</strong>
+      No <code>createdAt</code> or <code>updatedAt</code> columns. Impossible to audit changes, debug data issues, or implement incremental ETL pipelines without row-level timestamps.
+      <div class="fix">Add <code>createdAt DATETIME DEFAULT NOW()</code> and <code>updatedAt DATETIME ON UPDATE NOW()</code> to every table.</div>
+    </div>
+
+    <div class="smell">
+      <strong>Flat address storage</strong>
+      Storing address as plain columns (street, city, zip) directly on an entity. Breaks as soon as one entity needs multiple addresses (billing vs. shipping vs. registered).
+      <div class="fix">Create an ADDRESS entity with its own PK. Link with a 1:N or M:N relationship depending on business rules.</div>
+    </div>
+
+  </div>
+</div>
+
+</div><!-- /layout -->
+
+<!-- ═══ FOOTER ════════════════════════════════════════════════════════ -->
+<footer>
+  <span>ERD Design &amp; Normalization Cheatsheet · Companion to Crow's Foot sheet</span>
+  <span>Fonts: Fraunces + IBM Plex Mono + IBM Plex Sans</span>
+  <span>Print-ready: Ctrl/Cmd+P</span>
+</footer>
+
+</body>
+</html>

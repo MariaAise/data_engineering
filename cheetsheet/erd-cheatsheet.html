@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crow's Foot ERD Notation — Definitive 2026 Cheatsheet</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+/* ── Reset & tokens ─────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:       #f8fafc;
+  --surface:  #ffffff;
+  --surface2: #f1f5f9;
+  --border:   #e2e8f0;
+  --border2:  #cbd5e1;
+
+  --ink:      #0f172a;
+  --body:     #334155;
+  --muted:    #64748b;
+  --faint:    #94a3b8;
+
+  --blue:     #1d4ed8;
+  --blue-lt:  #eff6ff;
+  --blue-md:  #bfdbfe;
+
+  --teal:     #0d9488;
+  --teal-lt:  #f0fdfa;
+  --teal-md:  #99f6e4;
+
+  --slate:    #475569;
+
+  --amber:    #b45309;
+  --amber-lt: #fffbeb;
+  --amber-md: #fde68a;
+
+  --violet:   #6d28d9;
+  --violet-lt:#f5f3ff;
+  --violet-md:#ddd6fe;
+
+  --mono: 'DM Mono', monospace;
+  --sans: 'Plus Jakarta Sans', sans-serif;
+
+  --r: 10px;
+  --shadow: 0 1px 3px rgba(15,23,42,.06), 0 4px 16px rgba(15,23,42,.06);
+}
+
+html { font-size: 14px; }
+body {
+  background: var(--bg);
+  color: var(--body);
+  font-family: var(--sans);
+  line-height: 1.55;
+  padding: 36px 28px 48px;
+  max-width: 1160px;
+  margin: 0 auto;
+}
+
+h1 { font-size: 2rem; font-weight: 800; color: var(--ink); letter-spacing: -.5px; line-height: 1.15; }
+h2 { font-size: .95rem; font-weight: 700; color: var(--ink); letter-spacing: -.2px; margin-bottom: 14px; }
+h3 { font-size: .78rem; font-weight: 700; color: var(--muted); letter-spacing: .12em; text-transform: uppercase; margin-bottom: 10px; }
+p  { font-size: .82rem; color: var(--body); line-height: 1.6; }
+
+/* ── Header ─────────────────────────────────────────── */
+.page-header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: start;
+  gap: 16px;
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 2px solid var(--border);
+}
+.header-left { display: flex; flex-direction: column; gap: 8px; }
+.header-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--blue-lt); border: 1px solid var(--blue-md);
+  color: var(--blue); font-family: var(--mono); font-size: .68rem;
+  font-weight: 500; letter-spacing: .1em; text-transform: uppercase;
+  padding: 3px 10px; border-radius: 999px; width: fit-content;
+}
+.header-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--blue); }
+.header-meta { font-size: .75rem; color: var(--muted); font-family: var(--mono); }
+.header-tools { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.tool-pill {
+  font-size: .65rem; font-family: var(--mono); color: var(--muted);
+  background: var(--surface2); border: 1px solid var(--border);
+  padding: 2px 8px; border-radius: 4px; white-space: nowrap;
+}
+
+/* ── Layout ─────────────────────────────────────────── */
+.layout { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.span2  { grid-column: 1 / -1; }
+
+/* ── Card ───────────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 20px 22px;
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+}
+.card-accent { position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: var(--r) var(--r) 0 0; }
+.acc-blue   { background: linear-gradient(90deg, var(--blue), #60a5fa); }
+.acc-teal   { background: linear-gradient(90deg, var(--teal), #34d399); }
+.acc-violet { background: linear-gradient(90deg, var(--violet), #a78bfa); }
+.acc-amber  { background: linear-gradient(90deg, var(--amber), #fbbf24); }
+
+/* ── Intro ──────────────────────────────────────────── */
+.intro-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px;
+}
+.intro-item {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 11px 13px;
+}
+.intro-item strong { display: block; font-size: .8rem; color: var(--ink); margin-bottom: 3px; }
+.intro-item span   { font-size: .74rem; color: var(--muted); line-height: 1.5; }
+.reading-rule {
+  margin-top: 12px; background: var(--blue-lt);
+  border: 1px solid var(--blue-md); border-radius: 8px;
+  padding: 11px 14px; display: flex; gap: 10px; align-items: flex-start;
+}
+.reading-rule p { font-size: .77rem; color: #1e3a5f; line-height: 1.55; }
+.reading-rule strong { color: var(--blue); }
+
+/* ── Symbol rows ────────────────────────────────────── */
+.sym-grid { display: grid; grid-template-columns: 1fr; gap: 0; }
+.sym-row {
+  display: grid; grid-template-columns: 96px 1fr; gap: 0 12px;
+  align-items: center; padding: 9px 0; border-bottom: 1px solid var(--border);
+}
+.sym-row:last-child { border-bottom: none; }
+.sym-row:first-child { padding-top: 2px; }
+.sym-vis { display: flex; align-items: center; justify-content: center; height: 44px; }
+.sym-info strong { display: block; font-size: .82rem; font-weight: 600; color: var(--ink); }
+.sym-code {
+  font-family: var(--mono); font-size: .72rem; color: var(--blue);
+  background: var(--blue-lt); padding: 1px 7px; border-radius: 4px;
+  display: inline-block; margin: 3px 0 2px;
+}
+.sym-rule { font-size: .7rem; color: var(--muted); font-style: italic; }
+
+.annot-bar { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
+.annot {
+  display: flex; align-items: center; gap: 6px; font-size: .69rem;
+  color: var(--muted); background: var(--surface2);
+  border: 1px solid var(--border); padding: 4px 9px; border-radius: 6px;
+}
+.annot-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.variant-note {
+  margin-top: 12px; padding: 10px 12px; background: var(--amber-lt);
+  border: 1px solid var(--amber-md); border-radius: 7px;
+  font-size: .72rem; color: #78350f; line-height: 1.5;
+}
+
+/* ── Patterns table ─────────────────────────────────── */
+.pat-table { width: 100%; border-collapse: collapse; font-size: .78rem; }
+.pat-table th {
+  font-family: var(--mono); font-size: .62rem; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--muted);
+  padding: 5px 10px; border-bottom: 2px solid var(--border); text-align: left;
+}
+.pat-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.pat-table tr:last-child td { border-bottom: none; }
+.pat-table tr:hover td { background: var(--surface2); }
+
+.badge {
+  display: inline-block; font-family: var(--mono); font-size: .65rem;
+  font-weight: 500; padding: 2px 7px; border-radius: 5px; white-space: nowrap;
+}
+.b-blue   { background: var(--blue-lt);   color: var(--blue);   border: 1px solid var(--blue-md); }
+.b-teal   { background: var(--teal-lt);   color: var(--teal);   border: 1px solid var(--teal-md); }
+.b-violet { background: var(--violet-lt); color: var(--violet); border: 1px solid var(--violet-md); }
+.b-slate  { background: var(--surface2);  color: var(--slate);  border: 1px solid var(--border2); }
+
+.mn-note {
+  margin-top: 11px; padding: 10px 12px; background: var(--violet-lt);
+  border: 1px solid var(--violet-md); border-radius: 7px;
+  font-size: .72rem; color: #3b1f6e; line-height: 1.55;
+}
+
+/* ── Entity anatomy ─────────────────────────────────── */
+.keys-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+.key-item {
+  display: flex; gap: 9px; align-items: flex-start;
+  padding: 9px 11px; background: var(--surface2);
+  border: 1px solid var(--border); border-radius: 8px;
+}
+.key-tag {
+  font-family: var(--mono); font-size: .72rem; font-weight: 500;
+  color: var(--violet); background: var(--violet-lt);
+  border: 1px solid var(--violet-md); padding: 2px 7px;
+  border-radius: 5px; white-space: nowrap; flex-shrink: 0;
+}
+.key-desc { font-size: .74rem; color: var(--body); line-height: 1.45; }
+.key-desc strong { color: var(--ink); font-weight: 600; }
+
+/* ── Diagram ────────────────────────────────────────── */
+.diagram-wrap {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 18px 14px 14px; overflow-x: auto;
+}
+.diagram-legend {
+  display: flex; flex-wrap: wrap; gap: 14px; margin-top: 11px;
+  padding-top: 11px; border-top: 1px solid var(--border);
+}
+.leg-item { display: flex; align-items: center; gap: 6px; font-size: .7rem; color: var(--muted); }
+.leg-swatch { width: 18px; height: 2.5px; border-radius: 2px; }
+
+/* ── Best practices ─────────────────────────────────── */
+.tips-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.tip {
+  padding: 11px 13px; border-radius: 8px; border-left: 3px solid;
+  font-size: .76rem; line-height: 1.5;
+}
+.tip strong { display: block; font-size: .71rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 3px; }
+.t-blue   { background: var(--blue-lt);   border-color: var(--blue);   color: #1e3a5f; }
+.t-blue   strong { color: var(--blue); }
+.t-teal   { background: var(--teal-lt);   border-color: var(--teal);   color: #134e4a; }
+.t-teal   strong { color: var(--teal); }
+.t-violet { background: var(--violet-lt); border-color: var(--violet); color: #3b1f6e; }
+.t-violet strong { color: var(--violet); }
+.t-amber  { background: var(--amber-lt);  border-color: var(--amber);  color: #78350f; }
+.t-amber  strong { color: var(--amber); }
+.t-slate  { background: var(--surface2);  border-color: var(--slate);  color: var(--body); }
+.t-slate  strong { color: var(--slate); }
+
+/* ── Footer ─────────────────────────────────────────── */
+footer {
+  margin-top: 32px; padding-top: 18px; border-top: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+  flex-wrap: wrap; gap: 8px;
+}
+footer span { font-size: .68rem; color: var(--faint); font-family: var(--mono); }
+
+/* ── Responsive ─────────────────────────────────────── */
+@media (max-width: 720px) {
+  .layout { grid-template-columns: 1fr; }
+  .span2  { grid-column: 1; }
+  .page-header, .intro-grid, .keys-grid, .tips-grid { grid-template-columns: 1fr; }
+}
+@media print {
+  body { padding: 0; max-width: 100%; background: white; }
+  .card { box-shadow: none; break-inside: avoid; }
+  footer { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══════════════════════════════════════════════════════ -->
+<header class="page-header">
+  <div class="header-left">
+    <div class="header-badge">Crow's Foot Notation</div>
+    <h1>ERD Reference Cheatsheet</h1>
+  </div>
+</header>
+
+<!-- ═══ LAYOUT ═══════════════════════════════════════════════════════ -->
+<div class="layout">
+
+<!-- ── S1: WHAT IS CROW'S FOOT? ─────────────────────────────────── -->
+<div class="card span2">
+  <div class="card-accent acc-blue"></div>
+  <h3>01 &nbsp;/&nbsp; What is Crow's Foot Notation?</h3>
+  <p>Crow's Foot is the <strong>dominant industry standard</strong> for Logical &amp; Physical ERD diagrams. Each relationship line carries two symbols — one at each end — encoding both <em>cardinality</em> (how many?) and <em>participation</em> (is it required?). It superseded Chen notation for logical/physical modelling and is the default in every major CASE and diagramming tool today.</p>
+  <div class="intro-grid">
+    <div class="intro-item">
+      <strong>Cardinality (max)</strong>
+      <span>The <em>maximum</em> number of instances that can be associated. Expressed as <strong>One</strong> (single vertical bar) or <strong>Many</strong> (crow's foot prongs).</span>
+    </div>
+    <div class="intro-item">
+      <strong>Participation (min)</strong>
+      <span>Whether the relationship is <strong>mandatory</strong> (must exist — bar |) or <strong>optional</strong> (may exist — circle ○). Also called "modality" or "optionality."</span>
+    </div>
+    <div class="intro-item">
+      <strong>Inner vs. Outer symbol</strong>
+      <span><strong>Inner</strong> symbol (closest to the entity) = <strong>max cardinality</strong> (bar = 1, crow's foot = many). <strong>Outer</strong> symbol = <strong>min participation</strong> (bar = mandatory, circle = optional).</span>
+    </div>
+    <div class="intro-item">
+      <strong>How to read a line</strong>
+      <span>Stand at one entity, look toward the other. The symbol <em>touching</em> the far entity = max. The symbol just outside it = min. Both together form the full constraint.</span>
+    </div>
+  </div>
+  <div class="reading-rule">
+    <span style="font-size:1rem;flex-shrink:0;margin-top:1px;">💡</span>
+    <p><strong>Golden reading rule:</strong> Example line &nbsp;<code style="font-family:var(--mono);font-size:.8rem;background:rgba(29,78,216,.08);padding:1px 6px;border-radius:4px;">CUSTOMER ||——O&lt; ORDER</code>&nbsp; reads as: <em>"Each Customer must have zero-or-many Orders (||= mandatory on Customer, O&lt; = optional many on Order). Each Order must belong to exactly one Customer."</em> Always read left→right AND right→left — each direction gives a different sentence.</p>
+  </div>
+</div>
+
+<!-- ── S2: SYMBOL REFERENCE ─────────────────────────────────────── -->
+<div class="card">
+  <div class="card-accent acc-teal"></div>
+  <h3>02 &nbsp;/&nbsp; Cardinality &amp; Participation Symbols</h3>
+  <p style="font-size:.72rem;color:var(--muted);margin-bottom:14px;">Symbols shown on <strong>right end</strong> of line. Crow's foot tip touches the entity. Outer marker = min (participation), Inner marker = max (cardinality).</p>
+
+  <div class="sym-grid">
+
+    <!-- MANDATORY ONE: || double bar -->
+    <div class="sym-row">
+      <div class="sym-vis">
+        <!--
+          Right end = entity side.
+          Inner bar (max=1) at x=78, outer bar (min=1, mandatory) at x=66.
+          Left end x=8 = plain line origin (the other entity).
+        -->
+        <svg width="96" height="44" viewBox="0 0 96 44">
+          <line x1="8"  y1="22" x2="84" y2="22" stroke="#1d4ed8" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="78" y1="11" x2="78" y2="33" stroke="#1d4ed8" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="67" y1="11" x2="67" y2="33" stroke="#1d4ed8" stroke-width="2.5" stroke-linecap="round"/>
+          <!-- annotation arrows -->
+          <text x="62" y="42" fill="#94a3b8" font-size="7" text-anchor="middle" font-family="'Plus Jakarta Sans',sans-serif">outer</text>
+          <text x="80" y="42" fill="#94a3b8" font-size="7" text-anchor="middle" font-family="'Plus Jakarta Sans',sans-serif">inner</text>
+        </svg>
+      </div>
+      <div class="sym-info">
+        <strong>Mandatory One <em style="font-weight:400;color:var(--muted)">(exactly one)</em></strong>
+        <div class="sym-code">||</div>
+        <div class="sym-rule">Inner | = max 1 &nbsp;·&nbsp; Outer | = min 1 (required). Most common "one" side.</div>
+      </div>
+    </div>
+
+    <!-- OPTIONAL ONE: O| circle + bar -->
+    <div class="sym-row">
+      <div class="sym-vis">
+        <!--
+          Inner bar (max=1) at x=78, outer circle (min=0) centred at x=62.
+          Circle fill = surface bg so line doesn't bleed through.
+        -->
+        <svg width="96" height="44" viewBox="0 0 96 44">
+          <line x1="8"  y1="22" x2="84" y2="22" stroke="#1d4ed8" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="78" y1="11" x2="78" y2="33" stroke="#1d4ed8" stroke-width="2.5" stroke-linecap="round"/>
+          <circle cx="62" cy="22" r="7" fill="white" stroke="#1d4ed8" stroke-width="2"/>
+          <text x="56" y="42" fill="#94a3b8" font-size="7" text-anchor="middle" font-family="'Plus Jakarta Sans',sans-serif">outer</text>
+          <text x="80" y="42" fill="#94a3b8" font-size="7" text-anchor="middle" font-family="'Plus Jakarta Sans',sans-serif">inner</text>
+        </svg>
+      </div>
+      <div class="sym-info">
+        <strong>Optional One <em style="font-weight:400;color:var(--muted)">(zero or one)</em></strong>
+        <div class="sym-code">O|</div>
+        <div class="sym-rule">Inner | = max 1 &nbsp;·&nbsp; Outer ○ = min 0 (optional). Used for nullable FKs.</div>
+      </div>
+    </div>
+
+    <!-- MANDATORY MANY: |< bar + crow's foot -->
+    <div class="sym-row">
+      <div class="sym-vis">
+        <!--
+          Crow's foot: tip at x=84 (entity wall), prongs fan back to x=71, ±12 y.
+          Outer mandatory bar at x=57 (outside the fan, ~14px beyond prong base).
+        -->
+        <svg width="96" height="44" viewBox="0 0 96 44">
+          <line x1="8"  y1="22" x2="84" y2="22" stroke="#0d9488" stroke-width="1.8" stroke-linecap="round"/>
+          <!-- crow's foot prongs from tip x=84 -->
+          <line x1="84" y1="22" x2="71" y2="11" stroke="#0d9488" stroke-width="2"   stroke-linecap="round"/>
+          <line x1="84" y1="22" x2="71" y2="33" stroke="#0d9488" stroke-width="2"   stroke-linecap="round"/>
+          <line x1="84" y1="22" x2="69" y2="22" stroke="#0d9488" stroke-width="2"   stroke-linecap="round"/>
+          <!-- outer mandatory bar -->
+          <line x1="57" y1="11" x2="57" y2="33" stroke="#0d9488" stroke-width="2.5" stroke-linecap="round"/>
+          <text x="51" y="42" fill="#94a3b8" font-size="7" text-anchor="middle" font-family="'Plus Jakarta Sans',sans-serif">outer</text>
+          <text x="80" y="42" fill="#94a3b8" font-size="7" text-anchor="middle" font-family="'Plus Jakarta Sans',sans-serif">inner</text>
+        </svg>
+      </div>
+      <div class="sym-info">
+        <strong>Mandatory Many <em style="font-weight:400;color:var(--muted)">(one or more, 1..*)</em></strong>
+        <div class="sym-code">|&lt;</div>
+        <div class="sym-rule">Inner crow's foot = max many &nbsp;·&nbsp; Outer | = min 1. Classic "has at least one."</div>
+      </div>
+    </div>
+
+    <!-- OPTIONAL MANY: O< circle + crow's foot -->
+    <div class="sym-row">
+      <div class="sym-vis">
+        <!--
+          Same crow's foot at x=84, outer circle (min=0) centred at x=52.
+        -->
+        <svg width="96" height="44" viewBox="0 0 96 44">
+          <line x1="8"  y1="22" x2="84" y2="22" stroke="#0d9488" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="84" y1="22" x2="71" y2="11" stroke="#0d9488" stroke-width="2"   stroke-linecap="round"/>
+          <line x1="84" y1="22" x2="71" y2="33" stroke="#0d9488" stroke-width="2"   stroke-linecap="round"/>
+          <line x1="84" y1="22" x2="69" y2="22" stroke="#0d9488" stroke-width="2"   stroke-linecap="round"/>
+          <circle cx="52" cy="22" r="7" fill="white" stroke="#0d9488" stroke-width="2"/>
+          <text x="46" y="42" fill="#94a3b8" font-size="7" text-anchor="middle" font-family="'Plus Jakarta Sans',sans-serif">outer</text>
+          <text x="80" y="42" fill="#94a3b8" font-size="7" text-anchor="middle" font-family="'Plus Jakarta Sans',sans-serif">inner</text>
+        </svg>
+      </div>
+      <div class="sym-info">
+        <strong>Optional Many <em style="font-weight:400;color:var(--muted)">(zero or more, 0..*)</em></strong>
+        <div class="sym-code">O&lt;</div>
+        <div class="sym-rule">Inner crow's foot = max many &nbsp;·&nbsp; Outer ○ = min 0. Most common "many" side.</div>
+      </div>
+    </div>
+
+  </div><!-- /sym-grid -->
+
+  <div class="annot-bar">
+    <div class="annot"><div class="annot-dot" style="background:#1d4ed8;"></div>One-side (blue): bar markers</div>
+    <div class="annot"><div class="annot-dot" style="background:#0d9488;"></div>Many-side (teal): crow's foot</div>
+    <div class="annot" style="font-style:italic;">Outer marker = min (participation) &nbsp;·&nbsp; Inner marker = max (cardinality)</div>
+  </div>
+  <div class="variant-note">
+    <strong>⚠ Tool variant:</strong> Some tools (older Visio, ERwin) show <strong>double-bar ||</strong> specifically for "mandatory" (min=1) vs. single bar for "exactly one" (max=1 only). The single-bar-covers-both convention shown here is the 2024–2026 standard in Lucidchart, draw.io, dbdiagram.io, and Creately. When in doubt, check your tool's legend.
+  </div>
+</div>
+
+<!-- ── S3: RELATIONSHIP PATTERNS ────────────────────────────────── -->
+<div class="card">
+  <div class="card-accent acc-blue"></div>
+  <h3>03 &nbsp;/&nbsp; Common Relationship Patterns</h3>
+
+  <table class="pat-table">
+    <thead>
+      <tr>
+        <th>Pattern</th>
+        <th style="min-width:96px;">Notation</th>
+        <th>Example</th>
+        <th>Label</th>
+      </tr>
+    </thead>
+    <tbody>
+
+      <!-- 1:1 mandatory -->
+      <tr>
+        <td><strong style="font-size:.8rem;color:var(--ink);">One-to-One</strong><br><span style="font-size:.7rem;color:var(--muted);">mandatory both</span></td>
+        <td>
+          <!-- ||——|| -->
+          <svg width="92" height="28" viewBox="0 0 92 28">
+            <line x1="6" y1="14" x2="86" y2="14" stroke="#475569" stroke-width="1.5"/>
+            <line x1="14" y1="5" x2="14" y2="23" stroke="#475569" stroke-width="2.2"/>
+            <line x1="23" y1="5" x2="23" y2="23" stroke="#475569" stroke-width="2.2"/>
+            <line x1="63" y1="5" x2="63" y2="23" stroke="#475569" stroke-width="2.2"/>
+            <line x1="72" y1="5" x2="72" y2="23" stroke="#475569" stroke-width="2.2"/>
+          </svg>
+        </td>
+        <td style="font-size:.75rem;color:var(--body);">Person ↔ Passport</td>
+        <td><span class="badge b-blue">1 : 1</span></td>
+      </tr>
+
+      <!-- 1:0..N -->
+      <tr>
+        <td><strong style="font-size:.8rem;color:var(--ink);">One-to-Many</strong><br><span style="font-size:.7rem;color:var(--muted);">mand. one / opt. many</span></td>
+        <td>
+          <!-- ||——O< -->
+          <svg width="92" height="28" viewBox="0 0 92 28">
+            <line x1="6" y1="14" x2="86" y2="14" stroke="#475569" stroke-width="1.5"/>
+            <line x1="14" y1="5" x2="14" y2="23" stroke="#475569" stroke-width="2.2"/>
+            <line x1="23" y1="5" x2="23" y2="23" stroke="#475569" stroke-width="2.2"/>
+            <!-- crow's foot tip x=86 -->
+            <line x1="86" y1="14" x2="74" y2="5"  stroke="#475569" stroke-width="1.8"/>
+            <line x1="86" y1="14" x2="74" y2="23" stroke="#475569" stroke-width="1.8"/>
+            <line x1="86" y1="14" x2="72" y2="14" stroke="#475569" stroke-width="1.8"/>
+            <!-- outer circle -->
+            <circle cx="61" cy="14" r="6" fill="white" stroke="#475569" stroke-width="1.8"/>
+          </svg>
+        </td>
+        <td style="font-size:.75rem;color:var(--body);">Customer → Orders</td>
+        <td><span class="badge b-teal">1 : 0..N</span></td>
+      </tr>
+
+      <!-- 1:1..N -->
+      <tr>
+        <td><strong style="font-size:.8rem;color:var(--ink);">One-to-Many</strong><br><span style="font-size:.7rem;color:var(--muted);">mandatory both</span></td>
+        <td>
+          <!-- ||——|< -->
+          <svg width="92" height="28" viewBox="0 0 92 28">
+            <line x1="6" y1="14" x2="86" y2="14" stroke="#475569" stroke-width="1.5"/>
+            <line x1="14" y1="5" x2="14" y2="23" stroke="#475569" stroke-width="2.2"/>
+            <line x1="23" y1="5" x2="23" y2="23" stroke="#475569" stroke-width="2.2"/>
+            <line x1="86" y1="14" x2="74" y2="5"  stroke="#475569" stroke-width="1.8"/>
+            <line x1="86" y1="14" x2="74" y2="23" stroke="#475569" stroke-width="1.8"/>
+            <line x1="86" y1="14" x2="72" y2="14" stroke="#475569" stroke-width="1.8"/>
+            <line x1="63" y1="5" x2="63" y2="23" stroke="#475569" stroke-width="2.2"/>
+          </svg>
+        </td>
+        <td style="font-size:.75rem;color:var(--body);">Dept must have ≥1 Emp</td>
+        <td><span class="badge b-teal">1 : 1..N</span></td>
+      </tr>
+
+      <!-- M:N -->
+      <tr>
+        <td><strong style="font-size:.8rem;color:var(--ink);">Many-to-Many</strong><br><span style="font-size:.7rem;color:var(--muted);">⚠ resolve with junction</span></td>
+        <td>
+          <!-- O<——>O -->
+          <svg width="92" height="28" viewBox="0 0 92 28">
+            <line x1="6" y1="14" x2="86" y2="14" stroke="#475569" stroke-width="1.5"/>
+            <!-- left crow's foot tip x=6, opens right -->
+            <line x1="6"  y1="14" x2="18" y2="5"  stroke="#475569" stroke-width="1.8"/>
+            <line x1="6"  y1="14" x2="18" y2="23" stroke="#475569" stroke-width="1.8"/>
+            <line x1="6"  y1="14" x2="20" y2="14" stroke="#475569" stroke-width="1.8"/>
+            <circle cx="30" cy="14" r="6" fill="white" stroke="#475569" stroke-width="1.8"/>
+            <!-- right crow's foot tip x=86, opens left -->
+            <line x1="86" y1="14" x2="74" y2="5"  stroke="#475569" stroke-width="1.8"/>
+            <line x1="86" y1="14" x2="74" y2="23" stroke="#475569" stroke-width="1.8"/>
+            <line x1="86" y1="14" x2="72" y2="14" stroke="#475569" stroke-width="1.8"/>
+            <circle cx="62" cy="14" r="6" fill="white" stroke="#475569" stroke-width="1.8"/>
+          </svg>
+        </td>
+        <td style="font-size:.75rem;color:var(--body);">Students ↔ Courses</td>
+        <td><span class="badge b-violet">M : N</span></td>
+      </tr>
+
+      <!-- Optional 1:1 -->
+      <tr>
+        <td><strong style="font-size:.8rem;color:var(--ink);">One-to-One</strong><br><span style="font-size:.7rem;color:var(--muted);">optional both</span></td>
+        <td>
+          <!-- O|——|O -->
+          <svg width="92" height="28" viewBox="0 0 92 28">
+            <line x1="6" y1="14" x2="86" y2="14" stroke="#475569" stroke-width="1.5"/>
+            <line x1="20" y1="5" x2="20" y2="23" stroke="#475569" stroke-width="2.2"/>
+            <circle cx="31" cy="14" r="6" fill="white" stroke="#475569" stroke-width="1.8"/>
+            <line x1="72" y1="5" x2="72" y2="23" stroke="#475569" stroke-width="2.2"/>
+            <circle cx="61" cy="14" r="6" fill="white" stroke="#475569" stroke-width="1.8"/>
+          </svg>
+        </td>
+        <td style="font-size:.75rem;color:var(--body);">Employee → Locker</td>
+        <td><span class="badge b-slate">0..1 : 0..1</span></td>
+      </tr>
+
+      <!-- Recursive -->
+      <tr>
+        <td><strong style="font-size:.8rem;color:var(--ink);">Recursive (Self)</strong><br><span style="font-size:.7rem;color:var(--muted);">same entity, both ends</span></td>
+        <td style="font-family:var(--mono);font-size:.72rem;color:var(--muted);">loopback arrow</td>
+        <td style="font-size:.75rem;color:var(--body);">Employee manages Employee</td>
+        <td><span class="badge b-slate">self-ref</span></td>
+      </tr>
+
+    </tbody>
+  </table>
+
+  <div class="mn-note">
+    <strong>M:N Rule:</strong> Many-to-many relationships <em>cannot be implemented directly</em> in a relational DB. Always resolve with a <strong>junction / bridge table</strong> (e.g. <code style="font-family:var(--mono);font-size:.72rem;">StudentCourse</code>) whose PK is a composite of both FKs. Add payload columns (grade, enrollDate) directly to the junction entity.
+  </div>
+</div>
+
+<!-- ── S4: ENTITY ANATOMY & KEYS ────────────────────────────────── -->
+<div class="card">
+  <div class="card-accent acc-violet"></div>
+  <h3>04 &nbsp;/&nbsp; Entity Anatomy &amp; Key Types</h3>
+
+  <div style="display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap;margin-bottom:12px;">
+    <!-- Entity box -->
+    <svg width="160" height="162" viewBox="0 0 160 162" font-family="'DM Mono',monospace" font-size="9.5">
+      <rect x="1" y="1" width="158" height="160" rx="4" fill="white" stroke="#1d4ed8" stroke-width="1.8"/>
+      <rect x="1" y="1" width="158" height="26"  rx="4" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.8"/>
+      <rect x="1" y="19" width="158" height="8"  fill="#eff6ff"/>
+      <text x="80" y="19" fill="#1d4ed8" text-anchor="middle" font-weight="700" font-size="11" font-family="'Plus Jakarta Sans',sans-serif">CUSTOMER</text>
+      <line x1="1" y1="27" x2="159" y2="27" stroke="#bfdbfe" stroke-width="1"/>
+      <!-- PK row -->
+      <rect x="1" y="27" width="158" height="22" fill="#faf5ff"/>
+      <text x="10" y="43" fill="#6d28d9" font-weight="500" text-decoration="underline">customerID</text>
+      <text x="151" y="43" fill="#6d28d9" text-anchor="end" font-size="8">PK  INT</text>
+      <line x1="1" y1="49" x2="159" y2="49" stroke="#e2e8f0" stroke-width=".8"/>
+      <!-- FK row -->
+      <rect x="1" y="49" width="158" height="22" fill="#f0fdfa"/>
+      <text x="10" y="65" fill="#0d9488" font-style="italic">name</text>
+      <text x="151" y="65" fill="#94a3b8" text-anchor="end" font-size="8">VARCHAR</text>
+      <line x1="1" y1="71" x2="159" y2="71" stroke="#e2e8f0" stroke-width=".8"/>
+      <rect x="1" y="71" width="158" height="22" fill="white"/>
+      <text x="10" y="87" fill="#334155">email</text>
+      <text x="151" y="87" fill="#94a3b8" text-anchor="end" font-size="8">VARCHAR</text>
+      <line x1="1" y1="93" x2="159" y2="93" stroke="#e2e8f0" stroke-width=".8"/>
+      <rect x="1" y="93" width="158" height="22" fill="white"/>
+      <text x="10" y="109" fill="#334155">phone</text>
+      <text x="151" y="109" fill="#94a3b8" text-anchor="end" font-size="8">VARCHAR</text>
+      <line x1="1" y1="115" x2="159" y2="115" stroke="#e2e8f0" stroke-width=".8"/>
+      <rect x="1" y="115" width="158" height="22" fill="white"/>
+      <text x="10" y="131" fill="#334155">createdAt</text>
+      <text x="151" y="131" fill="#94a3b8" text-anchor="end" font-size="8">DATETIME</text>
+      <line x1="1" y1="137" x2="159" y2="137" stroke="#e2e8f0" stroke-width=".8"/>
+      <rect x="1" y="137" width="158" height="24" rx="4" fill="white"/>
+      <rect x="1" y="137" width="158" height="10" fill="white"/>
+      <text x="10" y="154" fill="#334155">isActive</text>
+      <text x="151" y="154" fill="#94a3b8" text-anchor="end" font-size="8">BOOLEAN</text>
+    </svg>
+
+    <div style="flex:1;min-width:140px;">
+      <div style="font-size:.7rem;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">Display legend</div>
+      <div style="display:flex;flex-direction:column;gap:7px;">
+        <div style="display:flex;align-items:center;gap:8px;font-size:.75rem;">
+          <span style="width:12px;height:12px;border-radius:3px;background:#faf5ff;border:1.5px solid #6d28d9;flex-shrink:0;display:inline-block;"></span>
+          <span><strong style="color:#6d28d9;">PK</strong> — Primary Key &nbsp;<span style="color:var(--muted);">(underlined)</span></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:.75rem;">
+          <span style="width:12px;height:12px;border-radius:3px;background:#f0fdfa;border:1.5px solid #0d9488;flex-shrink:0;display:inline-block;"></span>
+          <span><strong style="color:#0d9488;">FK</strong> — Foreign Key &nbsp;<span style="color:var(--muted);">(italic, teal)</span></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:.75rem;">
+          <span style="width:12px;height:12px;border-radius:3px;background:white;border:1.5px solid #e2e8f0;flex-shrink:0;display:inline-block;"></span>
+          <span><strong style="color:var(--ink);">Regular attr</strong> &nbsp;<span style="color:var(--muted);">(plain)</span></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:.75rem;">
+          <span style="width:12px;height:12px;border-radius:3px;background:#eff6ff;border:1.5px solid #1d4ed8;flex-shrink:0;display:inline-block;"></span>
+          <span><strong style="color:#1d4ed8;">ENTITY_NAME</strong> &nbsp;<span style="color:var(--muted);">(header band)</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="keys-grid">
+    <div class="key-item">
+      <span class="key-tag">PK</span>
+      <div class="key-desc"><strong>Primary Key</strong> — Uniquely identifies every row. NOT NULL + UNIQUE. Never change after assignment.</div>
+    </div>
+    <div class="key-item">
+      <span class="key-tag">FK</span>
+      <div class="key-desc"><strong>Foreign Key</strong> — References a PK in another table. Enforces referential integrity via constraints.</div>
+    </div>
+    <div class="key-item">
+      <span class="key-tag">SK</span>
+      <div class="key-desc"><strong>Surrogate Key</strong> — System-generated (auto-increment INT or UUID). Stable, implementation-independent.</div>
+    </div>
+    <div class="key-item">
+      <span class="key-tag">NK</span>
+      <div class="key-desc"><strong>Natural Key</strong> — Real-world identifier (ISBN, SSN). Avoid as PK if it could change or be reused.</div>
+    </div>
+    <div class="key-item">
+      <span class="key-tag">CPK</span>
+      <div class="key-desc"><strong>Composite PK</strong> — Two or more columns form the PK together. Standard in junction tables.</div>
+    </div>
+    <div class="key-item">
+      <span class="key-tag">AK</span>
+      <div class="key-desc"><strong>Alternate Key</strong> — Candidate key not chosen as PK. Apply a UNIQUE constraint (e.g. email column).</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── S5: EXAMPLE DIAGRAM ─────────────────────────────────────── -->
+<div class="card span2">
+  <div class="card-accent acc-teal"></div>
+  <h3>05 &nbsp;/&nbsp; Example — Online Store Schema</h3>
+  <p style="font-size:.72rem;color:var(--muted);margin-bottom:14px;">Logical ERD · Crow's Foot · Four entities + one junction table · Read each line in both directions</p>
+
+  <div class="diagram-wrap">
+    <!--
+      ═══════════════════════════════════════════════════════
+      SVG GEOMETRY CONTRACT
+      ───────────────────────────────────────────────────────
+      Crow's foot:
+        tip   = touches entity wall (x or y of wall)
+        prongs = 3 lines fanning back 13px, ±11px y (diagonal) and straight centre
+      Mandatory bar: 8px beyond prong-base (outer, min=1)
+      Optional circle: r=6, centre 22px beyond prong-base (outer, min=0)
+      Circle fill = #f1f5f9 (matches diagram-wrap bg)
+      All stroke-linecap = round
+      ═══════════════════════════════════════════════════════
+    -->
+    <svg width="700" height="320" viewBox="0 0 700 320"
+         font-family="'DM Mono',monospace" font-size="9.5"
+         style="max-width:100%;display:block;">
+
+      <!-- ═══ ENTITIES ══════════════════════════════════════════ -->
+
+      <!-- CATEGORY  (x=10, y=18, w=120, h=88) -->
+      <rect x="10"  y="18"  width="120" height="88"  rx="4" fill="white"   stroke="#1d4ed8" stroke-width="1.5"/>
+      <rect x="10"  y="18"  width="120" height="24"  rx="4" fill="#eff6ff"  stroke="#1d4ed8" stroke-width="1.5"/>
+      <rect x="10"  y="34"  width="120" height="8"   fill="#eff6ff"/>
+      <text x="70"  y="35"  fill="#1d4ed8" text-anchor="middle" font-weight="700" font-size="10" font-family="'Plus Jakarta Sans',sans-serif">CATEGORY</text>
+      <line x1="10" y1="42" x2="130" y2="42"  stroke="#bfdbfe" stroke-width=".8"/>
+      <text x="18"  y="56"  fill="#6d28d9" text-decoration="underline">categoryID</text>
+      <text x="122" y="56"  fill="#94a3b8" text-anchor="end" font-size="8">INT</text>
+      <line x1="10" y1="61" x2="130" y2="61"  stroke="#e2e8f0" stroke-width=".8"/>
+      <text x="18"  y="75"  fill="#334155">name</text>
+      <text x="122" y="75"  fill="#94a3b8" text-anchor="end" font-size="8">VARCHAR</text>
+      <line x1="10" y1="80" x2="130" y2="80"  stroke="#e2e8f0" stroke-width=".8"/>
+      <text x="18"  y="94"  fill="#334155">slug</text>
+      <text x="122" y="94"  fill="#94a3b8" text-anchor="end" font-size="8">VARCHAR</text>
+
+      <!-- CUSTOMER  (x=10, y=148, w=120, h=128) -->
+      <rect x="10"  y="148" width="120" height="128" rx="4" fill="white"   stroke="#1d4ed8" stroke-width="1.5"/>
+      <rect x="10"  y="148" width="120" height="24"  rx="4" fill="#eff6ff"  stroke="#1d4ed8" stroke-width="1.5"/>
+      <rect x="10"  y="164" width="120" height="8"   fill="#eff6ff"/>
+      <text x="70"  y="165" fill="#1d4ed8" text-anchor="middle" font-weight="700" font-size="10" font-family="'Plus Jakarta Sans',sans-serif">CUSTOMER</text>
+      <line x1="10" y1="172" x2="130" y2="172" stroke="#bfdbfe" stroke-width=".8"/>
+      <text x="18"  y="186" fill="#6d28d9" text-decoration="underline">customerID</text>
+      <text x="122" y="186" fill="#94a3b8" text-anchor="end" font-size="8">INT</text>
+      <line x1="10" y1="191" x2="130" y2="191" stroke="#e2e8f0" stroke-width=".8"/>
+      <text x="18"  y="205" fill="#334155">email</text>
+      <text x="122" y="205" fill="#94a3b8" text-anchor="end" font-size="8">VARCHAR</text>
+      <line x1="10" y1="210" x2="130" y2="210" stroke="#e2e8f0" stroke-width=".8"/>
+      <text x="18"  y="224" fill="#334155">fullName</text>
+      <text x="122" y="224" fill="#94a3b8" text-anchor="end" font-size="8">VARCHAR</text>
+      <line x1="10" y1="229" x2="130" y2="229" stroke="#e2e8f0" stroke-width=".8"/>
+      <text x="18"  y="243" fill="#334155">phone</text>
+      <text x="122" y="243" fill="#94a3b8" text-anchor="end" font-size="8">VARCHAR</text>
+      <line x1="10" y1="248" x2="130" y2="248" stroke="#e2e8f0" stroke-width=".8"/>
+      <text x="18"  y="262" fill="#334155">createdAt</text>
+      <text x="122" y="262" fill="#94a3b8" text-anchor="end" font-size="8">DATETIME</text>
+
+      <!-- ORDER  (x=215, y=148, w=130, h=148) -->
+      <rect x="215" y="148" width="130" height="148" rx="4" fill="white"   stroke="#1d4ed8" stroke-width="1.5"/>
+      <rect x="215" y="148" width="130" height="24"  rx="4" fill="#eff6ff"  stroke="#1d4ed8" stroke-width="1.5"/>
+      <rect x="215" y="164" width="130" height="8"   fill="#eff6ff"/>
+      <text x="280" y="165" fill="#1d4ed8" text-anchor="middle" font-weight="700" font-size="10" font-family="'Plus Jakarta Sans',sans-serif">ORDER</text>
+      <line x1="215" y1="172" x2="345" y2="172" stroke="#bfdbfe" stroke-width=".8"/>
+      <text x="223" y="186" fill="#6d28d9" text-decoration="underline">orderID</text>
+      <text x="337" y="186" fill="#94a3b8" text-anchor="end" font-size="8">INT</text>
+      <line x1="215" y1="191" x2="345" y2="191" stroke="#e2e8f0" stroke-width=".8"/>
+      <text x="223" y="205" fill="#0d9488" font-style="italic">customerID</text>
+      <text x="337" y="205" fill="#94a3b8" text-anchor="end" font-size="8">FK</text>
+      <line x1="215" y1="210" x2="345" y2="210" stroke="#e2e8f0" stroke-width=".8"/>
+      <text x="223" y="224" fill="#334155">orderDate</text>
+      <text x="337" y="224" fill="#94a3b8" text-anchor="end" font-size="8">DATETIME</text>
+      <line x1="215" y1="229" x2="345" y2="229" stroke="#e2e8f0" stroke-width=".8"/>
+      <text x="223" y="243" fill="#334155">status</text>
+      <text x="337" y="243" fill="#94a3b8" text-anchor="end" font-size="8">ENUM</text>
+      <line x1="215" y1="248" x2="345" y2="248" stroke="#e2e8f0" stroke-width=".8"/>
+      <text x="223" y="262" fill="#334155">totalAmt</text>
+      <text x="337" y="262" fill="#94a3b8" text-anchor="end" font-size="8">DECIMAL</text>
+      <line x1="215" y1="267" x2="345" y2="267" stroke="#e2e8f0" stroke-width=".8"/>
+      <text x="223" y="281" fill="#334155">shippedAt</text>
+      <text x="337" y="281" fill="#94a3b8" text-anchor="end" font-size="8">DATETIME</text>
+
+      <!-- ORDER_ITEM  junction  (x=430, y=148, w=130, h=108) -->
+      <rect x="430" y="148" width="130" height="108" rx="4" fill="white"    stroke="#6d28d9" stroke-width="1.5" stroke-dasharray="5,3"/>
+      <rect x="430" y="148" width="130" height="24"  rx="4" fill="#f5f3ff"  stroke="#6d28d9" stroke-width="1.5"/>
+      <rect x="430" y="164" width="130" height="8"   fill="#f5f3ff"/>
+      <text x="495" y="165" fill="#6d28d9" text-anchor="middle" font-weight="700" font-size="10" font-family="'Plus Jakarta Sans',sans-serif">ORDER_ITEM</text>
+      <line x1="430" y1="172" x2="560" y2="172" stroke="#ddd6fe" stroke-width=".8"/>
+      <text x="438" y="186" fill="#6d28d9" text-decoration="underline" font-style="italic">orderID</text>
+      <text x="552" y="186" fill="#94a3b8" text-anchor="end" font-size="8">PK+FK</text>
+      <line x1="430" y1="191" x2="560" y2="191" stroke="#e2e8f0" stroke-width=".8"/>
+      <text x="438" y="205" fill="#6d28d9" text-decoration="underline" font-style="italic">productID</text>
+      <text x="552" y="205" fill="#94a3b8" text-anchor="end" font-size="8">PK+FK</text>
+      <line x1="430" y1="210" x2="560" y2="210" stroke="#e2e8f0" stroke-width=".8"/>
+      <text x="438" y="224" fill="#334155">qty</text>
+      <text x="552" y="224" fill="#94a3b8" text-anchor="end" font-size="8">INT</text>
+      <line x1="430" y1="229" x2="560" y2="229" stroke="#e2e8f0" stroke-width=".8"/>
+      <text x="438" y="243" fill="#334155">unitPrice</text>
+      <text x="552" y="243" fill="#94a3b8" text-anchor="end" font-size="8">DECIMAL</text>
+
+      <!-- PRODUCT  (x=430, y=18, w=130, h=108) -->
+      <rect x="430" y="18"  width="130" height="108" rx="4" fill="white"   stroke="#1d4ed8" stroke-width="1.5"/>
+      <rect x="430" y="18"  width="130" height="24"  rx="4" fill="#eff6ff"  stroke="#1d4ed8" stroke-width="1.5"/>
+      <rect x="430" y="34"  width="130" height="8"   fill="#eff6ff"/>
+      <text x="495" y="35"  fill="#1d4ed8" text-anchor="middle" font-weight="700" font-size="10" font-family="'Plus Jakarta Sans',sans-serif">PRODUCT</text>
+      <line x1="430" y1="42" x2="560" y2="42"  stroke="#bfdbfe" stroke-width=".8"/>
+      <text x="438" y="56"  fill="#6d28d9" text-decoration="underline">productID</text>
+      <text x="552" y="56"  fill="#94a3b8" text-anchor="end" font-size="8">INT</text>
+      <line x1="430" y1="61" x2="560" y2="61"  stroke="#e2e8f0" stroke-width=".8"/>
+      <text x="438" y="75"  fill="#0d9488" font-style="italic">categoryID</text>
+      <text x="552" y="75"  fill="#94a3b8" text-anchor="end" font-size="8">FK</text>
+      <line x1="430" y1="80" x2="560" y2="80"  stroke="#e2e8f0" stroke-width=".8"/>
+      <text x="438" y="94"  fill="#334155">name</text>
+      <text x="552" y="94"  fill="#94a3b8" text-anchor="end" font-size="8">VARCHAR</text>
+      <line x1="430" y1="99" x2="560" y2="99"  stroke="#e2e8f0" stroke-width=".8"/>
+      <text x="438" y="113" fill="#334155">price</text>
+      <text x="552" y="113" fill="#94a3b8" text-anchor="end" font-size="8">DECIMAL</text>
+
+      <!-- ═══ RELATIONSHIPS ════════════════════════════════════ -->
+
+      <!--
+        REL A: CATEGORY ||——O< PRODUCT
+        "Each Category has zero-or-many Products (O<).
+         Each Product belongs to exactly one Category (||)."
+        Line y=67 (FK row of PRODUCT), x: 130→430
+        CATEGORY side (left, x=130): mandatory one  ||
+          inner bar x=130, outer bar x=119
+        PRODUCT side (right, x=430): optional many  O<
+          crow's foot tip x=430, prong base x=417
+          outer circle cx=403
+      -->
+      <line x1="130" y1="67" x2="430" y2="67" stroke="#0d9488" stroke-width="1.8" stroke-linecap="round"/>
+      <!-- CATEGORY side: || -->
+      <line x1="130" y1="59" x2="130" y2="75" stroke="#0d9488" stroke-width="2.2" stroke-linecap="round"/>
+      <line x1="119" y1="59" x2="119" y2="75" stroke="#0d9488" stroke-width="2.2" stroke-linecap="round"/>
+      <!-- PRODUCT side: crow's foot tip=430 -->
+      <line x1="430" y1="67" x2="417" y2="56" stroke="#0d9488" stroke-width="1.9" stroke-linecap="round"/>
+      <line x1="430" y1="67" x2="417" y2="78" stroke="#0d9488" stroke-width="1.9" stroke-linecap="round"/>
+      <line x1="430" y1="67" x2="415" y2="67" stroke="#0d9488" stroke-width="1.9" stroke-linecap="round"/>
+      <!-- outer circle O -->
+      <circle cx="403" cy="67" r="6" fill="#f1f5f9" stroke="#0d9488" stroke-width="1.9"/>
+      <!-- label -->
+      <text x="278" y="62" fill="#0d9488" font-size="8" text-anchor="middle" font-family="'Plus Jakarta Sans',sans-serif" font-weight="600">0..*</text>
+
+      <!--
+        REL B: CUSTOMER ||——O< ORDER
+        "Each Customer has zero-or-many Orders (O<).
+         Each Order belongs to exactly one Customer (||)."
+        Line y=200 (FK row of ORDER), x: 130→215
+        CUSTOMER side (left, x=130): mandatory one  ||
+        ORDER side (right, x=215): optional many  O<
+      -->
+      <line x1="130" y1="200" x2="215" y2="200" stroke="#0d9488" stroke-width="1.8" stroke-linecap="round"/>
+      <!-- CUSTOMER: || -->
+      <line x1="130" y1="192" x2="130" y2="208" stroke="#0d9488" stroke-width="2.2" stroke-linecap="round"/>
+      <line x1="141" y1="192" x2="141" y2="208" stroke="#0d9488" stroke-width="2.2" stroke-linecap="round"/>
+      <!-- ORDER crow's foot tip=215 -->
+      <line x1="215" y1="200" x2="202" y2="189" stroke="#0d9488" stroke-width="1.9" stroke-linecap="round"/>
+      <line x1="215" y1="200" x2="202" y2="211" stroke="#0d9488" stroke-width="1.9" stroke-linecap="round"/>
+      <line x1="215" y1="200" x2="200" y2="200" stroke="#0d9488" stroke-width="1.9" stroke-linecap="round"/>
+      <!-- circle O -->
+      <circle cx="188" cy="200" r="6" fill="#f1f5f9" stroke="#0d9488" stroke-width="1.9"/>
+      <!-- label -->
+      <text x="172" y="195" fill="#0d9488" font-size="8" text-anchor="middle" font-family="'Plus Jakarta Sans',sans-serif" font-weight="600">0..*</text>
+
+      <!--
+        REL C: ORDER ||——|< ORDER_ITEM
+        "Each Order has one-or-many OrderItems (|<).
+         Each OrderItem belongs to exactly one Order (||)."
+        Line y=181 (PK row of ORDER_ITEM), x: 345→430
+        ORDER side (left, x=345): mandatory one  ||
+        ORDER_ITEM side (right, x=430): mandatory many  |<
+      -->
+      <line x1="345" y1="181" x2="430" y2="181" stroke="#6d28d9" stroke-width="1.8" stroke-linecap="round"/>
+      <!-- ORDER: || -->
+      <line x1="345" y1="173" x2="345" y2="189" stroke="#6d28d9" stroke-width="2.2" stroke-linecap="round"/>
+      <line x1="356" y1="173" x2="356" y2="189" stroke="#6d28d9" stroke-width="2.2" stroke-linecap="round"/>
+      <!-- ORDER_ITEM crow's foot tip=430 -->
+      <line x1="430" y1="181" x2="417" y2="170" stroke="#6d28d9" stroke-width="1.9" stroke-linecap="round"/>
+      <line x1="430" y1="181" x2="417" y2="192" stroke="#6d28d9" stroke-width="1.9" stroke-linecap="round"/>
+      <line x1="430" y1="181" x2="415" y2="181" stroke="#6d28d9" stroke-width="1.9" stroke-linecap="round"/>
+      <!-- outer mandatory bar -->
+      <line x1="405" y1="172" x2="405" y2="190" stroke="#6d28d9" stroke-width="2.2" stroke-linecap="round"/>
+      <!-- label -->
+      <text x="387" y="176" fill="#6d28d9" font-size="8" text-anchor="middle" font-family="'Plus Jakarta Sans',sans-serif" font-weight="600">1..*</text>
+
+      <!--
+        REL D: PRODUCT ||——|< ORDER_ITEM  (vertical)
+        "Each Product appears in one-or-many OrderItems (|<).
+         Each OrderItem references exactly one Product (||)."
+        PRODUCT bottom wall y=126 at x=495
+        ORDER_ITEM top wall y=148 at x=495
+        PRODUCT side (bottom, y=126): mandatory one  ||  — horizontal bars
+        ORDER_ITEM side (top, y=148): mandatory many  |<  — downward crow's foot
+      -->
+      <line x1="495" y1="126" x2="495" y2="148" stroke="#6d28d9" stroke-width="1.8" stroke-linecap="round"/>
+      <!-- PRODUCT: || (horizontal bars at bottom wall) -->
+      <line x1="485" y1="126" x2="505" y2="126" stroke="#6d28d9" stroke-width="2.2" stroke-linecap="round"/>
+      <line x1="485" y1="137" x2="505" y2="137" stroke="#6d28d9" stroke-width="2.2" stroke-linecap="round"/>
+      <!-- ORDER_ITEM: |< downward crow's foot tip=148 -->
+      <line x1="495" y1="148" x2="484" y2="135" stroke="#6d28d9" stroke-width="1.9" stroke-linecap="round"/>
+      <line x1="495" y1="148" x2="506" y2="135" stroke="#6d28d9" stroke-width="1.9" stroke-linecap="round"/>
+      <line x1="495" y1="148" x2="495" y2="134" stroke="#6d28d9" stroke-width="1.9" stroke-linecap="round"/>
+      <!-- label -->
+      <text x="510" y="140" fill="#6d28d9" font-size="8" font-family="'Plus Jakarta Sans',sans-serif" font-weight="600">1..*</text>
+
+      <!-- ═══ ANNOTATION CALLOUTS ══════════════════════════════ -->
+      <!-- Inner/Outer label callout -->
+      <line x1="600" y1="200" x2="600" y2="290" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3,3"/>
+      <rect x="592" y="185" width="100" height="18" rx="3" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/>
+      <text x="642" y="198" fill="#1d4ed8" font-size="7.5" text-anchor="middle" font-family="'Plus Jakarta Sans',sans-serif" font-weight="600">Reading a line</text>
+      <text x="596" y="212" fill="#64748b" font-size="7.5" font-family="'Plus Jakarta Sans',sans-serif">Inner (at entity) = max</text>
+      <text x="596" y="224" fill="#64748b" font-size="7.5" font-family="'Plus Jakarta Sans',sans-serif">Outer (away) = min</text>
+      <text x="596" y="239" fill="#0d9488" font-size="7.5" font-family="'DM Mono',monospace">|| = exactly one</text>
+      <text x="596" y="252" fill="#0d9488" font-size="7.5" font-family="'DM Mono',monospace">O&lt; = opt. many</text>
+      <text x="596" y="265" fill="#6d28d9" font-size="7.5" font-family="'DM Mono',monospace">|&lt;  = mand. many</text>
+      <text x="596" y="278" fill="#475569" font-size="7.5" font-family="'Plus Jakarta Sans',sans-serif" font-style="italic">dashed = junction</text>
+
+    </svg>
+  </div>
+
+  <div class="diagram-legend">
+    <div class="leg-item"><div class="leg-swatch" style="background:#0d9488;"></div>1:N relationship (teal)</div>
+    <div class="leg-item"><div class="leg-swatch" style="background:#6d28d9;"></div>Junction relationships (violet)</div>
+    <div class="leg-item" style="font-family:var(--mono);font-size:.68rem;color:var(--muted);">|| = mandatory one &nbsp;·&nbsp; O&lt; = optional many &nbsp;·&nbsp; |&lt; = mandatory many &nbsp;·&nbsp; dashed border = junction table</div>
+  </div>
+</div>
+
+<!-- ── S6: BEST PRACTICES ────────────────────────────────────────── -->
+<div class="card span2">
+  <div class="card-accent acc-amber"></div>
+  <h3>06 &nbsp;/&nbsp; Best Practices &amp; Modern Tips</h3>
+  <div class="tips-grid">
+    <div class="tip t-blue">
+      <strong>Naming conventions</strong>
+      Use <strong>singular nouns</strong> for entities (CUSTOMER, not CUSTOMERS). SQL attributes: snake_case. Relationship verb in label (Customer <em>places</em> Order). Avoid abbreviations in entity names.
+    </div>
+    <div class="tip t-teal">
+      <strong>Surrogate keys first</strong>
+      Prefer system-generated surrogate PKs (AUTO_INCREMENT INT or UUID v7). Never use email, username, or phone as a PK — they change. Apply UNIQUE constraints for business identifiers instead.
+    </div>
+    <div class="tip t-violet">
+      <strong>Resolve every M:N early</strong>
+      Many-to-many cannot exist in a physical schema. Introduce a <strong>junction table</strong> with a composite PK (FK₁ + FK₂) at the logical stage. Add payload columns (qty, price, enrollDate) to the junction.
+    </div>
+    <div class="tip t-amber">
+      <strong>Target 3NF for OLTP</strong>
+      Normalise to Third Normal Form: atomic values (1NF), full PK dependency (2NF), no transitive deps (3NF). Intentionally denormalise for OLAP / reporting warehouses only — document every deviation.
+    </div>
+    <div class="tip t-slate">
+      <strong>Model participation explicitly</strong>
+      Decide optionality before writing DDL — it drives NOT NULL constraints and JOIN type (INNER vs LEFT). An unresolved circle vs bar in your ERD = a bug waiting to happen in production queries.
+    </div>
+    <div class="tip t-blue">
+      <strong>Validate with domain experts</strong>
+      Review your ERD using plain language: <em>"Can a Customer exist with no Orders?"</em> Crow's Foot is intentionally readable by non-engineers. Catch business-rule errors before any DDL is written.
+    </div>
+    <div class="tip t-teal">
+      <strong>Read every line both ways</strong>
+      Each relationship line gives <em>two</em> sentences. CUSTOMER ||——O&lt; ORDER: (left→right) "A Customer has zero-or-many Orders." (right→left) "An Order must belong to exactly one Customer."
+    </div>
+    <div class="tip t-violet">
+      <strong>Tool recommendations (2026)</strong>
+      <strong>dbdiagram.io</strong> (code-first, free) · <strong>Lucidchart</strong> (collaborative) · <strong>draw.io</strong> (offline/FOSS) · <strong>DataGrip</strong> (auto-gen from live schema) · <strong>ERDPlus</strong> (education) · <strong>Miro</strong> (whiteboard-first).
+    </div>
+  </div>
+</div>
+
+</div><!-- /layout -->
+
+<!-- ═══ FOOTER ════════════════════════════════════════════════════════ -->
+<footer>
+  <span>Crow's Foot ERD Notation — Definitive 2026 Cheatsheet</span>
+  <span>Cross-checked: Lucidchart · draw.io · MS Visio · Redgate · Creately</span>
+  <span>Fonts: DM Mono + Plus Jakarta Sans &nbsp;·&nbsp; Print-ready: Ctrl/Cmd+P</span>
+</footer>
+
+</body>
+</html>
