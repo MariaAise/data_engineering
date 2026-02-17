@@ -1,0 +1,410 @@
+HI! I AM A HELPFUL ALERT ONLY VISIBLE IN EDIT MODE TO GUIDE YOU.
+
+INSTRUCTIONS TO UPDATE PAGE BANNER:
+
+1. USE UNSPLASH OR ANOTHER OPEN SOURCE SITE TO FIND AN IMAGE
+
+2. CROP THE IMAGE TO BE IN BANNER SIZE
+
+3. CLICK ON THE CURRENT IMAGE, CLICK INSERT STUFF (FIRST ICON IN THE EDITOR) AND UPLOAD YOUR NEW IMAGE
+
+4. YOUR IMAGE WILL REPLACE THE CURRENT IMAGE AND SCALE THE WIDTH AUTOMATICALLY
+
+5. DON'T FORGET TO ADD AN ALT TAG FOR ACCESSIBILITY PURPOSES!
+
+Project
+
+Assessment 2
+
+INSTRUCTIONS TO UPDATE THE TABLE:
+
+TO EDIT TEXT, TYPE DIRECTLY IN THE CELLS
+
+TO ADD/REMOVE CELLS, CLICK ON THE TABLE AND USE THE TABLE OPTIONS THAT APPEAR
+
+
+
+
+ Assessment Overview
+Overview	Worth	Due
+
+
+In this project, you will build a small end-to-end data engineering system for a digital streaming platform.
+
+	
+
+40%
+
+	
+
+session 10
+
+Key Assessment Information
+
+INSTRUCTIONS TO UPDATE PAGE CONTENTS BELOW:
+
+1. TO EDIT TEXT, TYPE/BACKSPACE DIRECTLY
+
+2. TO ADD MEDIA (VIDEO/IMAGES/H5PS), CLICK ON 'INSERT STUFF' (FIRST ICON FROM THE EDITOR)
+
+3. TO ADD A HYPERLINK, CLICK ON 'QUICKLINK' (THIRD ICON FROM THE EDITOR)
+
+
+
+
+ Purpose
+
+The purpose of this assessment task is to:
+
+Apply relational data modelling principles in a transactional (OLTP) system
+Generate structured, non-uniform synthetic data using a deterministic seed
+Design and implement a dimensional (star schema) data warehouse in BigQuery
+Implement Slowly Changing Dimension (SCD Type 2) logic to preserve historical data
+Develop and test incremental, idempotent data loading processes
+Apply partitioning and clustering to optimise analytical query performance
+Write and evaluate analytical SQL queries using real dataset-dependent outputs
+Demonstrate end-to-end data engineering workflow from source system to analytics layer
+
+
+
+The unit Learning Outcomes assessed are:
+
+LO 1: Deconstruct complex business problems to apply data mining and warehousing solutions, data requirements and data models using relational databases
+LO 4: Design and critically reflect upon data warehousing architecture and multidimensional data models using internal and external business data
+
+ Assessment Structure
+Overview
+
+This assessment is designed to test your practical skills in data mining and warehousing using MySQL, focusing on simulated real-world business scenarios.&nbsp;
+
+Modern Data Engineering Project
+
+Scenario: StreamWave Digital Subscription Streaming Platform
+
+Overview
+
+In this project, you will build a small end-to-end data engineering system for StreamWave, a digital subscription streaming platform.
+
+You will:
+
+Design and implement a transactional database in MySQL
+
+Generate a realistic, skewed dataset using your unique student seed
+
+Build a dimensional warehouse in BigQuery (star schema)
+
+Implement SCD Type 2 for subscription plan price changes
+
+Perform full and incremental data loads (idempotent)
+
+Apply partitioning and clustering in BigQuery
+
+Run analytical queries and record query cost (bytes processed)
+
+All outputs must depend on your unique dataset.
+
+Unique Dataset Requirement (Anti-Copy)
+
+You must use:
+
+student_seed = last 5 digits of your student ID
+
+
+Your data generation must depend on this seed.
+
+If two students submit identical metrics, both submissions will be investigated.
+
+Part 1 – MySQL OLTP System
+
+You must create the following tables exactly as specified.
+
+Table: users
+
+user_id INT PRIMARY KEY
+
+signup_date DATE NOT NULL
+
+region VARCHAR(20) NOT NULL
+
+Table: plans
+
+plan_id INT PRIMARY KEY
+
+plan_name VARCHAR(30) NOT NULL
+
+tier VARCHAR(20) NOT NULL
+
+current_price DECIMAL(8,2) NOT NULL
+
+Table: content
+
+content_id INT PRIMARY KEY
+
+content_type VARCHAR(10) NOT NULL
+
+genre VARCHAR(20) NOT NULL
+
+release_year INT NOT NULL
+
+Table: subscriptions
+
+user_id INT NOT NULL
+plan_id INT NOT NULL
+start_date DATE NOT NULL
+end_date DATE NULL
+PRIMARY KEY (user_id, start_date) (composite key required)
+FOREIGN KEY (user_id) REFERENCES users(user_id)
+FOREIGN KEY (plan_id) REFERENCES plans(plan_id)
+
+Table: stream_events
+
+event_id BIGINT PRIMARY KEY
+
+user_id INT NOT NULL
+
+content_id INT NOT NULL
+
+event_ts DATETIME NOT NULL
+
+watch_seconds INT NOT NULL
+
+device_type VARCHAR(20) NOT NULL
+
+FOREIGN KEY (user_id) REFERENCES users(user_id)
+
+FOREIGN KEY (content_id) REFERENCES content(content_id)
+
+You must create at least one additional non-PK index.
+
+Data Volume Requirements (MySQL)
+
+Minimum required:
+
+3,000 users
+
+120 content items
+
+30,000 stream_events
+
+At least one subscription per user
+
+Data must show skew:
+
+Some users stream significantly more than others
+
+Some content items are highly popular
+
+Part 2 – BigQuery Data Warehouse
+
+You must create the following star schema.
+
+Dimensions
+
+dim_user
+
+user_sk
+
+user_id
+
+region
+
+signup_date
+
+dim_content
+
+content_sk
+
+content_id
+
+content_type
+
+genre
+
+release_year
+
+dim_date
+
+date_sk
+
+date
+
+year
+
+month
+
+day
+
+dim_plan_scd (SCD Type 2)
+
+plan_sk
+
+plan_id
+
+plan_name
+
+tier
+
+price
+
+start_date
+
+end_date
+
+is_current
+
+Fact
+
+fact_streaming
+
+stream_sk
+
+date_sk
+
+user_sk
+
+content_sk
+
+plan_sk
+
+watch_seconds
+
+event_ts
+
+You must:
+
+Use surrogate keys in all dimensions
+
+Partition fact_streaming by DATE(event_ts)
+
+Cluster fact_streaming by content_sk
+
+Minimum rows in fact_streaming after full load: 60,000
+
+SCD Type 2 Requirement
+
+You must:
+
+Simulate price changes for at least 2 plans in MySQL.
+
+Reload into BigQuery.
+
+Ensure:
+
+Old version is closed (end_date set, is_current = FALSE)
+
+New version inserted (new surrogate key, is_current = TRUE)
+
+Incremental Load Requirement
+
+You must:
+
+Perform full load.
+
+Insert 5,000 new stream_events into MySQL.
+
+Run incremental load.
+
+Run incremental load again.
+
+After step 4, fact_streaming row count must not increase.
+
+Analytics Queries
+
+Run and record bytes processed for 4 queries:
+
+Total watch hours by month
+
+Top 10 most watched content
+
+Average watch_seconds by subscription tier
+
+Total watch hours by region and month
+
+Submission Requirements
+
+Submit one ZIP file containing:
+
+mysql_schema.sql
+
+mysql_data_generation.sql
+
+bq_ddl.sql
+
+bq_full_load.sql
+
+bq_incremental_load.sql
+
+bq_queries.sql
+
+metrics.json
+
+Required metrics.json Format
+
+{
+  "student_seed": 12345,
+  "mysql_counts": {
+    "users": 3000,
+    "content": 120,
+    "stream_events": 30000,
+    "subscriptions": 3000
+  },
+  "bq_counts": {
+    "fact_initial": 60000,
+    "fact_after_increment": 65000,
+    "fact_after_rerun": 65000,
+    "dim_plan_versions": 5
+  },
+  "query_bytes": {
+    "q1": 12345678,
+    "q2": 23456789,
+    "q3": 34567890,
+    "q4": 45678901
+  }
+}
+
+
+Malformed or missing JSON will result in reduced marks.
+
+Assessment Criteria (40 Marks)
+Component	Marks
+MySQL schema correctness	8
+Data generation (volume + skew + seed)	6
+Star schema correctness	8
+SCD Type 2 implementation	8
+Incremental load + idempotency	6
+Partitioning &amp; clustering	2
+Analytical queries &amp; cost evidence	2
+Academic Integrity
+
+You must use your own seed and generate your own dataset.
+
+AI tools may assist with coding.
+
+Outputs must match your dataset.
+
+Identical metrics between students will be flagged.
+
+Expected Effort
+
+Estimated time: 20–30 hours.
+
+INSTRUCTIONS TO LINK A DROPBOX:
+
+1. CLICK ON WHERE IN THE SENTENCE YOU WANT THE LINK TO APPEAR
+
+2. CLICK &gt; INSERT QUICKLINK FROM THE EDITOR
+
+3. CLICK &gt; DROP BOXES &gt; SELECT THE DROPBOX &gt; INSERT
+
+4. HIGHLIGHT THE LINKED TEXT, CLICK THE QUICKLINK OPTION AGAIN &gt; SELECT 'OPEN IN A NEW WINDOW' &gt; SAVE
+
+Submission Instructions
+
+Please submit your completed assessment electronically via the Dropbox.
+
+Please note: Ensure all group member details (Full Name and Student ID) are presented clearly on the assessment.
+
+
+
+
+
