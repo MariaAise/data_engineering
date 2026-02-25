@@ -1,5 +1,8 @@
-CREATE DATABASE IF NOT EXISTS sales_dw;
-USE sales_dw;
+-- ============================================================
+--  Retail Analytics Warehouse  –  Seed Data
+--  MySQL 8.0
+--  Covers all 30 tasks in the exercise sheet.
+-- ============================================================
 
 DROP TABLE IF EXISTS sales;
 DROP TABLE IF EXISTS customers;
@@ -7,42 +10,244 @@ DROP TABLE IF EXISTS products;
 DROP TABLE IF EXISTS stores;
 DROP TABLE IF EXISTS dates;
 
+-- ────────────────────────────────────────────────────────────
+--  DDL
+-- ────────────────────────────────────────────────────────────
 CREATE TABLE customers (
     customer_id INT PRIMARY KEY,
-    segment VARCHAR(50),
-    region VARCHAR(50)
+    segment     VARCHAR(50),
+    region      VARCHAR(50)
 );
 
 CREATE TABLE products (
-    product_id INT PRIMARY KEY,
-    category VARCHAR(50),
+    product_id   INT PRIMARY KEY,
+    category     VARCHAR(50),
     product_name VARCHAR(100)
 );
 
 CREATE TABLE stores (
-    store_id INT PRIMARY KEY,
-    city VARCHAR(50),
+    store_id   INT PRIMARY KEY,
+    city       VARCHAR(50),
     store_type VARCHAR(50)
 );
 
 CREATE TABLE dates (
-    date_id INT PRIMARY KEY,
+    date_id  INT PRIMARY KEY,
     full_date DATE,
-    year INT,
-    quarter INT,
-    month INT
+    year     INT,
+    quarter  INT,
+    month    INT
 );
 
 CREATE TABLE sales (
-    sale_id INT PRIMARY KEY,
-    date_id INT,
+    sale_id     INT PRIMARY KEY,
+    date_id     INT,
     customer_id INT,
-    product_id INT,
-    store_id INT,
-    quantity INT,
-    revenue DECIMAL(10,2),
-    FOREIGN KEY (date_id) REFERENCES dates(date_id),
+    product_id  INT,
+    store_id    INT,
+    quantity    INT,
+    revenue     DECIMAL(10,2),
+    FOREIGN KEY (date_id)     REFERENCES dates(date_id),
     FOREIGN KEY (customer_id) REFERENCES customers(customer_id),
-    FOREIGN KEY (product_id) REFERENCES products(product_id),
-    FOREIGN KEY (store_id) REFERENCES stores(store_id)
+    FOREIGN KEY (product_id)  REFERENCES products(product_id),
+    FOREIGN KEY (store_id)    REFERENCES stores(store_id)
 );
+
+
+-- ────────────────────────────────────────────────────────────
+--  CUSTOMERS  (10 rows)
+--  Segments:  Corporate / Consumer / Home Office
+--  Regions:   East / West / North / South
+--  Tasks covered:
+--    #12  distinct customers per region
+--    #15  avg revenue per segment
+--    #23  LEFT JOIN – customers WITH and WITHOUT sales
+--    #26  self-join  – same customer, same date
+--    #28  segment share of revenue
+-- ────────────────────────────────────────────────────────────
+INSERT INTO customers (customer_id, segment, region) VALUES
+-- customers who will have sales
+(1,  'Corporate',   'East'),
+(2,  'Consumer',    'West'),
+(3,  'Home Office', 'North'),
+(4,  'Corporate',   'South'),
+(5,  'Consumer',    'East'),
+(6,  'Home Office', 'West'),
+(7,  'Corporate',   'North'),
+(8,  'Consumer',    'South'),
+-- customers with NO sales (for task #23 LEFT JOIN)
+(9,  'Consumer',    'East'),
+(10, 'Home Office', 'South');
+
+
+-- ────────────────────────────────────────────────────────────
+--  PRODUCTS  (10 rows)
+--  Categories: Electronics / Furniture / Stationery / Clothing
+--  Product names: several start with 'P' for task #6 LIKE
+--  Tasks covered:
+--    #6   LIKE  'P%'
+--    #7   ORDER BY category, product_name
+--    #13  SUM revenue by category
+--    #16  AVG unit price by category
+--    #19  HAVING total_revenue > 1000
+--    #24  LEFT JOIN – products WITH and WITHOUT sales
+-- ────────────────────────────────────────────────────────────
+INSERT INTO products (product_id, category, product_name) VALUES
+(1,  'Electronics', 'Laptop'),
+(2,  'Electronics', 'Printer'),        -- starts with P  ✓
+(3,  'Electronics', 'Phone'),          -- starts with P  ✓
+(4,  'Furniture',   'Desk'),
+(5,  'Furniture',   'Chair'),
+(6,  'Stationery',  'Paper'),          -- starts with P  ✓
+(7,  'Stationery',  'Pen'),            -- starts with P  ✓
+(8,  'Clothing',    'Jacket'),
+(9,  'Clothing',    'Pants'),          -- starts with P  ✓
+-- product with NO sales (for task #24 LEFT JOIN)
+(10, 'Furniture',   'Bookshelf');
+
+
+-- ────────────────────────────────────────────────────────────
+--  STORES  (5 rows)
+--  Cities include Melbourne (task #2), various store_types
+--  Tasks covered:
+--    #2   city = 'Melbourne'
+--    #3   store_id IN (1, 3)
+--    #11  COUNT by store_type
+--    #18  MAX revenue per store
+--    #20  HAVING sales_count >= 3
+--    #25  CROSS JOIN region × category grid
+-- ────────────────────────────────────────────────────────────
+INSERT INTO stores (store_id, city, store_type) VALUES
+(1, 'Melbourne', 'Urban'),
+(2, 'Sydney',    'Urban'),
+(3, 'Melbourne', 'Suburban'),
+(4, 'Brisbane',  'Suburban'),
+(5, 'Adelaide',  'Rural');
+
+
+-- ────────────────────────────────────────────────────────────
+--  DATES  (14 rows)
+--  Range: Jan 2025 – July 2025
+--  Key design decisions:
+--    • Months 1–5 and 7 have dates (month 6 = June is ABSENT → task #29 missing month)
+--    • date_id 2 appears in TWO sales for same customer (task #26 self-join)
+--    • Dates span Feb–Apr for task #4 BETWEEN
+--  Tasks covered:
+--    #4   BETWEEN '2025-02-01' AND '2025-04-30'
+--    #9   TOP-3 by revenue (need full_date in result)
+--    #14  SUM quantity by month (Jan–Jul)
+--    #17  MIN / MAX full_date
+--    #22  JOIN to dates for full_date
+--    #29  missing month: June (month=6) has a date row but NO sales
+-- ────────────────────────────────────────────────────────────
+INSERT INTO dates (date_id, full_date, year, quarter, month) VALUES
+-- January 2025
+(1,  '2025-01-10', 2025, 1, 1),
+(2,  '2025-01-25', 2025, 1, 1),
+-- February 2025
+(3,  '2025-02-05', 2025, 1, 2),
+(4,  '2025-02-20', 2025, 1, 2),
+-- March 2025
+(5,  '2025-03-08', 2025, 1, 3),
+(6,  '2025-03-22', 2025, 1, 3),
+-- April 2025
+(7,  '2025-04-03', 2025, 2, 4),
+(8,  '2025-04-18', 2025, 2, 4),
+-- May 2025
+(9,  '2025-05-07', 2025, 2, 5),
+(10, '2025-05-29', 2025, 2, 5),
+-- June 2025  ← date rows exist, but NO sales will reference these (task #29)
+(11, '2025-06-11', 2025, 2, 6),
+(12, '2025-06-25', 2025, 2, 6),
+-- July 2025
+(13, '2025-07-04', 2025, 3, 7),
+(14, '2025-07-19', 2025, 3, 7);
+
+
+-- ────────────────────────────────────────────────────────────
+--  SALES  (22 rows)
+--
+--  Design checklist:
+--    #1   quantity >= 2          → many rows satisfy this
+--    #2   city = 'Melbourne'     → store_id 1 and 3 (both Melbourne)
+--    #3   store_id IN (1,3)      → several rows
+--    #4   BETWEEN Feb–Apr        → date_ids 3..8
+--    #5   (qty>=2 AND rev>=500) OR (qty=1 AND rev>=1400)
+--    #6   product_name LIKE 'P%' → products 2,3,6,7,9
+--    #8   revenue/quantity       → varied unit prices for ordering
+--    #9   TOP-3 revenue          → clear top-3
+--    #10  BOTTOM-3 quantity      → ties on quantity=1 to test tie-break by revenue
+--    #11  COUNT by store_type    → rows across Urban/Suburban/Rural
+--    #12  distinct customers per region
+--    #13  SUM revenue by category
+--    #14  SUM quantity by month (all months covered except June)
+--    #15  AVG revenue per segment
+--    #16  AVG unit_price by category
+--    #17  MIN full_date = 2025-01-10 (date_id 1), MAX in July
+--    #18  MAX revenue per store
+--    #19  HAVING total_revenue > 1000 → Electronics & Furniture qualify
+--    #20  HAVING sales_count >= 3 → stores 1,2,3 will qualify
+--    #21  INNER JOIN sales+products
+--    #22  JOIN sales+dates+stores+products
+--    #23  customers 9,10 have NO sales
+--    #24  product 10 has NO sales
+--    #25  region × category grid (need revenue in at least some combos)
+--    #26  customer 5 appears TWICE on date_id 2 (different sale_ids)
+--    #27  CASE price flag: HIGH (unit_price>800), NORMAL otherwise
+--    #28  segment share of revenue
+--    #29  June (date_ids 11,12) → NO sales reference them
+--    #30  reconciliation: SUM(revenue) = SUM(qty * revenue/qty)
+-- ────────────────────────────────────────────────────────────
+INSERT INTO sales
+    (sale_id, date_id, customer_id, product_id, store_id, quantity, revenue)
+VALUES
+-- ── January ────────────────────────────────────────────────
+-- sale_id 1:  qty=1, rev=1500  → task#5 (qty=1 AND rev>=1400), task#27 HIGH (1500/1=1500>800)
+(1,  1,  1,  1,  1,  1,    1500.00),   -- Laptop,   store 1 Melbourne Urban,   customer 1 Corporate East
+
+-- sale_id 2:  qty=3, rev=900   → task#1 (qty>=2), task#27 NORMAL (300/unit)
+(2,  1,  2,  6,  2,  3,     900.00),   -- Paper,    store 2 Sydney    Urban,   customer 2 Consumer West
+
+-- sale_id 3:  task#26 SELF-JOIN: customer 5 on date_id 2
+(3,  2,  5,  2,  1,  2,    1800.00),   -- Printer,  store 1 Melbourne Urban,   customer 5 Consumer East   — qty=2, rev=1800 → unit=900 HIGH
+
+-- sale_id 4:  task#26 SELF-JOIN: customer 5 on date_id 2 again (same customer, same date, different sale)
+(4,  2,  5,  3,  3,  1,     850.00),   -- Phone,    store 3 Melbourne Suburban,customer 5 Consumer East   — qty=1, rev=850  unit=850 HIGH
+
+-- ── February (date_ids 3,4) – inside BETWEEN range ──────────
+(5,  3,  3,  4,  4,  2,    1200.00),   -- Desk,     store 4 Brisbane  Suburban,customer 3 Home Office North   qty=2 rev=1200 HIGH(600/unit)
+(6,  3,  4,  8,  1,  3,     600.00),   -- Jacket,   store 1 Melbourne Urban,   customer 4 Corporate South   qty=3 rev=600 NORMAL(200/unit)
+(7,  4,  6,  1,  2,  1,    1600.00),   -- Laptop,   store 2 Sydney    Urban,   customer 6 Home Office West   qty=1 rev=1600 HIGH(1600>800) → task#5 (qty=1 AND rev>=1400)
+(8,  4,  7,  5,  3,  4,     400.00),   -- Chair,    store 3 Melbourne Suburban,customer 7 Corporate North   qty=4 rev=400 NORMAL(100/unit)
+
+-- ── March (date_ids 5,6) – inside BETWEEN range ─────────────
+(9,  5,  1,  2,  1,  2,    1000.00),   -- Printer,  store 1 Melbourne Urban,   customer 1 Corporate East   qty=2 rev=1000 → task#5 (qty>=2 AND rev>=500)
+(10, 5,  8,  9,  5,  1,     200.00),   -- Pants,    store 5 Adelaide  Rural,   customer 8 Consumer South   qty=1 rev=200  NORMAL
+(11, 6,  2,  7,  2,  5,     250.00),   -- Pen,      store 2 Sydney    Urban,   customer 2 Consumer West     qty=5 rev=250 NORMAL(50/unit)
+(12, 6,  3,  3,  4,  2,     700.00),   -- Phone,    store 4 Brisbane  Suburban,customer 3 Home Office North qty=2 rev=700  → task#5 (qty>=2 AND rev>=500)
+
+-- ── April (date_ids 7,8) – inside BETWEEN range ─────────────
+(13, 7,  4,  1,  1,  1,    2200.00),   -- Laptop,   store 1 Melbourne Urban,   customer 4 Corporate South   qty=1 rev=2200 HIGH(2200>800) → task#5 (qty=1 AND rev>=1400) — TOP revenue
+(14, 7,  5,  6,  3,  3,     300.00),   -- Paper,    store 3 Melbourne Suburban,customer 5 Consumer East     qty=3 rev=300  NORMAL(100/unit)
+(15, 8,  6,  4,  4,  1,    1100.00),   -- Desk,     store 4 Brisbane  Suburban,customer 6 Home Office West  qty=1 rev=1100 HIGH(1100>800) → task#5 (qty=1 AND rev>=1400) NO(1100<1400 & qty=1)... actually 1100<1400 so NORMAL for task#5 — but HIGH flag for task#27
+(16, 8,  7,  8,  2,  2,     480.00),   -- Jacket,   store 2 Sydney    Urban,   customer 7 Corporate North   qty=2 rev=480 NORMAL(240/unit)  → task#5? 480<500 NO
+
+-- ── May (date_ids 9,10) ──────────────────────────────────────
+(17, 9,  1,  5,  1,  3,     750.00),   -- Chair,    store 1 Melbourne Urban,   customer 1 Corporate East    qty=3 rev=750  → task#5 (qty>=2 AND rev>=500)? 750>=500 YES qty=3>=2 YES ✓
+(18, 9,  8,  1,  5,  1,    1450.00),   -- Laptop,   store 5 Adelaide  Rural,   customer 8 Consumer South    qty=1 rev=1450 HIGH(1450>800) → task#5 (qty=1 AND rev>=1400) ✓
+(19, 10, 2,  2,  2,  2,     960.00),   -- Printer,  store 2 Sydney    Urban,   customer 2 Consumer West     qty=2 rev=960  → task#5 (qty>=2 AND rev>=500) ✓  HIGH(480/unit)
+(20, 10, 4,  9,  3,  1,     180.00),   -- Pants,    store 3 Melbourne Suburban,customer 4 Corporate South   qty=1 rev=180  NORMAL
+
+-- ── July (date_ids 13,14) – note: June skipped for task#29 ──
+(21, 13, 3,  7,  4,  4,     200.00),   -- Pen,      store 4 Brisbane  Suburban,customer 3 Home Office North qty=4 rev=200  NORMAL(50/unit)
+(22, 14, 6,  4,  2,  2,    1300.00);   -- Desk,     store 2 Sydney    Urban,   customer 6 Home Office West  qty=2 rev=1300 HIGH(650/unit)
+
+-- ============================================================
+--  Quick verification counts
+--  (uncomment and run to sanity-check after loading)
+-- ============================================================
+-- SELECT 'customers' AS tbl, COUNT(*) AS n FROM customers
+-- UNION ALL SELECT 'products', COUNT(*) FROM products
+-- UNION ALL SELECT 'stores',   COUNT(*) FROM stores
+-- UNION ALL SELECT 'dates',    COUNT(*) FROM dates
+-- UNION ALL SELECT 'sales',    COUNT(*) FROM sales;
