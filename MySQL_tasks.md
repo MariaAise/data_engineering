@@ -1,3 +1,8 @@
+---
+layout: default
+title: MySQL Tasks
+---
+
 ## Dataset to use 
 
 Use the **Retail Analytics Warehouse** dataset already defined: `sales` (fact), `customers`, `products`, `stores`, `dates` (dimensions). MySQL **8.0**.
