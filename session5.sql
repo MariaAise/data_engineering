@@ -1,0 +1,48 @@
+CREATE DATABASE IF NOT EXISTS sales_dw;
+USE sales_dw;
+
+DROP TABLE IF EXISTS sales;
+DROP TABLE IF EXISTS customers;
+DROP TABLE IF EXISTS products;
+DROP TABLE IF EXISTS stores;
+DROP TABLE IF EXISTS dates;
+
+CREATE TABLE customers (
+    customer_id INT PRIMARY KEY,
+    segment VARCHAR(50),
+    region VARCHAR(50)
+);
+
+CREATE TABLE products (
+    product_id INT PRIMARY KEY,
+    category VARCHAR(50),
+    product_name VARCHAR(100)
+);
+
+CREATE TABLE stores (
+    store_id INT PRIMARY KEY,
+    city VARCHAR(50),
+    store_type VARCHAR(50)
+);
+
+CREATE TABLE dates (
+    date_id INT PRIMARY KEY,
+    full_date DATE,
+    year INT,
+    quarter INT,
+    month INT
+);
+
+CREATE TABLE sales (
+    sale_id INT PRIMARY KEY,
+    date_id INT,
+    customer_id INT,
+    product_id INT,
+    store_id INT,
+    quantity INT,
+    revenue DECIMAL(10,2),
+    FOREIGN KEY (date_id) REFERENCES dates(date_id),
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id),
+    FOREIGN KEY (product_id) REFERENCES products(product_id),
+    FOREIGN KEY (store_id) REFERENCES stores(store_id)
+);
