@@ -1,3 +1,8 @@
+---
+layout: default
+title: MySQL Tasks solutions
+---
+
 -- ============================================================
 --  Retail Analytics Warehouse — Solutions (MySQL 8.0)
 --  All 30 tasks, organised by section.
