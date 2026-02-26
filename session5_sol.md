@@ -4,21 +4,27 @@ title: MySQL Tasks solutions
 ---
 
 -- ============================================================
+
 --  Retail Analytics Warehouse — Solutions (MySQL 8.0)
 --  All 30 tasks, organised by section.
 --  Expected output rows shown in comments above each query.
+
 -- ============================================================
 
 
 -- ════════════════════════════════════════════════════════════
+
 --  A) FILTERING & CONDITIONS
 -- ════════════════════════════════════════════════════════════
 
 -- ────────────────────────────────────────────────────────────
+
 -- Task 1 · Basic filter (WHERE)
 -- Return sale_id, quantity, revenue where quantity >= 2
 -- Expected: 14 rows
+
 -- ────────────────────────────────────────────────────────────
+
 SELECT
     sale_id,
     quantity,
