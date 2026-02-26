@@ -3,27 +3,26 @@ layout: default
 title: MySQL Tasks solutions
 ---
 
--- ============================================================
+============================================================
 
---  Retail Analytics Warehouse — Solutions (MySQL 8.0)
---  All 30 tasks, organised by section.
---  Expected output rows shown in comments above each query.
+## Retail Analytics Warehouse — Solutions (MySQL 8.0)
+Expected output rows shown in comments above each query.
 
--- ============================================================
+============================================================
 
 
--- ════════════════════════════════════════════════════════════
+════════════════════════════════════════════════════════════
 
---  A) FILTERING & CONDITIONS
--- ════════════════════════════════════════════════════════════
+ A) FILTERING & CONDITIONS
+════════════════════════════════════════════════════════════
 
--- ────────────────────────────────────────────────────────────
+────────────────────────────────────────────────────────────
 
 -- Task 1 · Basic filter (WHERE)
 -- Return sale_id, quantity, revenue where quantity >= 2
 -- Expected: 14 rows
 
--- ────────────────────────────────────────────────────────────
+────────────────────────────────────────────────────────────
 
 SELECT
     sale_id,
@@ -34,11 +33,12 @@ WHERE quantity >= 2
 ORDER BY sale_id;
 
 
--- ────────────────────────────────────────────────────────────
--- Task 2 · Filter by dimension attribute (JOIN + WHERE)
--- sales made in Melbourne → join sales to stores, filter city
--- Expected: 10 rows (stores 1 and 3 are both Melbourne)
--- ────────────────────────────────────────────────────────────
+ ────────────────────────────────────────────────────────────
+Task 2 · Filter by dimension attribute (JOIN + WHERE)
+ sales made in Melbourne → join sales to stores, filter city
+ Expected: 10 rows (stores 1 and 3 are both Melbourne)
+ ────────────────────────────────────────────────────────────
+
 SELECT
     s.sale_id,
     st.city,
@@ -49,11 +49,12 @@ WHERE st.city = 'Melbourne'
 ORDER BY s.sale_id;
 
 
--- ────────────────────────────────────────────────────────────
--- Task 3 · IN condition
--- sales where store_id IN (1, 3)
--- Expected: 10 rows
--- ────────────────────────────────────────────────────────────
+ ────────────────────────────────────────────────────────────
+ Task 3 · IN condition
+sales where store_id IN (1, 3)
+Expected: 10 rows
+────────────────────────────────────────────────────────────
+
 SELECT
     sale_id,
     store_id,
@@ -63,11 +64,12 @@ WHERE store_id IN (1, 3)
 ORDER BY sale_id;
 
 
--- ────────────────────────────────────────────────────────────
--- Task 4 · BETWEEN on dates
--- sales between 2025-02-01 and 2025-04-30 (inclusive)
--- Expected: 12 rows (date_ids 3–8, i.e., Feb, Mar, Apr)
--- ────────────────────────────────────────────────────────────
+────────────────────────────────────────────────────────────
+Task 4 · BETWEEN on dates
+sales between 2025-02-01 and 2025-04-30 (inclusive)
+Expected: 12 rows (date_ids 3–8, i.e., Feb, Mar, Apr)
+────────────────────────────────────────────────────────────
+
 SELECT
     s.sale_id,
     d.full_date,
@@ -78,11 +80,12 @@ WHERE d.full_date BETWEEN '2025-02-01' AND '2025-04-30'
 ORDER BY d.full_date, s.sale_id;
 
 
--- ────────────────────────────────────────────────────────────
--- Task 5 · Multiple conditions (AND / OR)
--- (quantity >= 2 AND revenue >= 500) OR (quantity = 1 AND revenue >= 1400)
--- Expected: 13 rows
--- ────────────────────────────────────────────────────────────
+────────────────────────────────────────────────────────────
+Task 5 · Multiple conditions (AND / OR)
+(quantity >= 2 AND revenue >= 500) OR (quantity = 1 AND revenue >= 1400)
+Expected: 13 rows
+────────────────────────────────────────────────────────────
+
 SELECT
     sale_id,
     revenue
@@ -92,11 +95,12 @@ WHERE (quantity >= 2 AND revenue >= 500)
 ORDER BY sale_id;
 
 
--- ────────────────────────────────────────────────────────────
--- Task 6 · Pattern match (LIKE)
--- Products whose name starts with 'P'
--- Expected: 5 rows — Printer, Phone, Paper, Pen, Pants
--- ────────────────────────────────────────────────────────────
+────────────────────────────────────────────────────────────
+Task 6 · Pattern match (LIKE)
+Products whose name starts with 'P'
+Expected: 5 rows — Printer, Phone, Paper, Pen, Pants
+────────────────────────────────────────────────────────────
+
 SELECT
     product_id,
     product_name
@@ -105,9 +109,9 @@ WHERE product_name LIKE 'P%'
 ORDER BY product_name;
 
 
--- ════════════════════════════════════════════════════════════
---  B) ORDERING & LIMITING
--- ════════════════════════════════════════════════════════════
+ ════════════════════════════════════════════════════════════
+ B) ORDERING & LIMITING
+ ════════════════════════════════════════════════════════════
 
 -- ────────────────────────────────────────────────────────────
 -- Task 7 · ORDER BY single column
