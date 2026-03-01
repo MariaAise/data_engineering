@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ch 01 · CTEs & Multi-Step Logic</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+
+<nav class="topbar">
+  <a class="tb-brand" href="index.html">L2·SQL</a>
+  <div class="tb-links">
+    <a class="tb-link active" href="ch1.html">01·CTEs</a>
+    <a class="tb-link" href="ch2.html">02·Windows</a>
+    <a class="tb-link" href="ch3.html">03·Top-N</a>
+    <a class="tb-link" href="ch4.html">04·Running</a>
+    <a class="tb-link" href="ch5.html">05·Pivot</a>
+    <a class="tb-link" href="ch6.html">06·Dates</a>
+  </div>
+  <a class="tb-home" href="index.html">← Index</a>
+</nav>
+
+<div class="hero">
+  <div class="hero-eyebrow">Chapter 01 · MySQL 8.0</div>
+  <h1>CTEs &amp; <span class="accent">Multi-Step Logic</span></h1>
+  <p class="hero-desc">
+    A CTE (Common Table Expression) is a <strong>named intermediate result</strong> you define before
+    your main query. Instead of nesting subqueries inside each other, you write each logical step
+    as a named block — then reference those names like tables. The result: queries that read
+    top-to-bottom like a recipe instead of inside-out like a puzzle.
+  </p>
+  <div class="hero-tags">
+    <span class="hero-tag hi">WITH … AS (…)</span>
+    <span class="hero-tag">Chained CTEs</span>
+    <span class="hero-tag">CROSS JOIN scalar</span>
+    <span class="hero-tag">Self-join via CTE</span>
+  </div>
+</div>
+
+<div class="page-wrap">
+
+<!-- ── CONCEPT ── -->
+<div class="concept">
+  <div class="concept-eyebrow">Core Concept</div>
+  <h3>What is a CTE and why does it exist?</h3>
+  <p>SQL evaluates queries inside-out. A subquery buried three levels deep is correct but unreadable. CTEs solve this by letting you <strong>name each logical step</strong> and reference it by name.</p>
+  <p>Think of it like assigning variables in code. Instead of writing the same complex expression three times, you compute it once, give it a name, and use the name.</p>
+  <ul>
+    <li><strong>Readability</strong> — logic flows top to bottom, step by step</li>
+    <li><strong>Reusability</strong> — the same CTE can appear multiple times in the main query</li>
+    <li><strong>Chaining</strong> — a later CTE can reference an earlier one, layering complexity cleanly</li>
+    <li><strong>Scope</strong> — CTEs exist only for the duration of the one query; they don't persist</li>
+  </ul>
+  <p><strong>Performance note:</strong> In MySQL 8.0, non-recursive CTEs are materialised or merged depending on the optimiser. They are not automatically faster than subqueries — the value is clarity, not speed.</p>
+</div>
+
+<!-- ── WHEN TO USE ── -->
+<div class="when-grid">
+  <div class="when-card">
+    <div class="when-head use">✓ Use a CTE when</div>
+    <p>You need to aggregate before filtering on that aggregate. You reference the same derived data more than once. A nested subquery exceeds two levels. You want to self-join a derived result.</p>
+  </div>
+  <div class="when-card">
+    <div class="when-head skip">✗ Skip CTEs when</div>
+    <p>A simple JOIN + WHERE answers the question in one step. The "subquery" is a single trivial expression. A window function already solves it inline without an intermediate step.</p>
+  </div>
+</div>
+
+<!-- ── SYNTAX: SIMPLE CTE ── -->
+<div class="syntax-block">
+  <div class="syntax-head">Syntax Anatomy — Simple CTE</div>
+  <div class="syntax-body">
+<div class="aln"><span class="aln-code"><span class="kw">WITH</span> <span class="al">cte_name</span> <span class="kw">AS</span> (</span><span class="aln-note hi">← keyword WITH starts the CTE block; name it anything</span></div>
+<div class="aln"><span class="aln-code">    <span class="kw">SELECT</span> customer_id, <span class="fn">SUM</span>(amount) <span class="kw">AS</span> <span class="al">total</span></span><span class="aln-note">← the CTE body is any valid SELECT</span></div>
+<div class="aln"><span class="aln-code">    <span class="kw">FROM</span>   <span class="tb">payments</span></span><span class="aln-note"></span></div>
+<div class="aln"><span class="aln-code">    <span class="kw">GROUP BY</span> customer_id</span><span class="aln-note"></span></div>
+<div class="aln"><span class="aln-code">)</span><span class="aln-note hi">← close the CTE body with )</span></div>
+<div class="aln"><span class="aln-code"><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> <span class="al">cte_name</span> <span class="kw">WHERE</span> total <span class="op">&gt;</span> <span class="nm">500</span>;</span><span class="aln-note hi">← main query — reference the CTE by name like a table</span></div>
+  </div>
+</div>
+
+<!-- ── SYNTAX: CHAINED CTEs ── -->
+<div class="syntax-block">
+  <div class="syntax-head">Syntax Anatomy — Chained CTEs (CTE references a prior CTE)</div>
+  <div class="syntax-body">
+<div class="aln"><span class="aln-code"><span class="kw">WITH</span></span><span class="aln-note hi">← WITH appears exactly once, before all CTEs</span></div>
+<div class="aln"><span class="aln-code"><span class="al">step_one</span> <span class="kw">AS</span> (</span><span class="aln-note">← first CTE defined here</span></div>
+<div class="aln"><span class="aln-code">    <span class="kw">SELECT</span> customer_id, <span class="fn">SUM</span>(amount) <span class="kw">AS</span> <span class="al">total_paid</span></span><span class="aln-note"></span></div>
+<div class="aln"><span class="aln-code">    <span class="kw">FROM</span> <span class="tb">payments</span> <span class="kw">GROUP BY</span> customer_id</span><span class="aln-note"></span></div>
+<div class="aln"><span class="aln-code">),</span><span class="aln-note hi">← comma separates CTEs — never a semicolon</span></div>
+<div class="aln"><span class="aln-code"><span class="al">step_two</span> <span class="kw">AS</span> (</span><span class="aln-note">← second CTE — can query step_one directly</span></div>
+<div class="aln"><span class="aln-code">    <span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> <span class="al">step_one</span> <span class="kw">WHERE</span> total_paid <span class="op">&gt;</span> <span class="nm">500</span></span><span class="aln-note hi">← reference earlier CTE by name</span></div>
+<div class="aln"><span class="aln-code">)</span><span class="aln-note"></span></div>
+<div class="aln"><span class="aln-code"><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> <span class="al">step_two</span>;</span><span class="aln-note hi">← main query — no comma before this line</span></div>
+  </div>
+</div>
+
+<div class="ch-divider"></div>
+<div class="section-title">Tasks</div>
+
+<!-- ════ TASK 1.1 ════ -->
+<div class="task">
+  <div class="task-head">
+    <span class="task-badge">TASK 1.1</span>
+    <span class="task-title">High-Value Customers — Filter on an Aggregated Intermediate</span>
+  </div>
+  <div class="task-body">
+
+    <div class="q-block">
+      <div class="q-label">Business Question</div>
+      <div class="q-text">Find customers whose total completed payments exceed the average total spend across all customers. Return their name, region, and total_paid, ordered by total_paid descending.</div>
+    </div>
+
+    <div class="thinking">
+      <div class="think-label">Thinking — How to Construct This Query</div>
+      <div class="think-step"><span class="think-n">1</span><span class="think-text"><strong>Why can't this be one query?</strong> You need to compare each customer's total to the average of all totals. That's two levels of aggregation. You cannot write <code>WHERE SUM(amount) > AVG(SUM(amount))</code> — aggregates can't nest like that in a WHERE clause.</span></div>
+      <div class="think-step"><span class="think-n">2</span><span class="think-text"><strong>CTE 1 — <code>customer_totals</code>:</strong> Group payments by customer_id, SUM the amount. This gives one row per customer with their total.</span></div>
+      <div class="think-step"><span class="think-n">3</span><span class="think-text"><strong>CTE 2 — <code>avg_spend</code>:</strong> SELECT AVG(total_paid) from CTE 1. This returns exactly one row — a single scalar value.</span></div>
+      <div class="think-step"><span class="think-n">4</span><span class="think-text"><strong>Main query:</strong> JOIN customer_totals to customers for the name/region. CROSS JOIN avg_spend to bring the average into every row (one row × one row = same one row, so it's safe). Filter <code>WHERE total_paid &gt; avg_total</code>.</span></div>
+      <div class="think-step"><span class="think-n">5</span><span class="think-text"><strong>Why CROSS JOIN for the scalar?</strong> avg_spend returns one row. CROSS JOIN multiplies each customer row by that one row, effectively adding the average as a new column on every row — without changing the row count.</span></div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-head"><span class="code-dot"></span>Solution</div>
+<pre><span class="kw">WITH</span>
+<span class="cm">-- Step 1: total completed payments per customer</span>
+<span class="al">customer_totals</span> <span class="kw">AS</span> (
+    <span class="kw">SELECT</span>
+        customer_id,
+        <span class="fn">SUM</span>(amount) <span class="kw">AS</span> <span class="al">total_paid</span>
+    <span class="kw">FROM</span>   <span class="tb">payments</span>
+    <span class="kw">WHERE</span>  status <span class="op">=</span> <span class="st">'completed'</span>
+    <span class="kw">GROUP BY</span> customer_id
+),
+<span class="cm">-- Step 2: average of those totals (returns 1 row, 1 column)</span>
+<span class="al">avg_spend</span> <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> <span class="fn">AVG</span>(total_paid) <span class="kw">AS</span> <span class="al">avg_total</span>
+    <span class="kw">FROM</span>   <span class="al">customer_totals</span>
+)
+<span class="kw">SELECT</span>
+    c.name,
+    c.region,
+    ct.total_paid
+<span class="kw">FROM</span>       <span class="al">customer_totals</span>  ct
+<span class="kw">JOIN</span>       <span class="tb">customers</span>        c  <span class="kw">ON</span> ct.customer_id <span class="op">=</span> c.customer_id
+<span class="kw">CROSS JOIN</span> <span class="al">avg_spend</span>          a  <span class="cm">-- broadcasts the scalar into every row</span>
+<span class="kw">WHERE</span>  ct.total_paid <span class="op">&gt;</span> a.avg_total
+<span class="kw">ORDER BY</span>   ct.total_paid <span class="kw">DESC</span>;</pre>
+    </div>
+
+    <div class="result-wrap">
+      <div class="result-label">Expected Output — avg_total = 1166.25, so 5 customers qualify</div>
+      <table class="rt">
+        <tr><th>name</th><th>region</th><th>total_paid</th></tr>
+        <tr><td>Ironclad</td><td>APAC</td><td class="g">1980.00</td></tr>
+        <tr><td>Vantage</td><td>EU</td><td class="g">1980.00</td></tr>
+        <tr><td>NovaTech</td><td>APAC</td><td class="g">1790.00</td></tr>
+        <tr><td>Acme Corp</td><td>US-East</td><td class="g">1490.00</td></tr>
+        <tr><td>Brightline</td><td>US-West</td><td class="g">1190.00</td></tr>
+      </table>
+    </div>
+
+    <div class="note green">
+      <span>💡</span>
+      <div><strong>Key insight:</strong> CTE 2 queries CTE 1 — this is chaining. You never have to re-aggregate the payments table a second time. Each step builds cleanly on the one before it.</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════ TASK 1.2 ════ -->
+<div class="task">
+  <div class="task-head">
+    <span class="task-badge">TASK 1.2</span>
+    <span class="task-title">Plan Revenue Share — Percentage of Total per Group</span>
+  </div>
+  <div class="task-body">
+
+    <div class="q-block">
+      <div class="q-label">Business Question</div>
+      <div class="q-text">For each plan, show total revenue, the company grand total, and that plan's percentage share of total revenue. Order by revenue descending.</div>
+    </div>
+
+    <div class="thinking">
+      <div class="think-label">Thinking — How to Construct This Query</div>
+      <div class="think-step"><span class="think-n">1</span><span class="think-text"><strong>CTE 1 — <code>plan_revenue</code>:</strong> JOIN payments to plans, GROUP BY plan_name, SUM amount. One row per plan.</span></div>
+      <div class="think-step"><span class="think-n">2</span><span class="think-text"><strong>CTE 2 — <code>grand_total</code>:</strong> SUM all revenue from CTE 1. One row, one number.</span></div>
+      <div class="think-step"><span class="think-n">3</span><span class="think-text"><strong>Main query:</strong> CROSS JOIN the two CTEs. Compute <code>ROUND(revenue / total * 100, 1)</code> for the percentage. Because <code>grand_total</code> is one row, CROSS JOIN just adds that column without multiplying rows.</span></div>
+      <div class="think-step"><span class="think-n">4</span><span class="think-text"><strong>Alternative:</strong> Chapter 4 covers <code>SUM(revenue) OVER()</code> which solves this in one CTE. Understanding the two-CTE approach first builds the muscle for chaining — then the window function version feels like a natural shortcut.</span></div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-head"><span class="code-dot"></span>Solution</div>
+<pre><span class="kw">WITH</span>
+<span class="al">plan_revenue</span> <span class="kw">AS</span> (
+    <span class="kw">SELECT</span>
+        pl.plan_name,
+        <span class="fn">SUM</span>(p.amount) <span class="kw">AS</span> <span class="al">revenue</span>
+    <span class="kw">FROM</span>   <span class="tb">payments</span> p
+    <span class="kw">JOIN</span>   <span class="tb">plans</span>    pl <span class="kw">ON</span> p.plan_id <span class="op">=</span> pl.plan_id
+    <span class="kw">WHERE</span>  p.status <span class="op">=</span> <span class="st">'completed'</span>
+    <span class="kw">GROUP BY</span> pl.plan_name
+),
+<span class="al">grand_total</span> <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> <span class="fn">SUM</span>(revenue) <span class="kw">AS</span> <span class="al">total</span>
+    <span class="kw">FROM</span>   <span class="al">plan_revenue</span>     <span class="cm">-- CTE referencing another CTE</span>
+)
+<span class="kw">SELECT</span>
+    pr.plan_name,
+    pr.revenue,
+    gt.total                                   <span class="kw">AS</span> <span class="al">grand_total</span>,
+    <span class="fn">ROUND</span>(pr.revenue <span class="op">/</span> gt.total <span class="op">*</span> <span class="nm">100</span>, <span class="nm">1</span>)    <span class="kw">AS</span> <span class="al">pct_of_total</span>
+<span class="kw">FROM</span>       <span class="al">plan_revenue</span> pr
+<span class="kw">CROSS JOIN</span> <span class="al">grand_total</span>  gt
+<span class="kw">ORDER BY</span>   pr.revenue <span class="kw">DESC</span>;</pre>
+    </div>
+
+    <div class="result-wrap">
+      <div class="result-label">Expected Output — grand total = 9330.00</div>
+      <table class="rt">
+        <tr><th>plan_name</th><th>revenue</th><th>grand_total</th><th>pct_of_total</th></tr>
+        <tr><td>Enterprise</td><td class="g">5940.00</td><td>9330.00</td><td class="t">63.7</td></tr>
+        <tr><td>Pro</td><td class="g">2790.00</td><td>9330.00</td><td class="t">29.9</td></tr>
+        <tr><td>Basic</td><td class="g">600.00</td><td>9330.00</td><td class="t">6.4</td></tr>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════ TASK 1.3 ════ -->
+<div class="task">
+  <div class="task-head">
+    <span class="task-badge">TASK 1.3</span>
+    <span class="task-title">Plan Upgrades — Self-Join a CTE to Compare Rows</span>
+  </div>
+  <div class="task-body">
+
+    <div class="q-block">
+      <div class="q-label">Business Question</div>
+      <div class="q-text">Find customers who upgraded their plan — meaning they have a later subscription with a higher tier_level than an earlier one. Return customer name, from_plan, to_plan, and both start dates.</div>
+    </div>
+
+    <div class="thinking">
+      <div class="think-label">Thinking — How to Construct This Query</div>
+      <div class="think-step"><span class="think-n">1</span><span class="think-text"><strong>The problem shape:</strong> An "upgrade" involves two rows in the subscriptions table for the same customer, where the later row has a higher tier_level. This means comparing a table against itself — a self-join.</span></div>
+      <div class="think-step"><span class="think-n">2</span><span class="think-text"><strong>CTE — <code>sub_with_tier</code>:</strong> JOIN subscriptions to plans so each row has plan_name and tier_level alongside start_date and customer_id. This enriched view is what we'll self-join.</span></div>
+      <div class="think-step"><span class="think-n">3</span><span class="think-text"><strong>Self-join in main query:</strong> Reference the CTE twice with different aliases (<code>old</code> and <code>new</code>). Join conditions: same customer, <code>new.start_date &gt; old.start_date</code>, and <code>new.tier_level &gt; old.tier_level</code>.</span></div>
+      <div class="think-step"><span class="think-n">4</span><span class="think-text"><strong>Why CTE makes self-joins cleaner:</strong> Without a CTE, you'd write the same 3-table JOIN twice inside the same query. The CTE names that derived table once; both aliases reference the name.</span></div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-head"><span class="code-dot"></span>Solution</div>
+<pre><span class="kw">WITH</span>
+<span class="al">sub_with_tier</span> <span class="kw">AS</span> (
+    <span class="kw">SELECT</span>
+        s.customer_id,
+        s.start_date,
+        pl.plan_name,
+        pl.tier_level
+    <span class="kw">FROM</span>   <span class="tb">subscriptions</span> s
+    <span class="kw">JOIN</span>   <span class="tb">plans</span>          pl <span class="kw">ON</span> s.plan_id <span class="op">=</span> pl.plan_id
+)
+<span class="kw">SELECT</span>
+    c.name,
+    old_s.plan_name  <span class="kw">AS</span> <span class="al">from_plan</span>,
+    new_s.plan_name  <span class="kw">AS</span> <span class="al">to_plan</span>,
+    old_s.start_date <span class="kw">AS</span> <span class="al">old_start</span>,
+    new_s.start_date <span class="kw">AS</span> <span class="al">new_start</span>
+<span class="kw">FROM</span>   <span class="al">sub_with_tier</span> old_s
+<span class="kw">JOIN</span>   <span class="al">sub_with_tier</span> new_s
+    <span class="kw">ON</span>  old_s.customer_id  <span class="op">=</span> new_s.customer_id
+   <span class="kw">AND</span>  new_s.start_date   <span class="op">&gt;</span> old_s.start_date
+   <span class="kw">AND</span>  new_s.tier_level   <span class="op">&gt;</span> old_s.tier_level
+<span class="kw">JOIN</span>   <span class="tb">customers</span> c <span class="kw">ON</span> c.customer_id <span class="op">=</span> old_s.customer_id
+<span class="kw">ORDER BY</span> c.name, old_s.start_date;</pre>
+    </div>
+
+    <div class="result-wrap">
+      <div class="result-label">Expected Output — Acme (Basic→Pro→Enterprise) produces 3 pairs; NovaTech 1</div>
+      <table class="rt">
+        <tr><th>name</th><th>from_plan</th><th>to_plan</th><th>old_start</th><th>new_start</th></tr>
+        <tr><td>Acme Corp</td><td>Basic</td><td class="t">Pro</td><td>2024-01-15</td><td>2024-06-01</td></tr>
+        <tr><td>Acme Corp</td><td>Basic</td><td class="g">Enterprise</td><td>2024-01-15</td><td>2024-09-01</td></tr>
+        <tr><td>Acme Corp</td><td>Pro</td><td class="g">Enterprise</td><td>2024-06-01</td><td>2024-09-01</td></tr>
+        <tr><td>NovaTech</td><td>Pro</td><td class="g">Enterprise</td><td>2024-03-01</td><td>2024-09-01</td></tr>
+      </table>
+    </div>
+
+    <div class="note amber">
+      <span>⚠️</span>
+      <div><strong>Multiple upgrade pairs per customer:</strong> Acme appears 3 times because the self-join finds every valid (old, new) combination — not just adjacent transitions. If you only want direct consecutive upgrades, add a <code>NOT EXISTS</code> clause to exclude cases where an intermediate subscription exists between old and new.</div>
+    </div>
+
+  </div>
+</div>
+
+<div class="note teal" style="margin-top:8px;">
+  <span>→</span>
+  <div><strong>Next:</strong> Chapter 2 introduces window functions — you'll see how <code>OVER()</code> lets you compute rankings and comparisons across rows without collapsing them into groups. <a href="ch2.html" style="color:var(--green);">Go to Ch 02 →</a></div>
+</div>
+
+</div><!-- /page-wrap -->
+</body>
+</html>

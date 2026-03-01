@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ch 03 · Top-N Per Group</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+
+<nav class="topbar">
+  <a class="tb-brand" href="index.html">L2·SQL</a>
+  <div class="tb-links">
+    <a class="tb-link" href="ch1.html">01·CTEs</a>
+    <a class="tb-link" href="ch2.html">02·Windows</a>
+    <a class="tb-link active" href="ch3.html">03·Top-N</a>
+    <a class="tb-link" href="ch4.html">04·Running</a>
+    <a class="tb-link" href="ch5.html">05·Pivot</a>
+    <a class="tb-link" href="ch6.html">06·Dates</a>
+  </div>
+  <a class="tb-home" href="index.html">← Index</a>
+</nav>
+
+<div class="hero">
+  <div class="hero-eyebrow">Chapter 03 · MySQL 8.0</div>
+  <h1>Top-N <span class="accent">Per Group</span></h1>
+  <p class="hero-desc">
+    <code>LIMIT 3</code> returns the top 3 rows globally. Getting the <strong>top 3 within each
+    category, plan, or region</strong> requires a different pattern: assign a rank number to each
+    row within its group using <code>ROW_NUMBER()</code>, wrap it in a CTE, then filter on
+    that rank. This pattern appears constantly in real analytics work.
+  </p>
+  <div class="hero-tags">
+    <span class="hero-tag hi">ROW_NUMBER() OVER (PARTITION BY …)</span>
+    <span class="hero-tag">Filter on rn &lt;= N</span>
+    <span class="hero-tag">Most recent per customer</span>
+  </div>
+</div>
+
+<div class="page-wrap">
+
+<!-- ── CONCEPT ── -->
+<div class="concept">
+  <div class="concept-eyebrow">Core Concept</div>
+  <h3>Why LIMIT Doesn't Work Per Group</h3>
+  <p><code>ORDER BY revenue DESC LIMIT 2</code> returns the global top 2 rows. It has no awareness of groups. There is no syntax like <code>LIMIT 2 PER plan</code> in standard SQL.</p>
+  <p>The solution is a two-step pattern that combines what you learned in chapters 1 and 2:</p>
+  <ul>
+    <li><strong>Step 1 — Rank within group:</strong> Use <code>ROW_NUMBER() OVER (PARTITION BY group_col ORDER BY metric DESC)</code> to assign a sequential number to each row within its group. The best row in each group gets rn=1, second best gets rn=2, and so on.</li>
+    <li><strong>Step 2 — Filter on rank:</strong> Wrap step 1 in a CTE. In the outer query, <code>WHERE rn &lt;= N</code> keeps only the top N per group.</li>
+  </ul>
+  <p><strong>ROW_NUMBER vs RANK for top-N:</strong> Use <code>ROW_NUMBER</code> when you want exactly N rows per group regardless of ties. Use <code>RANK</code> when ties should both be included (may return more than N rows if there's a tie at position N).</p>
+</div>
+
+<!-- ── SYNTAX TEMPLATE ── -->
+<div class="syntax-block">
+  <div class="syntax-head">The Top-N Per Group Template</div>
+  <div class="syntax-body">
+<div class="aln"><span class="aln-code"><span class="kw">WITH</span> <span class="al">ranked</span> <span class="kw">AS</span> (</span><span class="aln-note hi">← Step 1: rank rows within each group</span></div>
+<div class="aln"><span class="aln-code">    <span class="kw">SELECT</span> <span class="op">*</span>,</span><span class="aln-note"></span></div>
+<div class="aln"><span class="aln-code">        <span class="fn">ROW_NUMBER</span>() <span class="kw">OVER</span> (</span><span class="aln-note">always unique — no ties within a partition</span></div>
+<div class="aln"><span class="aln-code">            <span class="kw">PARTITION BY</span> group_col</span><span class="aln-note hi">← restart numbering for each group</span></div>
+<div class="aln"><span class="aln-code">            <span class="kw">ORDER BY</span>     metric_col <span class="kw">DESC</span></span><span class="aln-note">← what defines "top"</span></div>
+<div class="aln"><span class="aln-code">        ) <span class="kw">AS</span> <span class="al">rn</span></span><span class="aln-note"></span></div>
+<div class="aln"><span class="aln-code">    <span class="kw">FROM</span> source_cte_or_table</span><span class="aln-note"></span></div>
+<div class="aln"><span class="aln-code">)</span><span class="aln-note"></span></div>
+<div class="aln"><span class="aln-code"><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> <span class="al">ranked</span></span><span class="aln-note hi">← Step 2: filter to top N per group</span></div>
+<div class="aln"><span class="aln-code"><span class="kw">WHERE</span> rn <span class="op">&lt;=</span> <span class="nm">2</span>;</span><span class="aln-note">change N to whatever you need</span></div>
+  </div>
+</div>
+
+<div class="note violet">
+  <span>⚠️</span>
+  <div><strong>Why can't we filter in the same SELECT?</strong> Window functions are evaluated <em>after</em> WHERE. You cannot write <code>WHERE ROW_NUMBER() OVER(...) &lt;= 2</code> — the WHERE runs before the window function has been computed. The CTE forces evaluation first, making the result available to filter on.</div>
+</div>
+
+<div class="ch-divider"></div>
+<div class="section-title">Tasks</div>
+
+<!-- ════ TASK 3.1 ════ -->
+<div class="task">
+  <div class="task-head">
+    <span class="task-badge">TASK 3.1</span>
+    <span class="task-title">Top 2 Paying Customers Per Plan</span>
+  </div>
+  <div class="task-body">
+
+    <div class="q-block">
+      <div class="q-label">Business Question</div>
+      <div class="q-text">For each plan, find the top 2 customers by total completed payment amount. Return plan name, customer name, total paid, and their rank within the plan.</div>
+    </div>
+
+    <div class="thinking">
+      <div class="think-label">Thinking — How to Construct This Query</div>
+      <div class="think-step"><span class="think-n">1</span><span class="think-text"><strong>CTE 1 — <code>totals</code>:</strong> Aggregate payments per customer+plan. This is the source data for ranking — one row per customer per plan.</span></div>
+      <div class="think-step"><span class="think-n">2</span><span class="think-text"><strong>CTE 2 — <code>ranked</code>:</strong> Apply ROW_NUMBER() OVER (PARTITION BY plan_id ORDER BY total_paid DESC) to CTE 1. This assigns rn=1 to the highest spender in each plan, rn=2 to the second, etc.</span></div>
+      <div class="think-step"><span class="think-n">3</span><span class="think-text"><strong>Main query:</strong> SELECT from <code>ranked</code> WHERE rn &lt;= 2. JOIN to customers and plans for readable names.</span></div>
+      <div class="think-step"><span class="think-n">4</span><span class="think-text"><strong>Three CTEs vs one:</strong> You could combine steps 1 and 2 into one CTE by joining and aggregating there. Splitting them makes the logic easier to test incrementally — run just CTE 1 to verify the aggregation before adding the ranking layer.</span></div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-head"><span class="code-dot"></span>Solution</div>
+<pre><span class="kw">WITH</span>
+<span class="cm">-- Step 1: aggregate per customer per plan</span>
+<span class="al">totals</span> <span class="kw">AS</span> (
+    <span class="kw">SELECT</span>
+        p.customer_id,
+        p.plan_id,
+        <span class="fn">SUM</span>(p.amount) <span class="kw">AS</span> <span class="al">total_paid</span>
+    <span class="kw">FROM</span>   <span class="tb">payments</span> p
+    <span class="kw">WHERE</span>  p.status <span class="op">=</span> <span class="st">'completed'</span>
+    <span class="kw">GROUP BY</span> p.customer_id, p.plan_id
+),
+<span class="cm">-- Step 2: rank within each plan</span>
+<span class="al">ranked</span> <span class="kw">AS</span> (
+    <span class="kw">SELECT</span>
+        customer_id,
+        plan_id,
+        total_paid,
+        <span class="fn">ROW_NUMBER</span>() <span class="kw">OVER</span> (
+            <span class="kw">PARTITION BY</span> plan_id
+            <span class="kw">ORDER BY</span>     total_paid <span class="kw">DESC</span>
+        ) <span class="kw">AS</span> <span class="al">rn</span>
+    <span class="kw">FROM</span> <span class="al">totals</span>
+)
+<span class="cm">-- Step 3: filter and join for readable output</span>
+<span class="kw">SELECT</span>
+    pl.plan_name,
+    c.name          <span class="kw">AS</span> <span class="al">customer_name</span>,
+    r.total_paid,
+    r.rn            <span class="kw">AS</span> <span class="al">rank_in_plan</span>
+<span class="kw">FROM</span>   <span class="al">ranked</span>    r
+<span class="kw">JOIN</span>   <span class="tb">customers</span> c  <span class="kw">ON</span> r.customer_id <span class="op">=</span> c.customer_id
+<span class="kw">JOIN</span>   <span class="tb">plans</span>     pl <span class="kw">ON</span> r.plan_id     <span class="op">=</span> pl.plan_id
+<span class="kw">WHERE</span>  r.rn <span class="op">&lt;=</span> <span class="nm">2</span>
+<span class="kw">ORDER BY</span> pl.plan_name, r.rn;</pre>
+    </div>
+
+    <div class="result-wrap">
+      <div class="result-label">Expected Output — 2 rows per plan = 6 rows total</div>
+      <table class="rt">
+        <tr><th>plan_name</th><th>customer_name</th><th>total_paid</th><th>rank_in_plan</th></tr>
+        <tr><td>Basic</td><td>Acme Corp</td><td>300.00</td><td class="g">1</td></tr>
+        <tr><td>Basic</td><td>Starfield</td><td>300.00</td><td class="g">2</td></tr>
+        <tr><td>Enterprise</td><td>Ironclad</td><td>1980.00</td><td class="g">1</td></tr>
+        <tr><td>Enterprise</td><td>Vantage</td><td>1980.00</td><td class="g">2</td></tr>
+        <tr><td>Pro</td><td>Brightline</td><td>1190.00</td><td class="g">1</td></tr>
+        <tr><td>Pro</td><td>NovaTech</td><td>790.00</td><td class="g">2</td></tr>
+      </table>
+    </div>
+
+    <div class="note green">
+      <span>💡</span>
+      <div><strong>Acme and Starfield both paid 300 on Basic</strong> — they're a tie, but ROW_NUMBER assigns them different numbers (1 and 2) based on an internal tiebreak. If you need both to show as rank 1, use RANK instead: <code>WHERE RANK() OVER(...) &lt;= 2</code> — but you'd then get 3 rows for Basic since rank 3 (Redwood) would still be excluded.</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════ TASK 3.2 ════ -->
+<div class="task">
+  <div class="task-head">
+    <span class="task-badge">TASK 3.2</span>
+    <span class="task-title">Most Recent Payment Per Customer</span>
+  </div>
+  <div class="task-body">
+
+    <div class="q-block">
+      <div class="q-label">Business Question</div>
+      <div class="q-text">For each customer, return their single most recent completed payment — including the date, amount, and plan name. One row per customer.</div>
+    </div>
+
+    <div class="thinking">
+      <div class="think-label">Thinking — How to Construct This Query</div>
+      <div class="think-step"><span class="think-n">1</span><span class="think-text"><strong>"Most recent per customer" = top-1 per group.</strong> This is the same pattern as Task 3.1 with N=1 and a different ORDER BY.</span></div>
+      <div class="think-step"><span class="think-n">2</span><span class="think-text"><strong>ORDER BY payment_date DESC:</strong> The most recent date = largest date value = rank 1 when ordering descending.</span></div>
+      <div class="think-step"><span class="think-n">3</span><span class="think-text"><strong>Why not MAX(payment_date)?</strong> <code>SELECT customer_id, MAX(payment_date)</code> gives you the date, but not the other columns from that row (amount, plan_id). The ROW_NUMBER pattern keeps the entire row intact.</span></div>
+      <div class="think-step"><span class="think-n">4</span><span class="think-text"><strong>Tiebreak:</strong> If a customer has two payments on the same date, ROW_NUMBER will arbitrarily pick one. Add a secondary ORDER BY (e.g. <code>payment_id DESC</code>) to make the tiebreak deterministic.</span></div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-head"><span class="code-dot"></span>Solution</div>
+<pre><span class="kw">WITH</span>
+<span class="al">ranked_payments</span> <span class="kw">AS</span> (
+    <span class="kw">SELECT</span>
+        p.customer_id,
+        p.payment_date,
+        p.amount,
+        p.plan_id,
+        <span class="fn">ROW_NUMBER</span>() <span class="kw">OVER</span> (
+            <span class="kw">PARTITION BY</span> p.customer_id
+            <span class="kw">ORDER BY</span>     p.payment_date <span class="kw">DESC</span>,
+                         p.payment_id   <span class="kw">DESC</span>  <span class="cm">-- tiebreak</span>
+        ) <span class="kw">AS</span> <span class="al">rn</span>
+    <span class="kw">FROM</span>   <span class="tb">payments</span> p
+    <span class="kw">WHERE</span>  p.status <span class="op">=</span> <span class="st">'completed'</span>
+)
+<span class="kw">SELECT</span>
+    c.name           <span class="kw">AS</span> <span class="al">customer</span>,
+    rp.payment_date  <span class="kw">AS</span> <span class="al">last_payment_date</span>,
+    rp.amount        <span class="kw">AS</span> <span class="al">last_amount</span>,
+    pl.plan_name     <span class="kw">AS</span> <span class="al">last_plan</span>
+<span class="kw">FROM</span>   <span class="al">ranked_payments</span> rp
+<span class="kw">JOIN</span>   <span class="tb">customers</span>       c  <span class="kw">ON</span> rp.customer_id <span class="op">=</span> c.customer_id
+<span class="kw">JOIN</span>   <span class="tb">plans</span>           pl <span class="kw">ON</span> rp.plan_id     <span class="op">=</span> pl.plan_id
+<span class="kw">WHERE</span>  rp.rn <span class="op">=</span> <span class="nm">1</span>
+<span class="kw">ORDER BY</span> rp.payment_date <span class="kw">DESC</span>;</pre>
+    </div>
+
+    <div class="result-wrap">
+      <div class="result-label">Expected Output — 1 row per customer, 8 rows total</div>
+      <table class="rt">
+        <tr><th>customer</th><th>last_payment_date</th><th>last_amount</th><th>last_plan</th></tr>
+        <tr><td>Starfield</td><td>2024-11-01</td><td>100.00</td><td>Basic</td></tr>
+        <tr><td>NovaTech</td><td>2024-10-01</td><td>990.00</td><td class="g">Enterprise</td></tr>
+        <tr><td>Brightline</td><td>2024-09-01</td><td>390.00</td><td>Pro</td></tr>
+        <tr><td>Acme Corp</td><td>2024-09-01</td><td>990.00</td><td class="g">Enterprise</td></tr>
+        <tr><td>Ironclad</td><td>2024-09-01</td><td>990.00</td><td class="g">Enterprise</td></tr>
+        <tr><td>Vantage</td><td>2024-07-01</td><td>990.00</td><td class="g">Enterprise</td></tr>
+        <tr><td>Redwood</td><td>2024-05-01</td><td>100.00</td><td>Basic</td></tr>
+        <tr><td>Catalyst</td><td>2024-03-01</td><td>400.00</td><td>Pro</td></tr>
+      </table>
+    </div>
+
+    <div class="note amber">
+      <span>💡</span>
+      <div><strong>This pattern is everywhere:</strong> "Latest order per customer", "most recent login per user", "last status update per ticket" — they're all the same shape: top-1 per group ordered by a timestamp descending.</div>
+    </div>
+
+  </div>
+</div>
+
+<div class="note teal" style="margin-top:8px;">
+  <span>→</span>
+  <div><strong>Next:</strong> Chapter 4 extends window functions into running totals, cumulative sums, and month-over-month comparisons using <code>SUM OVER</code> and <code>LAG</code> together. <a href="ch4.html" style="color:var(--green);">Go to Ch 04 →</a></div>
+</div>
+
+</div>
+</body>
+</html>

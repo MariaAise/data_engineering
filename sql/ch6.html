@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ch 06 · Date Arithmetic & Time-Series Gaps</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+
+<nav class="topbar">
+  <a class="tb-brand" href="index.html">L2·SQL</a>
+  <div class="tb-links">
+    <a class="tb-link" href="ch1.html">01·CTEs</a>
+    <a class="tb-link" href="ch2.html">02·Windows</a>
+    <a class="tb-link" href="ch3.html">03·Top-N</a>
+    <a class="tb-link" href="ch4.html">04·Running</a>
+    <a class="tb-link" href="ch5.html">05·Pivot</a>
+    <a class="tb-link active" href="ch6.html">06·Dates</a>
+  </div>
+  <a class="tb-home" href="index.html">← Index</a>
+</nav>
+
+<div class="hero">
+  <div class="hero-eyebrow">Chapter 06 · MySQL 8.0</div>
+  <h1>Date Arithmetic <span class="accent">&amp; Time-Series Gaps</span></h1>
+  <p class="hero-desc">
+    Date analysis is where SQL meets business reality. <strong>How long since a customer paid?
+    Which months had zero revenue? What's the average gap between transactions?</strong>
+    These questions require date functions, gap detection via LEFT JOIN + IS NULL,
+    and combining LAG with DATEDIFF to measure time between events.
+  </p>
+  <div class="hero-tags">
+    <span class="hero-tag hi">DATEDIFF · DATE_ADD · CURDATE</span>
+    <span class="hero-tag">Gap detection via LEFT JOIN IS NULL</span>
+    <span class="hero-tag">LAG + DATEDIFF</span>
+    <span class="hero-tag">Date spine</span>
+  </div>
+</div>
+
+<div class="page-wrap">
+
+<!-- ── CONCEPT ── -->
+<div class="concept">
+  <div class="concept-eyebrow">Core Concept</div>
+  <h3>Essential MySQL Date Functions</h3>
+  <p>MySQL has a rich set of date functions. The ones you'll use most in analytics:</p>
+  <ul>
+    <li><code>DATEDIFF(date1, date2)</code> — returns date1 minus date2 in days (positive if date1 is later)</li>
+    <li><code>DATE_ADD(date, INTERVAL n MONTH)</code> — add n months to a date</li>
+    <li><code>CURDATE()</code> — today's date</li>
+    <li><code>DATE_FORMAT(date, '%Y-%m')</code> — format as 'YYYY-MM' string</li>
+    <li><code>MONTH(date)</code> / <code>YEAR(date)</code> / <code>QUARTER(date)</code> — extract parts</li>
+    <li><code>LAST_DAY(date)</code> — last day of the month containing that date</li>
+  </ul>
+  <p><strong>Gap detection:</strong> The LEFT JOIN + IS NULL pattern from Level 1 applies to time-series too. Build a complete sequence of expected months (a "date spine"), LEFT JOIN your actual data onto it, and any month with IS NULL in the data side is a gap.</p>
+</div>
+
+<!-- ── SYNTAX REFERENCE ── -->
+<div class="syntax-block">
+  <div class="syntax-head">Date Function Quick Reference</div>
+  <div class="syntax-body" style="line-height:1.8">
+<div class="aln"><span class="aln-code"><span class="fn">DATEDIFF</span>(<span class="fn">CURDATE</span>(), last_payment_date)</span><span class="aln-note">days since last payment (positive = in the past)</span></div>
+<div class="aln"><span class="aln-code"><span class="fn">DATE_ADD</span>(payment_date, <span class="kw">INTERVAL</span> <span class="nm">30</span> <span class="kw">DAY</span>)</span><span class="aln-note">30 days after payment_date</span></div>
+<div class="aln"><span class="aln-code"><span class="fn">DATE_FORMAT</span>(payment_date, <span class="st">'%Y-%m'</span>)</span><span class="aln-note">format as '2024-03' for month grouping</span></div>
+<div class="aln"><span class="aln-code"><span class="fn">LAST_DAY</span>(<span class="st">'2024-02-01'</span>)</span><span class="aln-note">returns '2024-02-29' — useful for month-end logic</span></div>
+<div class="aln"><span class="aln-code"><span class="fn">PERIOD_DIFF</span>(<span class="fn">EXTRACT</span>(…), <span class="fn">EXTRACT</span>(…))</span><span class="aln-note">difference in months between two year-month values</span></div>
+  </div>
+</div>
+
+<div class="ch-divider"></div>
+<div class="section-title">Tasks</div>
+
+<!-- ════ TASK 6.1 ════ -->
+<div class="task">
+  <div class="task-head">
+    <span class="task-badge">TASK 6.1</span>
+    <span class="task-title">Days Since Last Payment Per Customer</span>
+  </div>
+  <div class="task-body">
+
+    <div class="q-block">
+      <div class="q-label">Business Question</div>
+      <div class="q-text">For each customer, find the date of their most recent completed payment and calculate how many days ago that was (relative to 2024-12-01 as "today" for reproducibility). Return customer name, last_payment_date, and days_since_payment.</div>
+    </div>
+
+    <div class="thinking">
+      <div class="think-label">Thinking — How to Construct This Query</div>
+      <div class="think-step"><span class="think-n">1</span><span class="think-text"><strong>CTE — most recent date per customer:</strong> GROUP BY customer_id, MAX(payment_date). This is the simplest way to get one row per customer with their latest date.</span></div>
+      <div class="think-step"><span class="think-n">2</span><span class="think-text"><strong>DATEDIFF:</strong> <code>DATEDIFF('2024-12-01', last_payment_date)</code> gives the number of days between those two dates. We use a fixed reference date instead of CURDATE() so the result is reproducible — in production you'd use CURDATE().</span></div>
+      <div class="think-step"><span class="think-n">3</span><span class="think-text"><strong>Ordering:</strong> Order by days_since_payment DESC to surface customers who haven't paid recently at the top — the most at-risk accounts.</span></div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-head"><span class="code-dot"></span>Solution</div>
+<pre><span class="kw">WITH</span>
+<span class="al">last_payments</span> <span class="kw">AS</span> (
+    <span class="kw">SELECT</span>
+        customer_id,
+        <span class="fn">MAX</span>(payment_date) <span class="kw">AS</span> <span class="al">last_payment_date</span>
+    <span class="kw">FROM</span>   <span class="tb">payments</span>
+    <span class="kw">WHERE</span>  status <span class="op">=</span> <span class="st">'completed'</span>
+    <span class="kw">GROUP BY</span> customer_id
+)
+<span class="kw">SELECT</span>
+    c.name,
+    lp.last_payment_date,
+    <span class="fn">DATEDIFF</span>(<span class="st">'2024-12-01'</span>, lp.last_payment_date) <span class="kw">AS</span> <span class="al">days_since_payment</span>
+<span class="kw">FROM</span>   <span class="al">last_payments</span> lp
+<span class="kw">JOIN</span>   <span class="tb">customers</span>     c <span class="kw">ON</span> lp.customer_id <span class="op">=</span> c.customer_id
+<span class="kw">ORDER BY</span> days_since_payment <span class="kw">DESC</span>;</pre>
+    </div>
+
+    <div class="result-wrap">
+      <div class="result-label">Expected Output — reference date: 2024-12-01</div>
+      <table class="rt">
+        <tr><th>name</th><th>last_payment_date</th><th>days_since_payment</th></tr>
+        <tr><td>Catalyst</td><td>2024-03-01</td><td class="r">275</td></tr>
+        <tr><td>Redwood</td><td>2024-05-01</td><td class="r">214</td></tr>
+        <tr><td>Vantage</td><td>2024-07-01</td><td class="a">153</td></tr>
+        <tr><td>Ironclad</td><td>2024-09-01</td><td class="a">91</td></tr>
+        <tr><td>Brightline</td><td>2024-09-01</td><td class="a">91</td></tr>
+        <tr><td>Acme Corp</td><td>2024-09-01</td><td class="a">91</td></tr>
+        <tr><td>NovaTech</td><td>2024-10-01</td><td class="t">61</td></tr>
+        <tr><td>Starfield</td><td>2024-11-01</td><td class="g">30</td></tr>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════ TASK 6.2 ════ -->
+<div class="task">
+  <div class="task-head">
+    <span class="task-badge">TASK 6.2</span>
+    <span class="task-title">Churned Customers — No Payment in Last 90 Days</span>
+  </div>
+  <div class="task-body">
+
+    <div class="q-block">
+      <div class="q-label">Business Question</div>
+      <div class="q-text">Flag customers whose most recent payment was more than 90 days ago (relative to 2024-12-01). These are potentially churned accounts. Return their name, segment, last payment date, and days since payment.</div>
+    </div>
+
+    <div class="thinking">
+      <div class="think-label">Thinking — How to Construct This Query</div>
+      <div class="think-step"><span class="think-n">1</span><span class="think-text"><strong>Build on Task 6.1:</strong> The CTE structure is the same. Add a WHERE filter on the outer query for <code>days_since_payment > 90</code>.</span></div>
+      <div class="think-step"><span class="think-n">2</span><span class="think-text"><strong>Alternative date approach:</strong> Instead of computing days and filtering, you can filter directly on the date: <code>WHERE last_payment_date &lt; DATE_SUB('2024-12-01', INTERVAL 90 DAY)</code>. Both approaches produce the same result — the days calculation is useful when you also want to display the number.</span></div>
+      <div class="think-step"><span class="think-n">3</span><span class="think-text"><strong>Include segment:</strong> Join to customers for the segment column — useful for analysing whether churn is concentrated in SMB vs Enterprise customers.</span></div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-head"><span class="code-dot"></span>Solution</div>
+<pre><span class="kw">WITH</span>
+<span class="al">last_payments</span> <span class="kw">AS</span> (
+    <span class="kw">SELECT</span>
+        customer_id,
+        <span class="fn">MAX</span>(payment_date) <span class="kw">AS</span> <span class="al">last_payment_date</span>
+    <span class="kw">FROM</span>   <span class="tb">payments</span>
+    <span class="kw">WHERE</span>  status <span class="op">=</span> <span class="st">'completed'</span>
+    <span class="kw">GROUP BY</span> customer_id
+),
+<span class="al">days_since</span> <span class="kw">AS</span> (
+    <span class="kw">SELECT</span>
+        lp.customer_id,
+        lp.last_payment_date,
+        <span class="fn">DATEDIFF</span>(<span class="st">'2024-12-01'</span>, lp.last_payment_date) <span class="kw">AS</span> <span class="al">days_since_payment</span>
+    <span class="kw">FROM</span> <span class="al">last_payments</span> lp
+)
+<span class="kw">SELECT</span>
+    c.name,
+    c.segment,
+    ds.last_payment_date,
+    ds.days_since_payment,
+    <span class="kw">CASE</span>
+        <span class="kw">WHEN</span> ds.days_since_payment <span class="op">&gt;</span> <span class="nm">180</span> <span class="kw">THEN</span> <span class="st">'High Risk'</span>
+        <span class="kw">WHEN</span> ds.days_since_payment <span class="op">&gt;</span> <span class="nm">90</span>  <span class="kw">THEN</span> <span class="st">'At Risk'</span>
+        <span class="kw">ELSE</span>                                   <span class="st">'Active'</span>
+    <span class="kw">END</span> <span class="kw">AS</span> <span class="al">churn_flag</span>
+<span class="kw">FROM</span>   <span class="al">days_since</span> ds
+<span class="kw">JOIN</span>   <span class="tb">customers</span>  c <span class="kw">ON</span> ds.customer_id <span class="op">=</span> c.customer_id
+<span class="kw">WHERE</span>  ds.days_since_payment <span class="op">&gt;</span> <span class="nm">90</span>
+<span class="kw">ORDER BY</span> ds.days_since_payment <span class="kw">DESC</span>;</pre>
+    </div>
+
+    <div class="result-wrap">
+      <div class="result-label">Expected Output — customers with no payment in 90+ days</div>
+      <table class="rt">
+        <tr><th>name</th><th>segment</th><th>last_payment_date</th><th>days_since_payment</th><th>churn_flag</th></tr>
+        <tr><td>Catalyst</td><td>Mid-Market</td><td>2024-03-01</td><td class="r">275</td><td class="r">High Risk</td></tr>
+        <tr><td>Redwood</td><td>SMB</td><td>2024-05-01</td><td class="r">214</td><td class="r">High Risk</td></tr>
+        <tr><td>Vantage</td><td>Enterprise</td><td>2024-07-01</td><td class="a">153</td><td class="a">At Risk</td></tr>
+      </table>
+    </div>
+
+    <div class="note rose">
+      <span>⚠️</span>
+      <div><strong>Catalyst has only one payment (March):</strong> Their failed June payment (status='failed') is excluded by the <code>WHERE status = 'completed'</code> filter. In a real system, you might want to include failed payments in the "last attempt" date to distinguish "paid then went quiet" from "their last attempt failed".</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════ TASK 6.3 ════ -->
+<div class="task">
+  <div class="task-head">
+    <span class="task-badge">TASK 6.3</span>
+    <span class="task-title">Missing Months — Months in the Calendar With No Revenue</span>
+  </div>
+  <div class="task-body">
+
+    <div class="q-block">
+      <div class="q-label">Business Question</div>
+      <div class="q-text">Find all months in 2024 (Jan through Nov) that had zero completed revenue. Return the missing month numbers. Use a date spine to generate the complete list of expected months.</div>
+    </div>
+
+    <div class="thinking">
+      <div class="think-label">Thinking — How to Construct This Query</div>
+      <div class="think-step"><span class="think-n">1</span><span class="think-text"><strong>The gap detection pattern:</strong> Build a complete set of expected months (the "date spine"), then LEFT JOIN your actual data. Months with no matching data have NULL in the right-side columns — those are the gaps.</span></div>
+      <div class="think-step"><span class="think-n">2</span><span class="think-text"><strong>Generating a date spine in MySQL:</strong> MySQL doesn't have a native sequence generator. The cleanest method is a recursive CTE that generates numbers 1–11 (or 1–12) by adding 1 in each iteration.</span></div>
+      <div class="think-step"><span class="think-n">3</span><span class="think-text"><strong>LEFT JOIN + IS NULL:</strong> LEFT JOIN the spine to a grouped payments summary. Months with no payments have NULL in the revenue column — <code>WHERE revenue IS NULL</code> keeps only the gaps.</span></div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-head"><span class="code-dot"></span>Solution</div>
+<pre><span class="kw">WITH RECURSIVE</span>
+<span class="cm">-- Generate month numbers 1 through 11 (Jan–Nov 2024)</span>
+<span class="al">month_spine</span> <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> <span class="nm">1</span> <span class="kw">AS</span> <span class="al">month</span>                       <span class="cm">-- anchor: start at January</span>
+    <span class="kw">UNION ALL</span>
+    <span class="kw">SELECT</span> month <span class="op">+</span> <span class="nm">1</span>                          <span class="cm">-- recursive: add 1 each step</span>
+    <span class="kw">FROM</span>   <span class="al">month_spine</span>
+    <span class="kw">WHERE</span>  month <span class="op">&lt;</span> <span class="nm">11</span>                        <span class="cm">-- stop at November</span>
+),
+<span class="cm">-- Months that actually have payments</span>
+<span class="al">revenue_months</span> <span class="kw">AS</span> (
+    <span class="kw">SELECT DISTINCT</span>
+        <span class="fn">MONTH</span>(payment_date) <span class="kw">AS</span> <span class="al">month</span>
+    <span class="kw">FROM</span>   <span class="tb">payments</span>
+    <span class="kw">WHERE</span>  status <span class="op">=</span> <span class="st">'completed'</span>
+      <span class="kw">AND</span>  <span class="fn">YEAR</span>(payment_date) <span class="op">=</span> <span class="nm">2024</span>
+)
+<span class="cm">-- LEFT JOIN spine to actuals; nulls = missing months</span>
+<span class="kw">SELECT</span>
+    ms.month                    <span class="kw">AS</span> <span class="al">missing_month</span>
+<span class="kw">FROM</span>       <span class="al">month_spine</span>     ms
+<span class="kw">LEFT JOIN</span>  <span class="al">revenue_months</span>  rm  <span class="kw">ON</span> ms.month <span class="op">=</span> rm.month
+<span class="kw">WHERE</span>      rm.month <span class="kw">IS NULL</span>
+<span class="kw">ORDER BY</span>   ms.month;</pre>
+    </div>
+
+    <div class="result-wrap">
+      <div class="result-label">Expected Output — month 1 (January) has no payments</div>
+      <table class="rt">
+        <tr><th>missing_month</th></tr>
+        <tr><td class="r">1</td></tr>
+      </table>
+    </div>
+
+    <div class="note violet">
+      <span>💡</span>
+      <div><strong>WITH RECURSIVE:</strong> This is the first recursive CTE in the guide. The pattern is always the same: an anchor SELECT (starting value), UNION ALL, a recursive SELECT that references the CTE name and adds to the value, and a WHERE clause that sets the stopping condition. MySQL 8.0 fully supports recursive CTEs.</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════ TASK 6.4 ════ -->
+<div class="task">
+  <div class="task-head">
+    <span class="task-badge">TASK 6.4</span>
+    <span class="task-title">Average Days Between Consecutive Payments Per Customer</span>
+  </div>
+  <div class="task-body">
+
+    <div class="q-block">
+      <div class="q-label">Business Question</div>
+      <div class="q-text">For each customer with more than one payment, calculate the average number of days between consecutive completed payments. This indicates payment cadence — useful for predicting the next expected payment.</div>
+    </div>
+
+    <div class="thinking">
+      <div class="think-label">Thinking — How to Construct This Query</div>
+      <div class="think-step"><span class="think-n">1</span><span class="think-text"><strong>Combining LAG + DATEDIFF:</strong> LAG gives you the previous payment date. DATEDIFF gives you the gap in days between two dates. Together: <code>DATEDIFF(payment_date, LAG(payment_date) OVER (PARTITION BY customer_id ORDER BY payment_date))</code> gives the days since the previous payment, per customer.</span></div>
+      <div class="think-step"><span class="think-n">2</span><span class="think-text"><strong>First payment per customer has no prior row</strong> — LAG returns NULL, so DATEDIFF returns NULL. We need to exclude these NULLs from the average.</span></div>
+      <div class="think-step"><span class="think-n">3</span><span class="think-text"><strong>CTE approach:</strong> CTE 1 computes the gap for every payment row. CTE 2 averages those gaps per customer, excluding NULLs (AVG ignores NULLs automatically). Filter to customers with at least 2 payments.</span></div>
+      <div class="think-step"><span class="think-n">4</span><span class="think-text"><strong>ROUND:</strong> Average days is cleaner as a whole number or one decimal — wrap in ROUND(…, 0) for readability.</span></div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-head"><span class="code-dot"></span>Solution</div>
+<pre><span class="kw">WITH</span>
+<span class="cm">-- Step 1: compute days since previous payment per row</span>
+<span class="al">payment_gaps</span> <span class="kw">AS</span> (
+    <span class="kw">SELECT</span>
+        customer_id,
+        payment_date,
+        <span class="fn">DATEDIFF</span>(
+            payment_date,
+            <span class="fn">LAG</span>(payment_date, <span class="nm">1</span>) <span class="kw">OVER</span> (
+                <span class="kw">PARTITION BY</span> customer_id
+                <span class="kw">ORDER BY</span>     payment_date
+            )
+        ) <span class="kw">AS</span> <span class="al">days_gap</span>     <span class="cm">-- NULL for first payment per customer</span>
+    <span class="kw">FROM</span>   <span class="tb">payments</span>
+    <span class="kw">WHERE</span>  status <span class="op">=</span> <span class="st">'completed'</span>
+),
+<span class="cm">-- Step 2: average the gaps (AVG ignores NULLs automatically)</span>
+<span class="al">avg_gaps</span> <span class="kw">AS</span> (
+    <span class="kw">SELECT</span>
+        customer_id,
+        <span class="fn">ROUND</span>(<span class="fn">AVG</span>(days_gap), <span class="nm">0</span>)  <span class="kw">AS</span> <span class="al">avg_days_between</span>,
+        <span class="fn">COUNT</span>(days_gap)            <span class="kw">AS</span> <span class="al">gap_count</span>  <span class="cm">-- rows used in average</span>
+    <span class="kw">FROM</span>   <span class="al">payment_gaps</span>
+    <span class="kw">GROUP BY</span> customer_id
+    <span class="kw">HAVING</span>   <span class="fn">COUNT</span>(days_gap) <span class="op">&gt;=</span> <span class="nm">1</span>  <span class="cm">-- at least 2 payments (1 gap)</span>
+)
+<span class="kw">SELECT</span>
+    c.name,
+    ag.avg_days_between,
+    ag.gap_count  <span class="kw">AS</span> <span class="al">payment_intervals_measured</span>
+<span class="kw">FROM</span>   <span class="al">avg_gaps</span>  ag
+<span class="kw">JOIN</span>   <span class="tb">customers</span> c <span class="kw">ON</span> ag.customer_id <span class="op">=</span> c.customer_id
+<span class="kw">ORDER BY</span> ag.avg_days_between <span class="kw">ASC</span>;</pre>
+    </div>
+
+    <div class="result-wrap">
+      <div class="result-label">Expected Output — avg gap in days between consecutive payments</div>
+      <table class="rt">
+        <tr><th>name</th><th>avg_days_between</th><th>payment_intervals_measured</th></tr>
+        <tr><td>Redwood</td><td class="g">90</td><td>1</td></tr>
+        <tr><td>Brightline</td><td class="g">92</td><td>2</td></tr>
+        <tr><td>NovaTech</td><td class="g">92</td><td>2</td></tr>
+        <tr><td>Starfield</td><td class="g">92</td><td>2</td></tr>
+        <tr><td>Ironclad</td><td class="g">92</td><td>1</td></tr>
+        <tr><td>Vantage</td><td class="g">91</td><td>1</td></tr>
+        <tr><td>Acme Corp</td><td class="a">106</td><td>2</td></tr>
+      </table>
+    </div>
+
+    <div class="note green">
+      <span>💡</span>
+      <div><strong>Catalyst is excluded:</strong> Catalyst has only one completed payment (their June payment failed). With only one payment, there are no gaps to measure — <code>COUNT(days_gap) = 0</code> so HAVING filters them out. Acme's higher average (106 days) reflects their Basic → Pro → Enterprise upgrade pattern with larger gaps between plan changes.</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- SUMMARY -->
+<div class="concept" style="border-left-color: var(--teal); margin-top: 16px;">
+  <div class="concept-eyebrow" style="color:var(--teal)">You've Completed Level 2</div>
+  <h3>What You Can Now Do</h3>
+  <p>Working through these 6 chapters, you've built the core toolkit of intermediate SQL:</p>
+  <ul>
+    <li><strong>CTEs</strong> — break any complex problem into readable named steps</li>
+    <li><strong>Window functions</strong> — rank, compare, and bucket rows without losing them</li>
+    <li><strong>Top-N per group</strong> — the ROW_NUMBER + CTE filter pattern you'll use constantly</li>
+    <li><strong>Running totals & MoM</strong> — time-series analysis with SUM OVER and LAG</li>
+    <li><strong>Conditional aggregation</strong> — pivot-style reports with SUM(CASE WHEN)</li>
+    <li><strong>Date arithmetic & gaps</strong> — DATEDIFF, date spines, churn detection</li>
+  </ul>
+  <p>The natural next progression is <strong>Level 3</strong>: schema design and indexing, stored procedures, transactions and isolation levels, JSON columns, and connecting SQL to Python for pipeline development.</p>
+</div>
+
+<a href="index.html" style="display:inline-block; margin-top:20px; font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--green); text-decoration:none; border:1px solid var(--green-d); padding:8px 16px; border-radius:4px;">← Back to Index</a>
+
+</div>
+</body>
+</html>

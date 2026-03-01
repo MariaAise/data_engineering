@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ch 02 · Window Functions</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+
+<nav class="topbar">
+  <a class="tb-brand" href="index.html">L2·SQL</a>
+  <div class="tb-links">
+    <a class="tb-link" href="ch1.html">01·CTEs</a>
+    <a class="tb-link active" href="ch2.html">02·Windows</a>
+    <a class="tb-link" href="ch3.html">03·Top-N</a>
+    <a class="tb-link" href="ch4.html">04·Running</a>
+    <a class="tb-link" href="ch5.html">05·Pivot</a>
+    <a class="tb-link" href="ch6.html">06·Dates</a>
+  </div>
+  <a class="tb-home" href="index.html">← Index</a>
+</nav>
+
+<div class="hero">
+  <div class="hero-eyebrow">Chapter 02 · MySQL 8.0</div>
+  <h1>Window <span class="accent">Functions</span></h1>
+  <p class="hero-desc">
+    Window functions compute a value <strong>across a set of related rows without collapsing them</strong>.
+    Unlike GROUP BY — which produces one row per group — a window function adds a new column
+    to every existing row. The "window" is the set of rows it looks at for each calculation,
+    defined by the <code>OVER()</code> clause.
+  </p>
+  <div class="hero-tags">
+    <span class="hero-tag hi">OVER(PARTITION BY … ORDER BY …)</span>
+    <span class="hero-tag">RANK / DENSE_RANK</span>
+    <span class="hero-tag">ROW_NUMBER</span>
+    <span class="hero-tag">LAG / LEAD</span>
+    <span class="hero-tag">NTILE</span>
+  </div>
+</div>
+
+<div class="page-wrap">
+
+<!-- ── CONCEPT ── -->
+<div class="concept">
+  <div class="concept-eyebrow">Core Concept</div>
+  <h3>The OVER() Clause — What Makes It a Window Function</h3>
+  <p>Any aggregate or ranking function gains window behaviour when followed by <code>OVER(...)</code>. Two parameters inside <code>OVER</code> control the window:</p>
+  <ul>
+    <li><strong>PARTITION BY col</strong> — divides rows into groups; the function restarts for each group. Omit it to treat all rows as one window.</li>
+    <li><strong>ORDER BY col</strong> — defines row order within each partition. Required for ranking functions and LAG/LEAD. Determines what "previous" and "next" mean.</li>
+  </ul>
+  <p><strong>The key rule:</strong> Window functions are computed <em>after</em> WHERE and GROUP BY, but <em>before</em> ORDER BY and LIMIT. This means you cannot filter on a window function result in a WHERE clause in the same query — you must wrap it in a CTE or subquery first.</p>
+</div>
+
+<!-- ── FUNCTION REFERENCE ── -->
+<div class="syntax-block">
+  <div class="syntax-head">Window Function Quick Reference</div>
+  <div class="syntax-body" style="line-height:1.8">
+<div class="aln"><span class="aln-code"><span class="fn">ROW_NUMBER</span>() <span class="kw">OVER</span>(...)</span><span class="aln-note">Always unique: 1, 2, 3, 4 — no ties, no gaps</span></div>
+<div class="aln"><span class="aln-code"><span class="fn">RANK</span>()       <span class="kw">OVER</span>(...)</span><span class="aln-note">Ties share rank, gap after:  1, 1, 3, 4</span></div>
+<div class="aln"><span class="aln-code"><span class="fn">DENSE_RANK</span>() <span class="kw">OVER</span>(...)</span><span class="aln-note">Ties share rank, no gap:     1, 1, 2, 3</span></div>
+<div class="aln"><span class="aln-code"><span class="fn">NTILE</span>(<span class="nm">4</span>)     <span class="kw">OVER</span>(...)</span><span class="aln-note">Divides rows into 4 equal buckets (1=bottom, 4=top)</span></div>
+<div class="aln"><span class="aln-code"><span class="fn">LAG</span>(col, <span class="nm">1</span>)  <span class="kw">OVER</span>(...)</span><span class="aln-note">Value from the previous row (NULL if none)</span></div>
+<div class="aln"><span class="aln-code"><span class="fn">LEAD</span>(col, <span class="nm">1</span>) <span class="kw">OVER</span>(...)</span><span class="aln-note">Value from the next row     (NULL if none)</span></div>
+<div class="aln"><span class="aln-code"><span class="fn">SUM</span>(col)     <span class="kw">OVER</span>(...)</span><span class="aln-note">Running or partitioned sum — see Chapter 04</span></div>
+  </div>
+</div>
+
+<!-- ── SYNTAX ANATOMY ── -->
+<div class="syntax-block">
+  <div class="syntax-head">Syntax Anatomy — OVER() Clause</div>
+  <div class="syntax-body">
+<div class="aln"><span class="aln-code"><span class="fn">RANK</span>() <span class="kw">OVER</span> (</span><span class="aln-note hi">← function + OVER signals window behaviour</span></div>
+<div class="aln"><span class="aln-code">    <span class="kw">PARTITION BY</span> plan_id       <span class="cm">-- restart rank for each plan</span></span><span class="aln-note">optional — omit to rank across all rows</span></div>
+<div class="aln"><span class="aln-code">    <span class="kw">ORDER BY</span>     total_paid <span class="kw">DESC</span>  <span class="cm">-- highest spend = rank 1</span></span><span class="aln-note hi">required for RANK, ROW_NUMBER, LAG, LEAD</span></div>
+<div class="aln"><span class="aln-code">) <span class="kw">AS</span> <span class="al">rnk</span></span><span class="aln-note">← always alias the result</span></div>
+  </div>
+</div>
+
+<div class="ch-divider"></div>
+<div class="section-title">Tasks</div>
+
+<!-- ════ TASK 2.1 ════ -->
+<div class="task">
+  <div class="task-head">
+    <span class="task-badge">TASK 2.1</span>
+    <span class="task-title">RANK — Rank Customers Within Each Plan by Total Spend</span>
+  </div>
+  <div class="task-body">
+
+    <div class="q-block">
+      <div class="q-label">Business Question</div>
+      <div class="q-text">For each customer, show their plan name, total completed payments, and their rank within that plan (rank 1 = highest spender). Show both RANK and DENSE_RANK so the difference is visible.</div>
+    </div>
+
+    <div class="thinking">
+      <div class="think-label">Thinking — How to Construct This Query</div>
+      <div class="think-step"><span class="think-n">1</span><span class="think-text"><strong>Need totals first:</strong> Window functions operate on rows — you can't rank before you have the per-customer totals. Use a CTE to aggregate first.</span></div>
+      <div class="think-step"><span class="think-n">2</span><span class="think-text"><strong>PARTITION BY plan_id:</strong> This resets the rank counter to 1 for each plan. Without it, you'd get a single global rank across all customers.</span></div>
+      <div class="think-step"><span class="think-n">3</span><span class="think-text"><strong>ORDER BY total_paid DESC:</strong> Highest spender gets rank 1. Flip to ASC for "lowest = rank 1".</span></div>
+      <div class="think-step"><span class="think-n">4</span><span class="think-text"><strong>RANK vs DENSE_RANK:</strong> If two customers tie at rank 1, RANK gives them both 1 and skips to 3. DENSE_RANK gives both 1 and continues at 2. Use DENSE_RANK when you need "no gaps" in ranking numbers.</span></div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-head"><span class="code-dot"></span>Solution</div>
+<pre><span class="kw">WITH</span>
+<span class="al">customer_plan_totals</span> <span class="kw">AS</span> (
+    <span class="kw">SELECT</span>
+        c.name,
+        pl.plan_name,
+        pl.plan_id,
+        <span class="fn">SUM</span>(p.amount) <span class="kw">AS</span> <span class="al">total_paid</span>
+    <span class="kw">FROM</span>   <span class="tb">payments</span>  p
+    <span class="kw">JOIN</span>   <span class="tb">customers</span> c  <span class="kw">ON</span> p.customer_id <span class="op">=</span> c.customer_id
+    <span class="kw">JOIN</span>   <span class="tb">plans</span>     pl <span class="kw">ON</span> p.plan_id     <span class="op">=</span> pl.plan_id
+    <span class="kw">WHERE</span>  p.status <span class="op">=</span> <span class="st">'completed'</span>
+    <span class="kw">GROUP BY</span> c.name, pl.plan_name, pl.plan_id
+)
+<span class="kw">SELECT</span>
+    name,
+    plan_name,
+    total_paid,
+    <span class="fn">RANK</span>() <span class="kw">OVER</span> (
+        <span class="kw">PARTITION BY</span> plan_id
+        <span class="kw">ORDER BY</span>     total_paid <span class="kw">DESC</span>
+    ) <span class="kw">AS</span> <span class="al">rnk</span>,
+    <span class="fn">DENSE_RANK</span>() <span class="kw">OVER</span> (
+        <span class="kw">PARTITION BY</span> plan_id
+        <span class="kw">ORDER BY</span>     total_paid <span class="kw">DESC</span>
+    ) <span class="kw">AS</span> <span class="al">dense_rnk</span>
+<span class="kw">FROM</span>   <span class="al">customer_plan_totals</span>
+<span class="kw">ORDER BY</span> plan_name, rnk;</pre>
+    </div>
+
+    <div class="result-wrap">
+      <div class="result-label">Expected Output — tie on Basic plan shows RANK vs DENSE_RANK difference</div>
+      <table class="rt">
+        <tr><th>name</th><th>plan_name</th><th>total_paid</th><th>rnk</th><th>dense_rnk</th></tr>
+        <tr><td>Acme Corp</td><td>Basic</td><td>300.00</td><td class="g">1</td><td class="g">1</td></tr>
+        <tr><td>Starfield</td><td>Basic</td><td>300.00</td><td class="g">1</td><td class="g">1</td></tr>
+        <tr><td>Redwood</td><td>Basic</td><td>200.00</td><td class="a">3</td><td class="t">2</td></tr>
+        <tr><td>Brightline</td><td>Pro</td><td>1190.00</td><td class="g">1</td><td class="g">1</td></tr>
+        <tr><td>NovaTech</td><td>Pro</td><td>790.00</td><td class="g">2</td><td class="g">2</td></tr>
+        <tr><td>Catalyst</td><td>Pro</td><td>400.00</td><td class="g">3</td><td class="g">3</td></tr>
+        <tr><td>Ironclad</td><td>Enterprise</td><td>1980.00</td><td class="g">1</td><td class="g">1</td></tr>
+        <tr><td>Vantage</td><td>Enterprise</td><td>1980.00</td><td class="g">1</td><td class="g">1</td></tr>
+        <tr><td>Acme Corp</td><td>Enterprise</td><td>990.00</td><td class="a">3</td><td class="t">2</td></tr>
+      </table>
+    </div>
+
+    <div class="note amber">
+      <span>⚠️</span>
+      <div><strong>Tie behaviour:</strong> Acme and Starfield both paid 300 on Basic — both get rank 1. RANK then jumps to 3 (skipping 2). DENSE_RANK goes to 2. Acme Corp appears in both Basic and Enterprise because it had payments across multiple plans over time.</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════ TASK 2.2 ════ -->
+<div class="task">
+  <div class="task-head">
+    <span class="task-badge">TASK 2.2</span>
+    <span class="task-title">LAG — Compare Each Payment to the Previous One</span>
+  </div>
+  <div class="task-body">
+
+    <div class="q-block">
+      <div class="q-label">Business Question</div>
+      <div class="q-text">For each customer's completed payments (ordered by date), show the current amount, the previous payment amount, and the difference. Useful for spotting payment growth or decline per account.</div>
+    </div>
+
+    <div class="thinking">
+      <div class="think-label">Thinking — How to Construct This Query</div>
+      <div class="think-step"><span class="think-n">1</span><span class="think-text"><strong>LAG(col, n, default):</strong> Returns the value of <code>col</code> from <code>n</code> rows earlier within the window. The optional third argument is the default when no prior row exists (first row of a partition). If omitted, returns NULL.</span></div>
+      <div class="think-step"><span class="think-n">2</span><span class="think-text"><strong>PARTITION BY customer_id:</strong> Each customer's payment history is its own independent window. The first payment per customer has no prior row, so LAG returns NULL (or the default).</span></div>
+      <div class="think-step"><span class="think-n">3</span><span class="think-text"><strong>ORDER BY payment_date:</strong> Defines what "previous" means — the payment that came before this one chronologically.</span></div>
+      <div class="think-step"><span class="think-n">4</span><span class="think-text"><strong>Computing delta:</strong> <code>amount - LAG(amount, 1, amount)</code> — using <code>amount</code> as default means when there's no prior row, delta = amount - amount = 0, which is cleaner than NULL arithmetic.</span></div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-head"><span class="code-dot"></span>Solution</div>
+<pre><span class="kw">SELECT</span>
+    c.name,
+    p.payment_date,
+    p.amount                                     <span class="kw">AS</span> <span class="al">current_amount</span>,
+
+    <span class="fn">LAG</span>(p.amount, <span class="nm">1</span>) <span class="kw">OVER</span> (
+        <span class="kw">PARTITION BY</span> p.customer_id
+        <span class="kw">ORDER BY</span>     p.payment_date
+    )                                            <span class="kw">AS</span> <span class="al">prev_amount</span>,
+
+    p.amount <span class="op">-</span> <span class="fn">LAG</span>(p.amount, <span class="nm">1</span>, p.amount) <span class="kw">OVER</span> (
+        <span class="kw">PARTITION BY</span> p.customer_id
+        <span class="kw">ORDER BY</span>     p.payment_date
+    )                                            <span class="kw">AS</span> <span class="al">delta</span>
+
+<span class="kw">FROM</span>   <span class="tb">payments</span>  p
+<span class="kw">JOIN</span>   <span class="tb">customers</span> c <span class="kw">ON</span> p.customer_id <span class="op">=</span> c.customer_id
+<span class="kw">WHERE</span>  p.status <span class="op">=</span> <span class="st">'completed'</span>
+<span class="kw">ORDER BY</span> c.name, p.payment_date;</pre>
+    </div>
+
+    <div class="result-wrap">
+      <div class="result-label">Expected Output (subset — 3 customers shown)</div>
+      <table class="rt">
+        <tr><th>name</th><th>payment_date</th><th>current_amount</th><th>prev_amount</th><th>delta</th></tr>
+        <tr><td>Acme Corp</td><td>2024-02-01</td><td>100.00</td><td class="dim">NULL</td><td class="dim">0.00</td></tr>
+        <tr><td>Acme Corp</td><td>2024-06-01</td><td>400.00</td><td>100.00</td><td class="g">+300.00</td></tr>
+        <tr><td>Acme Corp</td><td>2024-09-01</td><td>990.00</td><td>400.00</td><td class="g">+590.00</td></tr>
+        <tr><td>Brightline</td><td>2024-03-01</td><td>400.00</td><td class="dim">NULL</td><td class="dim">0.00</td></tr>
+        <tr><td>Brightline</td><td>2024-06-01</td><td>400.00</td><td>400.00</td><td>0.00</td></tr>
+        <tr><td>Brightline</td><td>2024-09-01</td><td>390.00</td><td>400.00</td><td class="r">−10.00</td></tr>
+        <tr><td>Starfield</td><td>2024-05-01</td><td>100.00</td><td class="dim">NULL</td><td class="dim">0.00</td></tr>
+        <tr><td>Starfield</td><td>2024-08-01</td><td>100.00</td><td>100.00</td><td>0.00</td></tr>
+        <tr><td>Starfield</td><td>2024-11-01</td><td>100.00</td><td>100.00</td><td>0.00</td></tr>
+      </table>
+    </div>
+
+    <div class="note green">
+      <span>💡</span>
+      <div><strong>LEAD is the mirror:</strong> Replace <code>LAG</code> with <code>LEAD</code> to look at the <em>next</em> row instead. Useful for "days until next payment" or "what plan did they move to next".</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════ TASK 2.3 ════ -->
+<div class="task">
+  <div class="task-head">
+    <span class="task-badge">TASK 2.3</span>
+    <span class="task-title">NTILE — Bucket Customers Into Spend Quartiles</span>
+  </div>
+  <div class="task-body">
+
+    <div class="q-block">
+      <div class="q-label">Business Question</div>
+      <div class="q-text">Divide all customers into 4 spend quartiles (Q1 = lowest 25%, Q4 = highest 25%). Return customer name, total spend, quartile number, and a readable label.</div>
+    </div>
+
+    <div class="thinking">
+      <div class="think-label">Thinking — How to Construct This Query</div>
+      <div class="think-step"><span class="think-n">1</span><span class="think-text"><strong>NTILE(n):</strong> Distributes rows into <code>n</code> buckets as equally as possible. Bucket 1 = lowest values, bucket n = highest values (when ORDER BY ASC). If rows don't divide evenly, earlier buckets get one extra row.</span></div>
+      <div class="think-step"><span class="think-n">2</span><span class="think-text"><strong>No PARTITION BY:</strong> We want quartiles across all customers, not within groups. Omitting PARTITION BY treats the entire result set as one window.</span></div>
+      <div class="think-step"><span class="think-n">3</span><span class="think-text"><strong>CTE for totals first:</strong> NTILE operates on rows — aggregate payments per customer in a CTE, then apply NTILE in the outer query.</span></div>
+      <div class="think-step"><span class="think-n">4</span><span class="think-text"><strong>Add a readable label:</strong> Wrap NTILE in a CASE expression. This avoids the caller needing to know that 4 = "top quartile".</span></div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-head"><span class="code-dot"></span>Solution</div>
+<pre><span class="kw">WITH</span>
+<span class="al">totals</span> <span class="kw">AS</span> (
+    <span class="kw">SELECT</span>
+        customer_id,
+        <span class="fn">SUM</span>(amount) <span class="kw">AS</span> <span class="al">total_paid</span>
+    <span class="kw">FROM</span>   <span class="tb">payments</span>
+    <span class="kw">WHERE</span>  status <span class="op">=</span> <span class="st">'completed'</span>
+    <span class="kw">GROUP BY</span> customer_id
+)
+<span class="kw">SELECT</span>
+    c.name,
+    t.total_paid,
+    <span class="fn">NTILE</span>(<span class="nm">4</span>) <span class="kw">OVER</span> (
+        <span class="kw">ORDER BY</span> t.total_paid <span class="kw">ASC</span>    <span class="cm">-- ASC: Q1=lowest, Q4=highest</span>
+    )                                <span class="kw">AS</span> <span class="al">quartile</span>,
+    <span class="kw">CASE</span> <span class="fn">NTILE</span>(<span class="nm">4</span>) <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> t.total_paid <span class="kw">ASC</span>)
+        <span class="kw">WHEN</span> <span class="nm">1</span> <span class="kw">THEN</span> <span class="st">'Q1 · Low'</span>
+        <span class="kw">WHEN</span> <span class="nm">2</span> <span class="kw">THEN</span> <span class="st">'Q2 · Mid-Low'</span>
+        <span class="kw">WHEN</span> <span class="nm">3</span> <span class="kw">THEN</span> <span class="st">'Q3 · Mid-High'</span>
+        <span class="kw">WHEN</span> <span class="nm">4</span> <span class="kw">THEN</span> <span class="st">'Q4 · Top'</span>
+    <span class="kw">END</span>                              <span class="kw">AS</span> <span class="al">quartile_label</span>
+<span class="kw">FROM</span>   <span class="al">totals</span>    t
+<span class="kw">JOIN</span>   <span class="tb">customers</span> c <span class="kw">ON</span> t.customer_id <span class="op">=</span> c.customer_id
+<span class="kw">ORDER BY</span> t.total_paid <span class="kw">ASC</span>;</pre>
+    </div>
+
+    <div class="result-wrap">
+      <div class="result-label">Expected Output — 8 customers, 2 per quartile</div>
+      <table class="rt">
+        <tr><th>name</th><th>total_paid</th><th>quartile</th><th>quartile_label</th></tr>
+        <tr><td>Redwood</td><td>200.00</td><td>1</td><td>Q1 · Low</td></tr>
+        <tr><td>Starfield</td><td>300.00</td><td>1</td><td>Q1 · Low</td></tr>
+        <tr><td>Catalyst</td><td>400.00</td><td>2</td><td>Q2 · Mid-Low</td></tr>
+        <tr><td>NovaTech</td><td>1790.00</td><td>2</td><td>Q2 · Mid-Low</td></tr>
+        <tr><td>Brightline</td><td>1190.00</td><td>3</td><td>Q3 · Mid-High</td></tr>
+        <tr><td>Acme Corp</td><td>1490.00</td><td>3</td><td>Q3 · Mid-High</td></tr>
+        <tr><td>Ironclad</td><td>1980.00</td><td>4</td><td class="g">Q4 · Top</td></tr>
+        <tr><td>Vantage</td><td>1980.00</td><td>4</td><td class="g">Q4 · Top</td></tr>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<div class="note teal" style="margin-top:8px;">
+  <span>→</span>
+  <div><strong>Next:</strong> Chapter 3 uses ROW_NUMBER() to solve a specific problem LIMIT can't — returning the top N rows <em>within each group</em>. <a href="ch3.html" style="color:var(--green);">Go to Ch 03 →</a></div>
+</div>
+
+</div>
+</body>
+</html>

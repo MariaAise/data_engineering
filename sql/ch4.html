@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ch 04 · Running Totals & Period-over-Period</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+
+<nav class="topbar">
+  <a class="tb-brand" href="index.html">L2·SQL</a>
+  <div class="tb-links">
+    <a class="tb-link" href="ch1.html">01·CTEs</a>
+    <a class="tb-link" href="ch2.html">02·Windows</a>
+    <a class="tb-link" href="ch3.html">03·Top-N</a>
+    <a class="tb-link active" href="ch4.html">04·Running</a>
+    <a class="tb-link" href="ch5.html">05·Pivot</a>
+    <a class="tb-link" href="ch6.html">06·Dates</a>
+  </div>
+  <a class="tb-home" href="index.html">← Index</a>
+</nav>
+
+<div class="hero">
+  <div class="hero-eyebrow">Chapter 04 · MySQL 8.0</div>
+  <h1>Running Totals <span class="accent">&amp; Period-over-Period</span></h1>
+  <p class="hero-desc">
+    Time-series analysis is the most common reason analysts reach for window functions.
+    <strong>Running totals</strong> accumulate a metric row by row.
+    <strong>Period-over-period</strong> comparisons measure growth by looking at the same metric
+    in the prior period. <strong>Rolling averages</strong> smooth out noise over a moving window.
+    All three patterns combine <code>SUM OVER</code>, <code>LAG</code>, and frame specifications.
+  </p>
+  <div class="hero-tags">
+    <span class="hero-tag hi">SUM() OVER (ORDER BY … ROWS BETWEEN …)</span>
+    <span class="hero-tag">LAG for MoM</span>
+    <span class="hero-tag">Rolling 3-month avg</span>
+  </div>
+</div>
+
+<div class="page-wrap">
+
+<!-- ── CONCEPT ── -->
+<div class="concept">
+  <div class="concept-eyebrow">Core Concept</div>
+  <h3>Frames — Controlling Which Rows the Window Includes</h3>
+  <p>When you add <code>ORDER BY</code> inside <code>OVER()</code>, the default window frame becomes <strong>"all rows from the start of the partition up to and including the current row"</strong>. This is what makes running totals work — each row sees all prior rows.</p>
+  <p>You can make this explicit with a <strong>ROWS BETWEEN</strong> frame clause:</p>
+  <ul>
+    <li><code>ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW</code> — cumulative total (default with ORDER BY)</li>
+    <li><code>ROWS BETWEEN 2 PRECEDING AND CURRENT ROW</code> — current row plus 2 rows before = 3-row rolling window</li>
+    <li><code>ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING</code> — all rows (same as no ORDER BY)</li>
+  </ul>
+</div>
+
+<!-- ── SYNTAX ── -->
+<div class="syntax-block">
+  <div class="syntax-head">Syntax Anatomy — Running Total + Rolling Average</div>
+  <div class="syntax-body">
+<div class="aln"><span class="aln-code"><span class="cm">-- Running total (cumulative from row 1 to current row)</span></span></div>
+<div class="aln"><span class="aln-code"><span class="fn">SUM</span>(revenue) <span class="kw">OVER</span> (</span><span class="aln-note hi">← ORDER BY makes this cumulative</span></div>
+<div class="aln"><span class="aln-code">    <span class="kw">ORDER BY</span> month</span><span class="aln-note">default frame = UNBOUNDED PRECEDING → CURRENT ROW</span></div>
+<div class="aln"><span class="aln-code">) <span class="kw">AS</span> <span class="al">running_total</span></span><span class="aln-note"></span></div>
+<div class="aln"><span class="aln-code"></span></div>
+<div class="aln"><span class="aln-code"><span class="cm">-- Rolling 3-month average (current + 2 prior months)</span></span></div>
+<div class="aln"><span class="aln-code"><span class="fn">AVG</span>(revenue) <span class="kw">OVER</span> (</span><span class="aln-note hi">← explicit frame clause</span></div>
+<div class="aln"><span class="aln-code">    <span class="kw">ORDER BY</span> month</span><span class="aln-note"></span></div>
+<div class="aln"><span class="aln-code">    <span class="kw">ROWS BETWEEN</span> <span class="nm">2</span> <span class="kw">PRECEDING AND CURRENT ROW</span></span><span class="aln-note">3 rows: current + 2 before</span></div>
+<div class="aln"><span class="aln-code">) <span class="kw">AS</span> <span class="al">rolling_3m_avg</span></span><span class="aln-note"></span></div>
+  </div>
+</div>
+
+<div class="ch-divider"></div>
+<div class="section-title">Tasks</div>
+
+<!-- ════ TASK 4.1 ════ -->
+<div class="task">
+  <div class="task-head">
+    <span class="task-badge">TASK 4.1</span>
+    <span class="task-title">Monthly Revenue With Running Cumulative Total</span>
+  </div>
+  <div class="task-body">
+
+    <div class="q-block">
+      <div class="q-label">Business Question</div>
+      <div class="q-text">Show monthly revenue for 2024, plus a running cumulative total that grows with each month. Return month, monthly_revenue, and cumulative_revenue.</div>
+    </div>
+
+    <div class="thinking">
+      <div class="think-label">Thinking — How to Construct This Query</div>
+      <div class="think-step"><span class="think-n">1</span><span class="think-text"><strong>CTE — <code>monthly</code>:</strong> GROUP BY month, SUM revenue. This produces one row per month with that month's total.</span></div>
+      <div class="think-step"><span class="think-n">2</span><span class="think-text"><strong>Running total:</strong> In the outer query, <code>SUM(monthly_revenue) OVER (ORDER BY month)</code>. Because ORDER BY is present, the default frame is UNBOUNDED PRECEDING → CURRENT ROW. Each month's row sees itself plus all earlier months.</span></div>
+      <div class="think-step"><span class="think-n">3</span><span class="think-text"><strong>No PARTITION BY:</strong> We want one running total across all months, not restarting per group. Omitting PARTITION BY treats all rows as one window.</span></div>
+      <div class="think-step"><span class="think-n">4</span><span class="think-text"><strong>Verification:</strong> The last month's cumulative_revenue should equal the SUM of all monthly revenues. In our data: 9330.00.</span></div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-head"><span class="code-dot"></span>Solution</div>
+<pre><span class="kw">WITH</span>
+<span class="al">monthly</span> <span class="kw">AS</span> (
+    <span class="kw">SELECT</span>
+        <span class="fn">MONTH</span>(payment_date)   <span class="kw">AS</span> <span class="al">month</span>,
+        <span class="fn">SUM</span>(amount)           <span class="kw">AS</span> <span class="al">monthly_revenue</span>
+    <span class="kw">FROM</span>   <span class="tb">payments</span>
+    <span class="kw">WHERE</span>  status <span class="op">=</span> <span class="st">'completed'</span>
+      <span class="kw">AND</span>  <span class="fn">YEAR</span>(payment_date) <span class="op">=</span> <span class="nm">2024</span>
+    <span class="kw">GROUP BY</span> <span class="fn">MONTH</span>(payment_date)
+)
+<span class="kw">SELECT</span>
+    month,
+    monthly_revenue,
+    <span class="fn">SUM</span>(monthly_revenue) <span class="kw">OVER</span> (
+        <span class="kw">ORDER BY</span> month
+        <span class="cm">-- default frame: UNBOUNDED PRECEDING → CURRENT ROW</span>
+    ) <span class="kw">AS</span> <span class="al">cumulative_revenue</span>
+<span class="kw">FROM</span>   <span class="al">monthly</span>
+<span class="kw">ORDER BY</span> month;</pre>
+    </div>
+
+    <div class="result-wrap">
+      <div class="result-label">Expected Output — cumulative grows month by month, ends at 9330.00</div>
+      <table class="rt">
+        <tr><th>month</th><th>monthly_revenue</th><th>cumulative_revenue</th></tr>
+        <tr><td>2</td><td>200.00</td><td class="t">200.00</td></tr>
+        <tr><td>3</td><td>800.00</td><td class="t">1000.00</td></tr>
+        <tr><td>4</td><td>1390.00</td><td class="t">2390.00</td></tr>
+        <tr><td>5</td><td>200.00</td><td class="t">2590.00</td></tr>
+        <tr><td>6</td><td>1790.00</td><td class="t">4380.00</td></tr>
+        <tr><td>7</td><td>1390.00</td><td class="t">5770.00</td></tr>
+        <tr><td>8</td><td>100.00</td><td class="t">5870.00</td></tr>
+        <tr><td>9</td><td>2370.00</td><td class="t">8240.00</td></tr>
+        <tr><td>10</td><td>990.00</td><td class="t">9230.00</td></tr>
+        <tr><td>11</td><td>100.00</td><td class="g">9330.00</td></tr>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════ TASK 4.2 ════ -->
+<div class="task">
+  <div class="task-head">
+    <span class="task-badge">TASK 4.2</span>
+    <span class="task-title">Month-over-Month Revenue Growth Percentage</span>
+  </div>
+  <div class="task-body">
+
+    <div class="q-block">
+      <div class="q-label">Business Question</div>
+      <div class="q-text">For each month in 2024, show monthly revenue, the previous month's revenue, and the percentage change. Format growth as a percentage rounded to 1 decimal place.</div>
+    </div>
+
+    <div class="thinking">
+      <div class="think-label">Thinking — How to Construct This Query</div>
+      <div class="think-step"><span class="think-n">1</span><span class="think-text"><strong>CTE — monthly totals:</strong> Same aggregation as Task 4.1 — GROUP BY month.</span></div>
+      <div class="think-step"><span class="think-n">2</span><span class="think-text"><strong>LAG for prior month:</strong> <code>LAG(monthly_revenue, 1) OVER (ORDER BY month)</code> gives the previous month's revenue. Month 2 (February) has no prior row, so LAG returns NULL.</span></div>
+      <div class="think-step"><span class="think-n">3</span><span class="think-text"><strong>MoM % formula:</strong> <code>(current - prior) / prior * 100</code>. Guard against division by zero with NULLIF: <code>/ NULLIF(prior, 0)</code> — this returns NULL instead of an error when prior = 0.</span></div>
+      <div class="think-step"><span class="think-n">4</span><span class="think-text"><strong>CASE for first month:</strong> Use CASE or COALESCE to display 'N/A' or NULL for the first month where there's no prior period to compare against.</span></div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-head"><span class="code-dot"></span>Solution</div>
+<pre><span class="kw">WITH</span>
+<span class="al">monthly</span> <span class="kw">AS</span> (
+    <span class="kw">SELECT</span>
+        <span class="fn">MONTH</span>(payment_date)  <span class="kw">AS</span> <span class="al">month</span>,
+        <span class="fn">SUM</span>(amount)          <span class="kw">AS</span> <span class="al">monthly_revenue</span>
+    <span class="kw">FROM</span>   <span class="tb">payments</span>
+    <span class="kw">WHERE</span>  status <span class="op">=</span> <span class="st">'completed'</span>
+      <span class="kw">AND</span>  <span class="fn">YEAR</span>(payment_date) <span class="op">=</span> <span class="nm">2024</span>
+    <span class="kw">GROUP BY</span> <span class="fn">MONTH</span>(payment_date)
+)
+<span class="kw">SELECT</span>
+    month,
+    monthly_revenue,
+    <span class="fn">LAG</span>(monthly_revenue, <span class="nm">1</span>) <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> month)  <span class="kw">AS</span> <span class="al">prev_month_revenue</span>,
+    <span class="fn">ROUND</span>(
+        (monthly_revenue <span class="op">-</span> <span class="fn">LAG</span>(monthly_revenue, <span class="nm">1</span>) <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> month))
+        <span class="op">/</span> <span class="fn">NULLIF</span>(<span class="fn">LAG</span>(monthly_revenue, <span class="nm">1</span>) <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> month), <span class="nm">0</span>)
+        <span class="op">*</span> <span class="nm">100</span>
+    , <span class="nm">1</span>)                                                <span class="kw">AS</span> <span class="al">mom_pct_change</span>
+<span class="kw">FROM</span>   <span class="al">monthly</span>
+<span class="kw">ORDER BY</span> month;</pre>
+    </div>
+
+    <div class="result-wrap">
+      <div class="result-label">Expected Output</div>
+      <table class="rt">
+        <tr><th>month</th><th>monthly_revenue</th><th>prev_month_revenue</th><th>mom_pct_change</th></tr>
+        <tr><td>2</td><td>200.00</td><td class="dim">NULL</td><td class="dim">NULL</td></tr>
+        <tr><td>3</td><td>800.00</td><td>200.00</td><td class="g">+300.0</td></tr>
+        <tr><td>4</td><td>1390.00</td><td>800.00</td><td class="g">+73.8</td></tr>
+        <tr><td>5</td><td>200.00</td><td>1390.00</td><td class="r">−85.6</td></tr>
+        <tr><td>6</td><td>1790.00</td><td>200.00</td><td class="g">+795.0</td></tr>
+        <tr><td>7</td><td>1390.00</td><td>1790.00</td><td class="r">−22.3</td></tr>
+        <tr><td>8</td><td>100.00</td><td>1390.00</td><td class="r">−92.8</td></tr>
+        <tr><td>9</td><td>2370.00</td><td>100.00</td><td class="g">+2270.0</td></tr>
+        <tr><td>10</td><td>990.00</td><td>2370.00</td><td class="r">−58.2</td></tr>
+        <tr><td>11</td><td>100.00</td><td>990.00</td><td class="r">−89.9</td></tr>
+      </table>
+    </div>
+
+    <div class="note amber">
+      <span>⚠️</span>
+      <div><strong>Wild swings are expected:</strong> Our dataset is small (8 customers, uneven payment schedules). In real data with hundreds of customers, monthly revenue is far smoother. The large swings here (e.g. +2270% in Sep) reflect clustered payment dates, not business volatility.</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════ TASK 4.3 ════ -->
+<div class="task">
+  <div class="task-head">
+    <span class="task-badge">TASK 4.3</span>
+    <span class="task-title">3-Month Rolling Average Revenue</span>
+  </div>
+  <div class="task-body">
+
+    <div class="q-block">
+      <div class="q-label">Business Question</div>
+      <div class="q-text">For each month, show the monthly revenue alongside a 3-month rolling average (current month + 2 prior months). Rolling averages smooth out noise and reveal underlying trends.</div>
+    </div>
+
+    <div class="thinking">
+      <div class="think-label">Thinking — How to Construct This Query</div>
+      <div class="think-step"><span class="think-n">1</span><span class="think-text"><strong>ROWS BETWEEN 2 PRECEDING AND CURRENT ROW:</strong> This tells the window to include the current row and exactly 2 rows before it — a 3-row window. If fewer than 2 prior rows exist (first two months), AVG uses however many rows are available.</span></div>
+      <div class="think-step"><span class="think-n">2</span><span class="think-text"><strong>AVG vs SUM:</strong> <code>AVG(monthly_revenue) OVER (...)</code> automatically divides by the number of rows in the frame. For the first month (only 1 row in frame), it returns that month's value. For month 2, average of 2. From month 3 onwards, average of 3.</span></div>
+      <div class="think-step"><span class="think-n">3</span><span class="think-text"><strong>ROWS vs RANGE:</strong> <code>ROWS BETWEEN</code> counts physical rows. <code>RANGE BETWEEN</code> counts by value. For sequential months with no gaps, they're equivalent. Use ROWS for counting actual rows; use RANGE when you want "all rows within ±N of the current value".</span></div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-head"><span class="code-dot"></span>Solution</div>
+<pre><span class="kw">WITH</span>
+<span class="al">monthly</span> <span class="kw">AS</span> (
+    <span class="kw">SELECT</span>
+        <span class="fn">MONTH</span>(payment_date)  <span class="kw">AS</span> <span class="al">month</span>,
+        <span class="fn">SUM</span>(amount)          <span class="kw">AS</span> <span class="al">monthly_revenue</span>
+    <span class="kw">FROM</span>   <span class="tb">payments</span>
+    <span class="kw">WHERE</span>  status <span class="op">=</span> <span class="st">'completed'</span>
+      <span class="kw">AND</span>  <span class="fn">YEAR</span>(payment_date) <span class="op">=</span> <span class="nm">2024</span>
+    <span class="kw">GROUP BY</span> <span class="fn">MONTH</span>(payment_date)
+)
+<span class="kw">SELECT</span>
+    month,
+    monthly_revenue,
+    <span class="fn">ROUND</span>(
+        <span class="fn">AVG</span>(monthly_revenue) <span class="kw">OVER</span> (
+            <span class="kw">ORDER BY</span> month
+            <span class="kw">ROWS BETWEEN</span> <span class="nm">2</span> <span class="kw">PRECEDING AND CURRENT ROW</span>
+        )
+    , <span class="nm">2</span>) <span class="kw">AS</span> <span class="al">rolling_3m_avg</span>
+<span class="kw">FROM</span>   <span class="al">monthly</span>
+<span class="kw">ORDER BY</span> month;</pre>
+    </div>
+
+    <div class="result-wrap">
+      <div class="result-label">Expected Output — rolling avg smooths the volatile monthly figures</div>
+      <table class="rt">
+        <tr><th>month</th><th>monthly_revenue</th><th>rolling_3m_avg</th></tr>
+        <tr><td>2</td><td>200.00</td><td class="t">200.00</td><td class="dim" style="padding-left:8px;font-size:10px">← 1 row only</td></tr>
+        <tr><td>3</td><td>800.00</td><td class="t">500.00</td><td class="dim" style="padding-left:8px;font-size:10px">← 2 rows</td></tr>
+        <tr><td>4</td><td>1390.00</td><td class="t">796.67</td><td class="dim" style="padding-left:8px;font-size:10px">← 3 rows</td></tr>
+        <tr><td>5</td><td>200.00</td><td class="t">796.67</td></tr>
+        <tr><td>6</td><td>1790.00</td><td class="t">793.33</td></tr>
+        <tr><td>7</td><td>1390.00</td><td class="t">1126.67</td></tr>
+        <tr><td>8</td><td>100.00</td><td class="t">1093.33</td></tr>
+        <tr><td>9</td><td>2370.00</td><td class="t">1286.67</td></tr>
+        <tr><td>10</td><td>990.00</td><td class="t">1153.33</td></tr>
+        <tr><td>11</td><td>100.00</td><td class="g">1153.33</td></tr>
+      </table>
+    </div>
+
+    <div class="note green">
+      <span>💡</span>
+      <div><strong>Rolling avg vs cumulative:</strong> The cumulative total always grows. The rolling average only looks at a fixed window, so it can go up or down. Rolling averages are better for trend detection; cumulative totals are better for "how much have we made so far this year?"</div>
+    </div>
+
+  </div>
+</div>
+
+<div class="note teal" style="margin-top:8px;">
+  <span>→</span>
+  <div><strong>Next:</strong> Chapter 5 teaches conditional aggregation — turning category values into columns using <code>SUM(CASE WHEN …)</code>, the SQL equivalent of a pivot table. <a href="ch5.html" style="color:var(--green);">Go to Ch 05 →</a></div>
+</div>
+
+</div>
+</body>
+</html>

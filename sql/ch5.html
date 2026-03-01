@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ch 05 · Conditional Aggregation</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+
+<nav class="topbar">
+  <a class="tb-brand" href="index.html">L2·SQL</a>
+  <div class="tb-links">
+    <a class="tb-link" href="ch1.html">01·CTEs</a>
+    <a class="tb-link" href="ch2.html">02·Windows</a>
+    <a class="tb-link" href="ch3.html">03·Top-N</a>
+    <a class="tb-link" href="ch4.html">04·Running</a>
+    <a class="tb-link active" href="ch5.html">05·Pivot</a>
+    <a class="tb-link" href="ch6.html">06·Dates</a>
+  </div>
+  <a class="tb-home" href="index.html">← Index</a>
+</nav>
+
+<div class="hero">
+  <div class="hero-eyebrow">Chapter 05 · MySQL 8.0</div>
+  <h1>Conditional <span class="accent">Aggregation</span></h1>
+  <p class="hero-desc">
+    Conditional aggregation turns distinct row values into separate columns —
+    the SQL equivalent of a pivot table, without needing a PIVOT keyword.
+    The pattern is <code>SUM(CASE WHEN category = 'X' THEN value ELSE 0 END)</code>
+    repeated for each category you want as a column. The result is a <strong>wide
+    table</strong> instead of a tall one, often exactly what reporting and dashboards need.
+  </p>
+  <div class="hero-tags">
+    <span class="hero-tag hi">SUM(CASE WHEN … THEN … ELSE 0 END)</span>
+    <span class="hero-tag">COUNT(CASE WHEN …)</span>
+    <span class="hero-tag">Pivot without PIVOT</span>
+  </div>
+</div>
+
+<div class="page-wrap">
+
+<!-- ── CONCEPT ── -->
+<div class="concept">
+  <div class="concept-eyebrow">Core Concept</div>
+  <h3>Rows → Columns: The CASE Inside an Aggregate Pattern</h3>
+  <p>Normally, <code>GROUP BY plan_name</code> gives you one row per plan. Sometimes you want one row per customer with columns for each plan. That requires conditional aggregation.</p>
+  <p><strong>The mental model:</strong> For each row, CASE evaluates whether it belongs to a given category. If yes, it passes the value to the aggregate. If no, it passes 0 (for SUM) or NULL (for COUNT). The aggregate then adds up only the matching values.</p>
+  <ul>
+    <li><code>SUM(CASE WHEN plan = 'Pro' THEN amount ELSE 0 END)</code> — revenue from Pro payments only</li>
+    <li><code>COUNT(CASE WHEN status = 'open' THEN 1 END)</code> — count of open items (NULL values ignored by COUNT)</li>
+    <li><code>MAX(CASE WHEN plan = 'Enterprise' THEN amount END)</code> — max value for Enterprise rows</li>
+  </ul>
+  <p><strong>When to use it:</strong> When a stakeholder asks for a report where each row is a customer/product/region and the columns represent categories. Also useful for creating heatmaps, comparison tables, and crosstabs directly in SQL.</p>
+</div>
+
+<!-- ── SYNTAX ── -->
+<div class="syntax-block">
+  <div class="syntax-head">Syntax Anatomy — Conditional Aggregation</div>
+  <div class="syntax-body">
+<div class="aln"><span class="aln-code"><span class="kw">SELECT</span></span><span class="aln-note hi">← one row per group_col value</span></div>
+<div class="aln"><span class="aln-code">    group_col,</span><span class="aln-note"></span></div>
+<div class="aln"><span class="aln-code">    <span class="fn">SUM</span>(<span class="kw">CASE WHEN</span> category <span class="op">=</span> <span class="st">'Basic'</span>      <span class="kw">THEN</span> amount <span class="kw">ELSE</span> <span class="nm">0</span> <span class="kw">END</span>) <span class="kw">AS</span> <span class="al">basic_rev</span>,</span><span class="aln-note">← one column per category</span></div>
+<div class="aln"><span class="aln-code">    <span class="fn">SUM</span>(<span class="kw">CASE WHEN</span> category <span class="op">=</span> <span class="st">'Pro'</span>        <span class="kw">THEN</span> amount <span class="kw">ELSE</span> <span class="nm">0</span> <span class="kw">END</span>) <span class="kw">AS</span> <span class="al">pro_rev</span>,</span><span class="aln-note hi">← same pattern, different filter</span></div>
+<div class="aln"><span class="aln-code">    <span class="fn">SUM</span>(<span class="kw">CASE WHEN</span> category <span class="op">=</span> <span class="st">'Enterprise'</span> <span class="kw">THEN</span> amount <span class="kw">ELSE</span> <span class="nm">0</span> <span class="kw">END</span>) <span class="kw">AS</span> <span class="al">ent_rev</span></span><span class="aln-note"></span></div>
+<div class="aln"><span class="aln-code"><span class="kw">FROM</span>   source_table</span><span class="aln-note"></span></div>
+<div class="aln"><span class="aln-code"><span class="kw">GROUP BY</span> group_col;</span><span class="aln-note hi">← GROUP BY collapses to one row per group</span></div>
+  </div>
+</div>
+
+<div class="when-grid">
+  <div class="when-card">
+    <div class="when-head use">SUM(CASE … ELSE 0)</div>
+    <p>Use ELSE 0 for revenue/quantity columns. Non-matching rows contribute 0 to the sum, so the total is always meaningful — never NULL.</p>
+  </div>
+  <div class="when-card">
+    <div class="when-head use">COUNT(CASE … END)</div>
+    <p>Omit ELSE for count columns. COUNT ignores NULLs, so non-matching rows (which return NULL) aren't counted. ELSE NULL is the same as omitting ELSE.</p>
+  </div>
+</div>
+
+<div class="ch-divider"></div>
+<div class="section-title">Tasks</div>
+
+<!-- ════ TASK 5.1 ════ -->
+<div class="task">
+  <div class="task-head">
+    <span class="task-badge">TASK 5.1</span>
+    <span class="task-title">Revenue by Plan as Columns — One Row Per Customer</span>
+  </div>
+  <div class="task-body">
+
+    <div class="q-block">
+      <div class="q-label">Business Question</div>
+      <div class="q-text">For each customer, show how much they paid on each plan (Basic, Pro, Enterprise) as separate columns. Also include a total column. One row per customer.</div>
+    </div>
+
+    <div class="thinking">
+      <div class="think-label">Thinking — How to Construct This Query</div>
+      <div class="think-step"><span class="think-n">1</span><span class="think-text"><strong>The shape we want:</strong> One row per customer. Three plan columns. Each column should show that customer's spend on that specific plan, or 0 if they never used it.</span></div>
+      <div class="think-step"><span class="think-n">2</span><span class="think-text"><strong>GROUP BY customer_id:</strong> One row per customer. Then for each plan column, a conditional SUM that only adds payments matching that plan.</span></div>
+      <div class="think-step"><span class="think-n">3</span><span class="think-text"><strong>Total column:</strong> Just <code>SUM(amount)</code> with no condition — adds up everything regardless of plan.</span></div>
+      <div class="think-step"><span class="think-n">4</span><span class="think-text"><strong>JOIN to plans for plan_name:</strong> The payments table has plan_id (integer). JOIN to plans to get the name string used in the CASE condition, or compare against plan_id integers directly.</span></div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-head"><span class="code-dot"></span>Solution</div>
+<pre><span class="kw">SELECT</span>
+    c.name                                                                  <span class="kw">AS</span> <span class="al">customer</span>,
+    <span class="fn">SUM</span>(<span class="kw">CASE WHEN</span> pl.plan_name <span class="op">=</span> <span class="st">'Basic'</span>       <span class="kw">THEN</span> p.amount <span class="kw">ELSE</span> <span class="nm">0</span> <span class="kw">END</span>)  <span class="kw">AS</span> <span class="al">basic_rev</span>,
+    <span class="fn">SUM</span>(<span class="kw">CASE WHEN</span> pl.plan_name <span class="op">=</span> <span class="st">'Pro'</span>         <span class="kw">THEN</span> p.amount <span class="kw">ELSE</span> <span class="nm">0</span> <span class="kw">END</span>)  <span class="kw">AS</span> <span class="al">pro_rev</span>,
+    <span class="fn">SUM</span>(<span class="kw">CASE WHEN</span> pl.plan_name <span class="op">=</span> <span class="st">'Enterprise'</span>  <span class="kw">THEN</span> p.amount <span class="kw">ELSE</span> <span class="nm">0</span> <span class="kw">END</span>)  <span class="kw">AS</span> <span class="al">enterprise_rev</span>,
+    <span class="fn">SUM</span>(p.amount)                                                           <span class="kw">AS</span> <span class="al">total_rev</span>
+<span class="kw">FROM</span>   <span class="tb">payments</span>  p
+<span class="kw">JOIN</span>   <span class="tb">customers</span> c  <span class="kw">ON</span> p.customer_id <span class="op">=</span> c.customer_id
+<span class="kw">JOIN</span>   <span class="tb">plans</span>     pl <span class="kw">ON</span> p.plan_id     <span class="op">=</span> pl.plan_id
+<span class="kw">WHERE</span>  p.status <span class="op">=</span> <span class="st">'completed'</span>
+<span class="kw">GROUP BY</span> c.customer_id, c.name
+<span class="kw">ORDER BY</span> total_rev <span class="kw">DESC</span>;</pre>
+    </div>
+
+    <div class="result-wrap">
+      <div class="result-label">Expected Output — zeros show where a customer never used that plan</div>
+      <table class="rt">
+        <tr><th>customer</th><th>basic_rev</th><th>pro_rev</th><th>enterprise_rev</th><th>total_rev</th></tr>
+        <tr><td>Ironclad</td><td>0.00</td><td>0.00</td><td class="g">1980.00</td><td class="g">1980.00</td></tr>
+        <tr><td>Vantage</td><td>0.00</td><td>0.00</td><td class="g">1980.00</td><td class="g">1980.00</td></tr>
+        <tr><td>NovaTech</td><td>0.00</td><td class="t">800.00</td><td>990.00</td><td class="g">1790.00</td></tr>
+        <tr><td>Acme Corp</td><td class="dim">100.00</td><td>400.00</td><td>990.00</td><td class="g">1490.00</td></tr>
+        <tr><td>Brightline</td><td>0.00</td><td class="t">1190.00</td><td>0.00</td><td>1190.00</td></tr>
+        <tr><td>Catalyst</td><td>0.00</td><td class="t">400.00</td><td>0.00</td><td>400.00</td></tr>
+        <tr><td>Starfield</td><td class="dim">300.00</td><td>0.00</td><td>0.00</td><td>300.00</td></tr>
+        <tr><td>Redwood</td><td class="dim">200.00</td><td>0.00</td><td>0.00</td><td>200.00</td></tr>
+      </table>
+    </div>
+
+    <div class="note green">
+      <span>💡</span>
+      <div><strong>Acme Corp's history is visible in one row:</strong> 100 on Basic (first subscription), 400 on Pro (after upgrading), 990 on Enterprise (final plan). The pivot makes the upgrade journey readable at a glance.</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════ TASK 5.2 ════ -->
+<div class="task">
+  <div class="task-head">
+    <span class="task-badge">TASK 5.2</span>
+    <span class="task-title">Support Tickets by Status — Count Columns Per Customer</span>
+  </div>
+  <div class="task-body">
+
+    <div class="q-block">
+      <div class="q-label">Business Question</div>
+      <div class="q-text">For each customer, show how many support tickets they have in each status (open, closed) as separate columns, plus a total ticket count. This is a customer health indicator.</div>
+    </div>
+
+    <div class="thinking">
+      <div class="think-label">Thinking — How to Construct This Query</div>
+      <div class="think-step"><span class="think-n">1</span><span class="think-text"><strong>COUNT instead of SUM:</strong> We're counting rows, not summing a numeric column. Use <code>COUNT(CASE WHEN status = 'open' THEN 1 END)</code> — the CASE returns 1 for open tickets and NULL otherwise; COUNT ignores NULLs, so only open tickets are counted.</span></div>
+      <div class="think-step"><span class="think-n">2</span><span class="think-text"><strong>No ELSE needed for COUNT:</strong> If you write <code>ELSE 0</code>, COUNT would still count the 0 values (COUNT counts non-NULL values, and 0 is not NULL). Either omit ELSE or use <code>ELSE NULL</code> explicitly.</span></div>
+      <div class="think-step"><span class="think-n">3</span><span class="think-text"><strong>Total column:</strong> <code>COUNT(*)</code> or <code>COUNT(ticket_id)</code> with no condition counts all tickets regardless of status.</span></div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-head"><span class="code-dot"></span>Solution</div>
+<pre><span class="kw">SELECT</span>
+    c.name                                                              <span class="kw">AS</span> <span class="al">customer</span>,
+    <span class="fn">COUNT</span>(<span class="kw">CASE WHEN</span> t.status <span class="op">=</span> <span class="st">'open'</span>   <span class="kw">THEN</span> <span class="nm">1</span> <span class="kw">END</span>)                  <span class="kw">AS</span> <span class="al">open_tickets</span>,
+    <span class="fn">COUNT</span>(<span class="kw">CASE WHEN</span> t.status <span class="op">=</span> <span class="st">'closed'</span> <span class="kw">THEN</span> <span class="nm">1</span> <span class="kw">END</span>)                  <span class="kw">AS</span> <span class="al">closed_tickets</span>,
+    <span class="fn">COUNT</span>(t.ticket_id)                                                  <span class="kw">AS</span> <span class="al">total_tickets</span>,
+    <span class="fn">COUNT</span>(<span class="kw">CASE WHEN</span> t.priority <span class="op">=</span> <span class="st">'high'</span> <span class="kw">AND</span> t.status <span class="op">=</span> <span class="st">'open'</span> <span class="kw">THEN</span> <span class="nm">1</span> <span class="kw">END</span>) <span class="kw">AS</span> <span class="al">high_open</span>
+<span class="kw">FROM</span>   <span class="tb">customers</span>       c
+<span class="kw">LEFT JOIN</span> <span class="tb">support_tickets</span> t <span class="kw">ON</span> c.customer_id <span class="op">=</span> t.customer_id
+<span class="kw">GROUP BY</span> c.customer_id, c.name
+<span class="kw">ORDER BY</span> open_tickets <span class="kw">DESC</span>, total_tickets <span class="kw">DESC</span>;</pre>
+    </div>
+
+    <div class="result-wrap">
+      <div class="result-label">Expected Output</div>
+      <table class="rt">
+        <tr><th>customer</th><th>open_tickets</th><th>closed_tickets</th><th>total_tickets</th><th>high_open</th></tr>
+        <tr><td>Brightline</td><td class="r">2</td><td>1</td><td>3</td><td class="r">1</td></tr>
+        <tr><td>NovaTech</td><td class="r">1</td><td>1</td><td>2</td><td class="r">1</td></tr>
+        <tr><td>Starfield</td><td class="a">1</td><td>1</td><td>2</td><td>0</td></tr>
+        <tr><td>Catalyst</td><td class="a">1</td><td>1</td><td>2</td><td class="r">1</td></tr>
+        <tr><td>Ironclad</td><td class="a">1</td><td>1</td><td>2</td><td>0</td></tr>
+        <tr><td>Vantage</td><td class="a">1</td><td>0</td><td>1</td><td class="r">1</td></tr>
+        <tr><td>Acme Corp</td><td>0</td><td>2</td><td>2</td><td>0</td></tr>
+        <tr><td>Redwood</td><td>0</td><td>1</td><td>1</td><td>0</td></tr>
+      </table>
+    </div>
+
+    <div class="note blue">
+      <span>💡</span>
+      <div><strong>Compound CASE conditions:</strong> The <code>high_open</code> column shows how you can combine multiple conditions inside one CASE — <code>WHEN priority = 'high' AND status = 'open'</code>. Any valid boolean expression works inside WHEN.</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════ TASK 5.3 ════ -->
+<div class="task">
+  <div class="task-head">
+    <span class="task-badge">TASK 5.3</span>
+    <span class="task-title">Monthly Revenue Heatmap — Quarters as Columns</span>
+  </div>
+  <div class="task-body">
+
+    <div class="q-block">
+      <div class="q-label">Business Question</div>
+      <div class="q-text">Create a monthly revenue breakdown with one row per month and one column per quarter label (Q1, Q2, Q3, Q4). Non-matching months show 0. This gives a heatmap-style view of revenue concentration by quarter.</div>
+    </div>
+
+    <div class="thinking">
+      <div class="think-label">Thinking — How to Construct This Query</div>
+      <div class="think-step"><span class="think-n">1</span><span class="think-text"><strong>CTE first:</strong> Aggregate revenue by month and compute the quarter number using <code>QUARTER(payment_date)</code> or a CASE on the month number.</span></div>
+      <div class="think-step"><span class="think-n">2</span><span class="think-text"><strong>Outer query:</strong> GROUP BY month again. For each quarter column, <code>SUM(CASE WHEN quarter = 1 THEN monthly_revenue ELSE 0 END)</code>. Since each month belongs to exactly one quarter, this just returns the monthly_revenue or 0.</span></div>
+      <div class="think-step"><span class="think-n">3</span><span class="think-text"><strong>Why not GROUP BY quarter?</strong> Grouping by quarter collapses the months together. We want each month as its own row with a visual column indicator showing which quarter it falls in — good for spotting seasonality.</span></div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-head"><span class="code-dot"></span>Solution</div>
+<pre><span class="kw">WITH</span>
+<span class="al">monthly</span> <span class="kw">AS</span> (
+    <span class="kw">SELECT</span>
+        <span class="fn">MONTH</span>(payment_date)    <span class="kw">AS</span> <span class="al">month</span>,
+        <span class="fn">QUARTER</span>(payment_date)  <span class="kw">AS</span> <span class="al">quarter</span>,
+        <span class="fn">SUM</span>(amount)            <span class="kw">AS</span> <span class="al">monthly_revenue</span>
+    <span class="kw">FROM</span>   <span class="tb">payments</span>
+    <span class="kw">WHERE</span>  status <span class="op">=</span> <span class="st">'completed'</span>
+      <span class="kw">AND</span>  <span class="fn">YEAR</span>(payment_date) <span class="op">=</span> <span class="nm">2024</span>
+    <span class="kw">GROUP BY</span> <span class="fn">MONTH</span>(payment_date), <span class="fn">QUARTER</span>(payment_date)
+)
+<span class="kw">SELECT</span>
+    month,
+    <span class="fn">SUM</span>(<span class="kw">CASE WHEN</span> quarter <span class="op">=</span> <span class="nm">1</span> <span class="kw">THEN</span> monthly_revenue <span class="kw">ELSE</span> <span class="nm">0</span> <span class="kw">END</span>)  <span class="kw">AS</span> <span class="al">Q1</span>,
+    <span class="fn">SUM</span>(<span class="kw">CASE WHEN</span> quarter <span class="op">=</span> <span class="nm">2</span> <span class="kw">THEN</span> monthly_revenue <span class="kw">ELSE</span> <span class="nm">0</span> <span class="kw">END</span>)  <span class="kw">AS</span> <span class="al">Q2</span>,
+    <span class="fn">SUM</span>(<span class="kw">CASE WHEN</span> quarter <span class="op">=</span> <span class="nm">3</span> <span class="kw">THEN</span> monthly_revenue <span class="kw">ELSE</span> <span class="nm">0</span> <span class="kw">END</span>)  <span class="kw">AS</span> <span class="al">Q3</span>,
+    <span class="fn">SUM</span>(<span class="kw">CASE WHEN</span> quarter <span class="op">=</span> <span class="nm">4</span> <span class="kw">THEN</span> monthly_revenue <span class="kw">ELSE</span> <span class="nm">0</span> <span class="kw">END</span>)  <span class="kw">AS</span> <span class="al">Q4</span>,
+    monthly_revenue                                                  <span class="kw">AS</span> <span class="al">total</span>
+<span class="kw">FROM</span>   <span class="al">monthly</span>
+<span class="kw">GROUP BY</span> month, monthly_revenue
+<span class="kw">ORDER BY</span> month;</pre>
+    </div>
+
+    <div class="result-wrap">
+      <div class="result-label">Expected Output — each row has revenue in only one quarter column</div>
+      <table class="rt">
+        <tr><th>month</th><th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th><th>total</th></tr>
+        <tr><td>2</td><td class="t">200.00</td><td>0.00</td><td>0.00</td><td>0.00</td><td>200.00</td></tr>
+        <tr><td>3</td><td class="t">800.00</td><td>0.00</td><td>0.00</td><td>0.00</td><td>800.00</td></tr>
+        <tr><td>4</td><td>0.00</td><td class="g">1390.00</td><td>0.00</td><td>0.00</td><td>1390.00</td></tr>
+        <tr><td>5</td><td>0.00</td><td class="g">200.00</td><td>0.00</td><td>0.00</td><td>200.00</td></tr>
+        <tr><td>6</td><td>0.00</td><td class="g">1790.00</td><td>0.00</td><td>0.00</td><td>1790.00</td></tr>
+        <tr><td>7</td><td>0.00</td><td>0.00</td><td class="a">1390.00</td><td>0.00</td><td>1390.00</td></tr>
+        <tr><td>8</td><td>0.00</td><td>0.00</td><td class="a">100.00</td><td>0.00</td><td>100.00</td></tr>
+        <tr><td>9</td><td>0.00</td><td>0.00</td><td class="a">2370.00</td><td>0.00</td><td>2370.00</td></tr>
+        <tr><td>10</td><td>0.00</td><td>0.00</td><td>0.00</td><td class="v">990.00</td><td>990.00</td></tr>
+        <tr><td>11</td><td>0.00</td><td>0.00</td><td>0.00</td><td class="v">100.00</td><td>100.00</td></tr>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<div class="note teal" style="margin-top:8px;">
+  <span>→</span>
+  <div><strong>Next:</strong> Chapter 6 covers date arithmetic — DATEDIFF, date spines, and gap detection. Find churned customers, missing months, and average days between payments. <a href="ch6.html" style="color:var(--green);">Go to Ch 06 →</a></div>
+</div>
+
+</div>
+</body>
+</html>
