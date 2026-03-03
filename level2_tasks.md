@@ -1,4 +1,4 @@
-# Level 2 SQL — 60 Tasks
+# Session 6
 ## Retail Analytics Warehouse · MySQL 8.0
 
 **Schema:** `sales` (22 rows) · `customers` (10) · `products` (10) · `stores` (5) · `dates` (14)  
