@@ -1,4 +1,4 @@
-# Chapter 7 — Database Normalization
+## Database Normalization
 
 **Schema:** `sales_raw` (single denormalized table)  
 **Tasks:** 16 · **Covers:** 1NF · 2NF · 3NF · Anomalies · Full decomposition
