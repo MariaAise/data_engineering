@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PyTorch 101</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d0d;
+    --surface: #141414;
+    --surface2: #1a1a1a;
+    --border: #2a2a2a;
+    --accent: #e87c2e;
+    --accent2: #4a9eff;
+    --accent3: #7ecf7e;
+    --muted: #555;
+    --text: #d4d4d4;
+    --text-bright: #f0f0f0;
+    --danger: #e05c5c;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-weight: 300;
+    line-height: 1.7;
+    font-size: 14px;
+  }
+
+  /* Layout */
+  .layout { display: flex; min-height: 100vh; }
+
+  nav {
+    width: 220px;
+    min-width: 220px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 32px 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+
+  nav .logo {
+    padding: 0 20px 24px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+
+  nav .logo span {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: var(--accent);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+  }
+
+  nav .logo p {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  nav a {
+    display: block;
+    padding: 6px 20px;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 12px;
+    transition: color 0.15s, background 0.15s;
+    border-left: 2px solid transparent;
+  }
+
+  nav a:hover { color: var(--text); background: var(--surface2); }
+  nav a.active { color: var(--accent); border-left-color: var(--accent); background: rgba(232,124,46,0.06); }
+
+  nav .section-label {
+    padding: 16px 20px 6px;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  main {
+    flex: 1;
+    max-width: 860px;
+    padding: 48px 56px;
+    overflow-x: hidden;
+  }
+
+  /* Typography */
+  h1 {
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--text-bright);
+    font-family: 'IBM Plex Mono', monospace;
+    margin-bottom: 8px;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 13px;
+    margin-bottom: 48px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  h2 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-bright);
+    font-family: 'IBM Plex Mono', monospace;
+    margin: 48px 0 16px;
+    padding-top: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  h2::before {
+    content: attr(data-n);
+    font-size: 11px;
+    color: var(--accent);
+    background: rgba(232,124,46,0.12);
+    padding: 2px 7px;
+    border-radius: 3px;
+  }
+
+  h3 {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent2);
+    font-family: 'IBM Plex Mono', monospace;
+    margin: 24px 0 10px;
+    letter-spacing: 0.03em;
+  }
+
+  p { margin-bottom: 12px; font-size: 13.5px; }
+
+  /* Code blocks */
+  pre {
+    background: #0a0a0a;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 18px 20px;
+    overflow-x: auto;
+    margin: 12px 0 20px;
+    position: relative;
+  }
+
+  pre::before {
+    content: attr(data-label);
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 3px 10px;
+    font-size: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--muted);
+    background: var(--surface2);
+    border-bottom-left-radius: 5px;
+    border-left: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  code {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.8;
+    color: var(--text);
+  }
+
+  .kw  { color: #c792ea; }  /* keyword */
+  .fn  { color: #82aaff; }  /* function/method */
+  .st  { color: #c3e88d; }  /* string */
+  .cm  { color: #546e7a; font-style: italic; }  /* comment */
+  .nm  { color: #f78c6c; }  /* number */
+  .tp  { color: var(--accent); }  /* type/class */
+  .op  { color: #89ddff; }  /* operator */
+
+  /* Callouts */
+  .note {
+    background: rgba(74,158,255,0.07);
+    border-left: 3px solid var(--accent2);
+    padding: 12px 16px;
+    border-radius: 0 5px 5px 0;
+    margin: 12px 0 20px;
+    font-size: 13px;
+  }
+
+  .warn {
+    background: rgba(224,92,92,0.07);
+    border-left: 3px solid var(--danger);
+    padding: 12px 16px;
+    border-radius: 0 5px 5px 0;
+    margin: 12px 0 20px;
+    font-size: 13px;
+  }
+
+  .warn strong, .note strong { font-weight: 600; display: block; margin-bottom: 4px; }
+
+  /* Comparison grid */
+  .compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 12px 0 20px;
+  }
+
+  .compare > div { }
+  .compare .label {
+    font-size: 11px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--muted);
+    margin-bottom: 6px;
+    letter-spacing: 0.05em;
+  }
+
+  /* Table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0 20px;
+    font-size: 12.5px;
+  }
+
+  th {
+    text-align: left;
+    padding: 8px 12px;
+    background: var(--surface2);
+    color: var(--accent);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--border);
+  }
+
+  td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  td code { font-size: 11.5px; color: var(--accent2); }
+  td:first-child { color: var(--accent2); font-family: 'IBM Plex Mono', monospace; }
+
+  /* Section divider */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 40px 0;
+  }
+
+  .tag {
+    display: inline-block;
+    font-size: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    padding: 2px 7px;
+    border-radius: 3px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+
+  .tag-g { background: rgba(126,207,126,0.12); color: var(--accent3); }
+  .tag-r { background: rgba(224,92,92,0.12); color: var(--danger); }
+  .tag-b { background: rgba(74,158,255,0.12); color: var(--accent2); }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<nav>
+  <div class="logo">
+    <span>PyTorch 101</span>
+    <p>syntax reference</p>
+  </div>
+  <div class="section-label">Core</div>
+  <a href="#tensors">Tensors</a>
+  <a href="#autograd">Autograd</a>
+  <a href="#nn">nn.Module</a>
+  <div class="section-label">Architecture</div>
+  <a href="#building">Building Networks</a>
+  <a href="#activations">Activations</a>
+  <a href="#normalization">Normalization</a>
+  <a href="#regularization">Regularization</a>
+  <a href="#weight-init">Weight Init</a>
+  <a href="#custom-layers">Custom Layers</a>
+  <div class="section-label">Training</div>
+  <a href="#data">Data Pipeline</a>
+  <a href="#loop">Training Loop</a>
+  <a href="#optim">Optimizers & LR</a>
+  <div class="section-label">Evaluation</div>
+  <a href="#eval">Eval Mode</a>
+  <a href="#metrics">Metrics</a>
+  <a href="#loss-fns">Loss Functions</a>
+  <a href="#inference">Inference Patterns</a>
+  <div class="section-label">Patterns</div>
+  <a href="#devices">Devices & CUDA</a>
+  <a href="#save">Save & Load</a>
+  <a href="#debug">Debug Tips</a>
+</nav>
+
+<main>
+
+<h1>PyTorch 101</h1>
+<p class="subtitle">For people who already know the math — this is the API map.</p>
+
+<!-- TENSORS -->
+<h2 id="tensors" data-n="01">Tensors</h2>
+<p>Tensors are the fundamental data structure — N-dimensional arrays with dtype, device, and a gradient tape attached.</p>
+
+<h3>Creation</h3>
+<pre data-label="python"><code><span class="kw">import</span> torch
+
+<span class="cm"># From data</span>
+x = torch.<span class="fn">tensor</span>([<span class="nm">1.0</span>, <span class="nm">2.0</span>, <span class="nm">3.0</span>])                   <span class="cm"># infers dtype</span>
+x = torch.<span class="fn">tensor</span>([<span class="nm">1.0</span>, <span class="nm">2.0</span>], dtype=torch.float32)   <span class="cm"># explicit dtype</span>
+
+<span class="cm"># Shape-based</span>
+torch.<span class="fn">zeros</span>(<span class="nm">3</span>, <span class="nm">4</span>)       <span class="cm"># 3x4 of zeros (float32)</span>
+torch.<span class="fn">ones</span>(<span class="nm">3</span>, <span class="nm">4</span>)        <span class="cm"># 3x4 of ones</span>
+torch.<span class="fn">rand</span>(<span class="nm">3</span>, <span class="nm">4</span>)        <span class="cm"># uniform [0,1)</span>
+torch.<span class="fn">randn</span>(<span class="nm">3</span>, <span class="nm">4</span>)       <span class="cm"># standard normal N(0,1)</span>
+torch.<span class="fn">arange</span>(<span class="nm">0</span>, <span class="nm">10</span>, <span class="nm">2</span>)  <span class="cm"># [0, 2, 4, 6, 8]</span>
+
+<span class="cm"># From numpy (shares memory!)</span>
+x = torch.<span class="fn">from_numpy</span>(arr)
+arr = x.<span class="fn">numpy</span>()          <span class="cm"># only works on CPU tensors</span></code></pre>
+
+<h3>Shape manipulation</h3>
+<pre data-label="python"><code>x = torch.<span class="fn">randn</span>(<span class="nm">8</span>, <span class="nm">16</span>)
+
+x.<span class="fn">shape</span>               <span class="cm"># torch.Size([8, 16])</span>
+x.<span class="fn">reshape</span>(<span class="nm">2</span>, <span class="nm">4</span>, <span class="nm">16</span>)   <span class="cm"># new shape, same data</span>
+x.<span class="fn">view</span>(<span class="nm">2</span>, <span class="nm">4</span>, <span class="nm">16</span>)      <span class="cm"># like reshape but requires contiguous memory</span>
+x.<span class="fn">permute</span>(<span class="nm">1</span>, <span class="nm">0</span>)       <span class="cm"># transpose: (16, 8)</span>
+x.<span class="fn">unsqueeze</span>(<span class="nm">0</span>)        <span class="cm"># add dim at pos 0 → (1, 8, 16)</span>
+x.<span class="fn">squeeze</span>()           <span class="cm"># remove all size-1 dims</span>
+x[<span class="nm">0</span>]                  <span class="cm"># index → shape (16,)</span>
+x[:, <span class="nm">3</span>:<span class="nm">7</span>]             <span class="cm"># slice → (8, 4)</span></code></pre>
+
+<div class="note">
+  <strong>reshape vs view</strong>
+  Both change shape without copying data. <code>view</code> requires the tensor to be contiguous in memory; if it's not (e.g. after permute), call <code>.contiguous()</code> first or just use <code>reshape</code> which handles this automatically.
+</div>
+
+<h3>Common ops</h3>
+<pre data-label="python"><code>a = torch.<span class="fn">randn</span>(<span class="nm">4</span>, <span class="nm">4</span>)
+b = torch.<span class="fn">randn</span>(<span class="nm">4</span>, <span class="nm">4</span>)
+
+a @ b              <span class="cm"># matrix multiply (same as torch.matmul)</span>
+a * b              <span class="cm"># element-wise multiply</span>
+torch.<span class="fn">sum</span>(a, dim=<span class="nm">0</span>)   <span class="cm"># sum along rows → shape (4,)</span>
+torch.<span class="fn">mean</span>(a, dim=<span class="nm">1</span>)  <span class="cm"># mean along cols → shape (4,)</span>
+torch.<span class="fn">softmax</span>(a, dim=<span class="nm">-1</span>)  <span class="cm"># softmax along last dim</span>
+torch.<span class="fn">cat</span>([a, b], dim=<span class="nm">0</span>)  <span class="cm"># concat → (8, 4)</span>
+torch.<span class="fn">stack</span>([a, b], dim=<span class="nm">0</span>) <span class="cm"># new dim → (2, 4, 4)</span></code></pre>
+
+<hr class="divider">
+
+<!-- AUTOGRAD -->
+<h2 id="autograd" data-n="02">Autograd</h2>
+<p>PyTorch builds a computation graph dynamically as you run forward operations. <code>.backward()</code> traverses it in reverse to compute gradients via chain rule.</p>
+
+<pre data-label="python"><code>x = torch.<span class="fn">tensor</span>([<span class="nm">2.0</span>], requires_grad=<span class="kw">True</span>)
+y = x ** <span class="nm">2</span> + <span class="nm">3</span> * x   <span class="cm"># builds graph</span>
+y.<span class="fn">backward</span>()          <span class="cm"># dy/dx = 2x + 3 = 7</span>
+x.grad                 <span class="cm"># tensor([7.])</span></code></pre>
+
+<div class="note">
+  <strong>requires_grad propagates</strong>
+  Any tensor computed from a <code>requires_grad=True</code> tensor also has <code>requires_grad=True</code>. The model parameters are leaves with this flag set — everything else in the forward pass inherits it.
+</div>
+
+<h3>Detaching from the graph</h3>
+<pre data-label="python"><code><span class="cm"># Don't track gradients for this operation</span>
+<span class="kw">with</span> torch.<span class="fn">no_grad</span>():
+    y = model(x)   <span class="cm"># no graph built → faster, less memory</span>
+
+<span class="cm"># Detach a tensor from the graph (e.g. for logging)</span>
+loss_val = loss.<span class="fn">detach</span>().<span class="fn">item</span>()   <span class="cm"># scalar Python float</span>
+
+<span class="cm"># Stop gradients flowing through a specific path</span>
+target = output.<span class="fn">detach</span>()   <span class="cm"># common in policy gradient / target networks</span></code></pre>
+
+<div class="warn">
+  <strong>Gradient accumulation gotcha</strong>
+  Gradients accumulate by default — they don't reset each step. You must call <code>optimizer.zero_grad()</code> before each backward pass, or they'll keep adding up across batches.
+</div>
+
+<hr class="divider">
+
+<!-- NN MODULE -->
+<h2 id="nn" data-n="03">nn.Module</h2>
+<p>The base class for all models. Subclass it, define layers in <code>__init__</code>, describe the forward pass in <code>forward</code>.</p>
+
+<pre data-label="python"><code><span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+
+<span class="kw">class</span> <span class="tp">MLP</span>(nn.<span class="tp">Module</span>):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, in_dim, hidden, out_dim):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        self.layers = nn.<span class="tp">Sequential</span>(
+            nn.<span class="tp">Linear</span>(in_dim, hidden),
+            nn.<span class="tp">ReLU</span>(),
+            nn.<span class="tp">Linear</span>(hidden, out_dim)
+        )
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x):
+        <span class="kw">return</span> self.layers(x)
+
+model = <span class="tp">MLP</span>(<span class="nm">784</span>, <span class="nm">256</span>, <span class="nm">10</span>)
+out = <span class="fn">model</span>(x)   <span class="cm"># calls forward() — don't call .forward() directly</span></code></pre>
+
+<h3>Common layers</h3>
+<table>
+  <tr><th>Layer</th><th>What it does</th><th>Key args</th></tr>
+  <tr><td>nn.Linear</td><td>Wx + b</td><td>in_features, out_features</td></tr>
+  <tr><td>nn.Conv2d</td><td>2D convolution</td><td>in_ch, out_ch, kernel_size, stride, padding</td></tr>
+  <tr><td>nn.BatchNorm1d/2d</td><td>Normalize over batch</td><td>num_features</td></tr>
+  <tr><td>nn.LayerNorm</td><td>Normalize over features</td><td>normalized_shape</td></tr>
+  <tr><td>nn.Dropout</td><td>Random zero-out</td><td>p (probability of zeroing)</td></tr>
+  <tr><td>nn.Embedding</td><td>Lookup table</td><td>num_embeddings, embedding_dim</td></tr>
+  <tr><td>nn.MultiheadAttention</td><td>Scaled dot-product attention</td><td>embed_dim, num_heads</td></tr>
+  <tr><td>nn.LSTM / nn.GRU</td><td>Recurrent layers</td><td>input_size, hidden_size, num_layers</td></tr>
+</table>
+
+<h3>Inspecting a model</h3>
+<pre data-label="python"><code><span class="cm"># All parameters (weights + biases)</span>
+<span class="kw">for</span> name, param <span class="kw">in</span> model.<span class="fn">named_parameters</span>():
+    print(name, param.shape)
+
+<span class="cm"># Total trainable param count</span>
+total = <span class="fn">sum</span>(p.<span class="fn">numel</span>() <span class="kw">for</span> p <span class="kw">in</span> model.<span class="fn">parameters</span>() <span class="kw">if</span> p.requires_grad)
+
+<span class="cm"># Architecture summary</span>
+print(model)   <span class="cm"># prints layer tree</span></code></pre>
+
+<hr class="divider">
+
+<!-- BUILDING NETWORKS -->
+<h2 id="building" data-n="04">Building Networks</h2>
+<p>Three patterns for composing layers — each with different tradeoffs for readability and flexibility.</p>
+
+<h3>Pattern 1: nn.Sequential — linear stacks</h3>
+<pre data-label="python"><code><span class="cm"># Good for: simple feedforward, conv blocks with no branching</span>
+encoder = nn.<span class="tp">Sequential</span>(
+    nn.<span class="tp">Linear</span>(<span class="nm">784</span>, <span class="nm">512</span>),
+    nn.<span class="tp">BatchNorm1d</span>(<span class="nm">512</span>),
+    nn.<span class="tp">ReLU</span>(),
+    nn.<span class="tp">Dropout</span>(<span class="nm">0.3</span>),
+    nn.<span class="tp">Linear</span>(<span class="nm">512</span>, <span class="nm">128</span>),
+    nn.<span class="tp">ReLU</span>(),
+)
+
+<span class="cm"># Can also build dynamically with OrderedDict for named layers</span>
+<span class="kw">from</span> collections <span class="kw">import</span> OrderedDict
+block = nn.<span class="tp">Sequential</span>(OrderedDict([
+    (<span class="st">'fc1'</span>,   nn.<span class="tp">Linear</span>(<span class="nm">128</span>, <span class="nm">64</span>)),
+    (<span class="st">'relu1'</span>, nn.<span class="tp">ReLU</span>()),
+    (<span class="st">'fc2'</span>,   nn.<span class="tp">Linear</span>(<span class="nm">64</span>, <span class="nm">10</span>)),
+]))</code></pre>
+
+<h3>Pattern 2: nn.ModuleList — dynamic / repeated blocks</h3>
+<pre data-label="python"><code><span class="cm"># Good for: variable depth, iterating over layers in forward()</span>
+<span class="kw">class</span> <span class="tp">DeepNet</span>(nn.<span class="tp">Module</span>):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, widths):  <span class="cm"># e.g. [784, 512, 256, 128, 10]</span>
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        self.layers = nn.<span class="tp">ModuleList</span>([
+            nn.<span class="tp">Linear</span>(widths[i], widths[i+<span class="nm">1</span>])
+            <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="fn">len</span>(widths) - <span class="nm">1</span>)
+        ])
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x):
+        <span class="kw">for</span> i, layer <span class="kw">in</span> <span class="fn">enumerate</span>(self.layers):
+            x = layer(x)
+            <span class="kw">if</span> i < <span class="fn">len</span>(self.layers) - <span class="nm">1</span>:   <span class="cm"># no activation on last layer</span>
+                x = torch.nn.functional.<span class="fn">relu</span>(x)
+        <span class="kw">return</span> x</code></pre>
+
+<div class="warn">
+  <strong>Always use ModuleList / ModuleDict — never plain Python lists</strong>
+  If you store submodules in a plain Python list, PyTorch can't see them. They won't appear in <code>parameters()</code>, won't get moved by <code>.to(device)</code>, and won't be saved in <code>state_dict()</code>. Always wrap in <code>nn.ModuleList</code> or <code>nn.ModuleDict</code>.
+</div>
+
+<h3>Pattern 3: Full Module — branches, skip connections, multiple inputs</h3>
+<pre data-label="python"><code><span class="cm"># Good for: ResNet blocks, encoder-decoder, multi-head models</span>
+<span class="kw">class</span> <span class="tp">ResidualBlock</span>(nn.<span class="tp">Module</span>):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, dim):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        self.block = nn.<span class="tp">Sequential</span>(
+            nn.<span class="tp">Linear</span>(dim, dim),
+            nn.<span class="tp">LayerNorm</span>(dim),
+            nn.<span class="tp">ReLU</span>(),
+            nn.<span class="tp">Linear</span>(dim, dim),
+            nn.<span class="tp">LayerNorm</span>(dim),
+        )
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x):
+        <span class="kw">return</span> torch.nn.functional.<span class="fn">relu</span>(x + self.block(x))   <span class="cm"># skip connection</span>
+
+
+<span class="kw">class</span> <span class="tp">EncoderDecoder</span>(nn.<span class="tp">Module</span>):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        self.encoder = nn.<span class="tp">Sequential</span>(nn.<span class="tp">Linear</span>(<span class="nm">784</span>, <span class="nm">256</span>), nn.<span class="tp">ReLU</span>())
+        self.decoder = nn.<span class="tp">Sequential</span>(nn.<span class="tp">Linear</span>(<span class="nm">256</span>, <span class="nm">784</span>), nn.<span class="tp">Sigmoid</span>())
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x):
+        z = self.encoder(x)   <span class="cm"># latent</span>
+        <span class="kw">return</span> self.decoder(z), z   <span class="cm"># return both for loss computation</span></code></pre>
+
+<h3>CNN building block</h3>
+<pre data-label="python"><code><span class="kw">class</span> <span class="tp">ConvBlock</span>(nn.<span class="tp">Module</span>):
+    <span class="cm">"""Conv → BN → ReLU — the fundamental CNN unit"""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, in_ch, out_ch, kernel=<span class="nm">3</span>, stride=<span class="nm">1</span>):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        self.block = nn.<span class="tp">Sequential</span>(
+            nn.<span class="tp">Conv2d</span>(in_ch, out_ch, kernel, stride, padding=kernel//<span class="nm">2</span>, bias=<span class="kw">False</span>),
+            nn.<span class="tp">BatchNorm2d</span>(out_ch),   <span class="cm"># bias=False because BN has its own bias</span>
+            nn.<span class="tp">ReLU</span>(inplace=<span class="kw">True</span>),
+        )
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x):
+        <span class="kw">return</span> self.block(x)
+
+
+<span class="cm"># Stacking into a small CNN</span>
+<span class="kw">class</span> <span class="tp">SmallCNN</span>(nn.<span class="tp">Module</span>):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, num_classes=<span class="nm">10</span>):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        self.features = nn.<span class="tp">Sequential</span>(
+            <span class="tp">ConvBlock</span>(<span class="nm">3</span>, <span class="nm">32</span>),    <span class="cm"># (B,3,H,W) → (B,32,H,W)</span>
+            nn.<span class="tp">MaxPool2d</span>(<span class="nm">2</span>),     <span class="cm"># → (B,32,H/2,W/2)</span>
+            <span class="tp">ConvBlock</span>(<span class="nm">32</span>, <span class="nm">64</span>),
+            nn.<span class="tp">MaxPool2d</span>(<span class="nm">2</span>),     <span class="cm"># → (B,64,H/4,W/4)</span>
+            <span class="tp">ConvBlock</span>(<span class="nm">64</span>, <span class="nm">128</span>),
+            nn.<span class="tp">AdaptiveAvgPool2d</span>((<span class="nm">1</span>, <span class="nm">1</span>)),  <span class="cm"># → (B,128,1,1) — any input size works</span>
+        )
+        self.classifier = nn.<span class="tp">Linear</span>(<span class="nm">128</span>, num_classes)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x):
+        x = self.features(x)
+        x = x.<span class="fn">flatten</span>(<span class="nm">1</span>)          <span class="cm"># (B,128,1,1) → (B,128)</span>
+        <span class="kw">return</span> self.classifier(x)</code></pre>
+
+<hr class="divider">
+
+<!-- ACTIVATIONS -->
+<h2 id="activations" data-n="05">Activations</h2>
+<p>The choice of activation is an architectural decision — it affects gradient flow, expressivity, and training stability.</p>
+
+<table>
+  <tr><th>Activation</th><th>Formula</th><th>Use when</th></tr>
+  <tr><td>nn.ReLU</td><td>max(0, x)</td><td>Default for CNNs and MLPs. Fast, sparse.</td></tr>
+  <tr><td>nn.GELU</td><td>x·Φ(x)</td><td>Transformers (BERT, GPT). Smoother than ReLU.</td></tr>
+  <tr><td>nn.SiLU / Swish</td><td>x·σ(x)</td><td>Modern CNNs (EfficientNet, YOLOv8). Non-monotonic.</td></tr>
+  <tr><td>nn.LeakyReLU</td><td>max(αx, x)</td><td>When dying ReLU is a problem. α typically 0.01–0.2.</td></tr>
+  <tr><td>nn.Tanh</td><td>tanh(x)</td><td>RNNs, outputs bounded to (-1,1).</td></tr>
+  <tr><td>nn.Sigmoid</td><td>σ(x)</td><td>Binary classification output only. Vanishes in hidden layers.</td></tr>
+  <tr><td>nn.Softmax</td><td>eˣᵢ / Σeˣ</td><td>Multi-class output. Use dim=-1. Built into CrossEntropyLoss.</td></tr>
+</table>
+
+<pre data-label="python"><code><span class="kw">import</span> torch.nn.functional <span class="kw">as</span> F
+
+<span class="cm"># Module form (use inside __init__ for stored layers)</span>
+self.act = nn.<span class="tp">GELU</span>()
+
+<span class="cm"># Functional form (use inside forward() for stateless ops)</span>
+x = F.<span class="fn">relu</span>(x)
+x = F.<span class="fn">gelu</span>(x)
+x = F.<span class="fn">softmax</span>(x, dim=<span class="nm">-1</span>)
+x = F.<span class="fn">sigmoid</span>(x)
+
+<span class="cm"># inplace=True saves memory but breaks autograd in some cases — use with care</span>
+x = F.<span class="fn">relu</span>(x, inplace=<span class="kw">True</span>)</code></pre>
+
+<div class="note">
+  <strong>Don't apply Softmax before CrossEntropyLoss</strong>
+  <code>nn.CrossEntropyLoss</code> internally applies log-softmax + NLL. If you apply softmax yourself first, you're passing probabilities to a function expecting raw logits — loss will be wrong and training will break silently.
+</div>
+
+<hr class="divider">
+
+<!-- NORMALIZATION -->
+<h2 id="normalization" data-n="06">Normalization</h2>
+<p>Normalization layers stabilize training by controlling the scale and distribution of activations. Which one to use depends on your architecture.</p>
+
+<table>
+  <tr><th>Layer</th><th>Normalizes over</th><th>Use when</th></tr>
+  <tr><td>BatchNorm1d/2d</td><td>Batch dimension (N)</td><td>CNNs with large batches. Bad with small batches.</td></tr>
+  <tr><td>LayerNorm</td><td>Feature dimension (C)</td><td>Transformers, RNNs. Works with batch_size=1.</td></tr>
+  <tr><td>GroupNorm</td><td>Groups of channels</td><td>CNNs with small batches (detection, segmentation).</td></tr>
+  <tr><td>InstanceNorm</td><td>Each sample independently</td><td>Style transfer, generative models.</td></tr>
+</table>
+
+<pre data-label="python"><code><span class="cm"># BatchNorm — learns gamma (scale) and beta (shift)</span>
+nn.<span class="tp">BatchNorm1d</span>(<span class="nm">num_features</span>)   <span class="cm"># for (B, F) inputs</span>
+nn.<span class="tp">BatchNorm2d</span>(<span class="nm">num_channels</span>)   <span class="cm"># for (B, C, H, W) inputs</span>
+
+<span class="cm"># LayerNorm — normalizes last N dims</span>
+nn.<span class="tp">LayerNorm</span>(<span class="nm">hidden_size</span>)            <span class="cm"># normalize over embedding dim</span>
+nn.<span class="tp">LayerNorm</span>([<span class="nm">seq_len</span>, <span class="nm">hidden_size</span>]) <span class="cm"># normalize over both dims</span>
+
+<span class="cm"># GroupNorm — num_groups divides num_channels evenly</span>
+nn.<span class="tp">GroupNorm</span>(num_groups=<span class="nm">32</span>, num_channels=<span class="nm">256</span>)
+
+<span class="cm"># Where to place norm — two conventions:</span>
+<span class="cm"># Post-norm (original): Linear → Activation → Norm  (classic transformers)</span>
+<span class="cm"># Pre-norm (modern):   Norm → Linear → Activation   (more stable training)</span></code></pre>
+
+<div class="note">
+  <strong>BatchNorm train vs eval behavior</strong>
+  During training, BN normalizes using the current batch's mean/variance and updates running statistics. During <code>eval()</code>, it uses those frozen running stats instead. This is why forgetting <code>model.eval()</code> gives inconsistent validation metrics — BN is still operating in batch mode.
+</div>
+
+<hr class="divider">
+
+<!-- REGULARIZATION -->
+<h2 id="regularization" data-n="07">Regularization</h2>
+
+<h3>Dropout</h3>
+<pre data-label="python"><code><span class="cm"># Standard dropout — zeroes random neurons with probability p</span>
+nn.<span class="tp">Dropout</span>(p=<span class="nm">0.5</span>)        <span class="cm"># for Linear layers</span>
+nn.<span class="tp">Dropout2d</span>(p=<span class="nm">0.1</span>)      <span class="cm"># for Conv layers — drops entire channels</span>
+nn.<span class="tp">AlphaDropout</span>(p=<span class="nm">0.1</span>)   <span class="cm"># for SELU activations — preserves self-normalizing property</span>
+
+<span class="cm"># Dropout is ONLY active during training mode</span>
+<span class="cm"># model.eval() disables it automatically — no manual toggle needed</span>
+
+<span class="cm"># Functional form for use inside forward()</span>
+x = F.<span class="fn">dropout</span>(x, p=<span class="nm">0.5</span>, training=self.training)  <span class="cm"># self.training is the mode flag</span></code></pre>
+
+<h3>Weight decay (L2 regularization)</h3>
+<pre data-label="python"><code><span class="cm"># Applied via optimizer, not as a layer</span>
+optimizer = torch.optim.<span class="tp">AdamW</span>(model.<span class="fn">parameters</span>(), lr=<span class="nm">1e-3</span>, weight_decay=<span class="nm">0.01</span>)
+
+<span class="cm"># Apply weight decay only to weights, not biases or norms</span>
+decay_params    = [p <span class="kw">for</span> n, p <span class="kw">in</span> model.<span class="fn">named_parameters</span>() <span class="kw">if</span> <span class="st">'bias'</span> <span class="kw">not in</span> n]
+no_decay_params = [p <span class="kw">for</span> n, p <span class="kw">in</span> model.<span class="fn">named_parameters</span>() <span class="kw">if</span> <span class="st">'bias'</span> <span class="kw">in</span> n]
+optimizer = torch.optim.<span class="tp">AdamW</span>([
+    {<span class="st">'params'</span>: decay_params,    <span class="st">'weight_decay'</span>: <span class="nm">0.01</span>},
+    {<span class="st">'params'</span>: no_decay_params, <span class="st">'weight_decay'</span>: <span class="nm">0.0</span>},
+], lr=<span class="nm">1e-3</span>)</code></pre>
+
+<hr class="divider">
+
+<!-- WEIGHT INIT -->
+<h2 id="weight-init" data-n="08">Weight Initialization</h2>
+<p>PyTorch has sensible defaults (Kaiming uniform for Linear/Conv, uniform for Embedding), but explicit init is important for custom architectures.</p>
+
+<pre data-label="python"><code><span class="kw">import</span> torch.nn.init <span class="kw">as</span> init
+
+<span class="cm"># Common initializers</span>
+init.<span class="fn">kaiming_normal_</span>(layer.weight, mode=<span class="st">'fan_out'</span>, nonlinearity=<span class="st">'relu'</span>)  <span class="cm"># He init</span>
+init.<span class="fn">xavier_uniform_</span>(layer.weight)    <span class="cm"># Glorot init — for tanh/sigmoid</span>
+init.<span class="fn">normal_</span>(layer.weight, mean=<span class="nm">0</span>, std=<span class="nm">0.02</span>)   <span class="cm"># GPT-style small init</span>
+init.<span class="fn">zeros_</span>(layer.bias)
+init.<span class="fn">ones_</span>(layer.weight)              <span class="cm"># for LayerNorm gamma</span>
+
+<span class="cm"># Apply to an entire model with apply()</span>
+<span class="kw">def</span> <span class="fn">init_weights</span>(module):
+    <span class="kw">if</span> <span class="fn">isinstance</span>(module, nn.<span class="tp">Linear</span>):
+        init.<span class="fn">kaiming_normal_</span>(module.weight)
+        <span class="kw">if</span> module.bias <span class="kw">is not None</span>:
+            init.<span class="fn">zeros_</span>(module.bias)
+    <span class="kw">elif</span> <span class="fn">isinstance</span>(module, nn.<span class="tp">Embedding</span>):
+        init.<span class="fn">normal_</span>(module.weight, std=<span class="nm">0.02</span>)
+    <span class="kw">elif</span> <span class="fn">isinstance</span>(module, (nn.<span class="tp">BatchNorm1d</span>, nn.<span class="tp">LayerNorm</span>)):
+        init.<span class="fn">ones_</span>(module.weight)
+        init.<span class="fn">zeros_</span>(module.bias)
+
+model.<span class="fn">apply</span>(init_weights)   <span class="cm"># walks every submodule recursively</span></code></pre>
+
+<div class="note">
+  <strong>Why Kaiming for ReLU, Xavier for Tanh?</strong>
+  Both try to keep activation variance stable across layers. Kaiming (He) accounts for ReLU's dead half — it scales by √(2/fan_in). Xavier assumes symmetric activations — it scales by √(2/(fan_in + fan_out)). Using Xavier with ReLU causes vanishing activations in deep networks.
+</div>
+
+<hr class="divider">
+
+<!-- CUSTOM LAYERS -->
+<h2 id="custom-layers" data-n="09">Custom Layers & Functional API</h2>
+
+<h3>Custom layer with learnable parameters</h3>
+<pre data-label="python"><code><span class="kw">class</span> <span class="tp">ScaledDotProductAttention</span>(nn.<span class="tp">Module</span>):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, dim):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        self.scale = dim ** <span class="nm">-0.5</span>       <span class="cm"># 1/√d_k</span>
+        self.q = nn.<span class="tp">Linear</span>(dim, dim)
+        self.k = nn.<span class="tp">Linear</span>(dim, dim)
+        self.v = nn.<span class="tp">Linear</span>(dim, dim)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x):
+        Q = self.q(x)
+        K = self.k(x)
+        V = self.v(x)
+        scores = (Q @ K.<span class="fn">transpose</span>(-<span class="nm">2</span>, -<span class="nm">1</span>)) * self.scale   <span class="cm"># (B, T, T)</span>
+        attn   = F.<span class="fn">softmax</span>(scores, dim=<span class="nm">-1</span>)
+        <span class="kw">return</span> attn @ V
+
+
+<span class="kw">class</span> <span class="tp">LearnedPositionalEncoding</span>(nn.<span class="tp">Module</span>):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, max_len, dim):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        self.pe = nn.<span class="tp">Embedding</span>(max_len, dim)   <span class="cm"># learned, not sinusoidal</span>
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x):
+        positions = torch.<span class="fn">arange</span>(x.<span class="fn">size</span>(<span class="nm">1</span>), device=x.device)
+        <span class="kw">return</span> x + self.pe(positions)   <span class="cm"># broadcast over batch dim</span></code></pre>
+
+<h3>nn.Parameter — raw learnable tensors</h3>
+<pre data-label="python"><code><span class="kw">class</span> <span class="tp">LayerScale</span>(nn.<span class="tp">Module</span>):
+    <span class="cm">"""Learnable per-channel scale factor (used in DeiT, CaiT)"""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, dim, init_value=<span class="nm">1e-4</span>):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        <span class="cm"># nn.Parameter registers tensor as a learnable parameter</span>
+        self.gamma = nn.<span class="tp">Parameter</span>(torch.<span class="fn">ones</span>(dim) * init_value)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x):
+        <span class="kw">return</span> x * self.gamma   <span class="cm"># element-wise scale</span></code></pre>
+
+<h3>Freezing layers</h3>
+<pre data-label="python"><code><span class="cm"># Freeze entire model (for feature extraction)</span>
+<span class="kw">for</span> param <span class="kw">in</span> model.<span class="fn">parameters</span>():
+    param.requires_grad = <span class="kw">False</span>
+
+<span class="cm"># Freeze only the backbone, keep classifier trainable</span>
+<span class="kw">for</span> param <span class="kw">in</span> model.backbone.<span class="fn">parameters</span>():
+    param.requires_grad = <span class="kw">False</span>
+<span class="kw">for</span> param <span class="kw">in</span> model.classifier.<span class="fn">parameters</span>():
+    param.requires_grad = <span class="kw">True</span>
+
+<span class="cm"># Verify which params will be updated</span>
+trainable = [n <span class="kw">for</span> n, p <span class="kw">in</span> model.<span class="fn">named_parameters</span>() <span class="kw">if</span> p.requires_grad]</code></pre>
+
+<hr class="divider">
+
+<!-- DATA -->
+<h2 id="data" data-n="10">Data Pipeline</h2>
+<p>PyTorch's data loading is a two-class system: <code>Dataset</code> defines what data exists, <code>DataLoader</code> defines how to iterate over it.</p>
+
+<pre data-label="python"><code><span class="kw">from</span> torch.utils.data <span class="kw">import</span> Dataset, DataLoader
+
+<span class="kw">class</span> <span class="tp">MyDataset</span>(Dataset):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, X, y):
+        self.X = X  <span class="cm"># tensors</span>
+        self.y = y
+
+    <span class="kw">def</span> <span class="fn">__len__</span>(self):
+        <span class="kw">return</span> <span class="fn">len</span>(self.X)
+
+    <span class="kw">def</span> <span class="fn">__getitem__</span>(self, idx):
+        <span class="kw">return</span> self.X[idx], self.y[idx]   <span class="cm"># (input, label) pair</span>
+
+dataset = <span class="tp">MyDataset</span>(X_train, y_train)
+loader  = <span class="tp">DataLoader</span>(dataset, batch_size=<span class="nm">32</span>, shuffle=<span class="kw">True</span>, num_workers=<span class="nm">4</span>)
+
+<span class="kw">for</span> X_batch, y_batch <span class="kw">in</span> loader:
+    <span class="cm"># X_batch.shape → (32, ...)</span>
+    ...</code></pre>
+
+<div class="note">
+  <strong>num_workers</strong>
+  Spawns background processes that prefetch data in parallel so the GPU is never idle waiting for I/O. Rule of thumb: 4 per GPU. Set to 0 when debugging (avoids multiprocessing overhead and confusing tracebacks).
+</div>
+
+<hr class="divider">
+
+<!-- TRAINING LOOP -->
+<h2 id="loop" data-n="11">Training Loop</h2>
+<p>The canonical pattern. Every step is explicit — this is by design.</p>
+
+<pre data-label="python"><code>model = <span class="tp">MLP</span>(<span class="nm">784</span>, <span class="nm">256</span>, <span class="nm">10</span>).<span class="fn">to</span>(device)
+optimizer = torch.optim.<span class="tp">Adam</span>(model.<span class="fn">parameters</span>(), lr=<span class="nm">1e-3</span>)
+criterion = nn.<span class="tp">CrossEntropyLoss</span>()
+
+<span class="kw">for</span> epoch <span class="kw">in</span> <span class="fn">range</span>(num_epochs):
+    model.<span class="fn">train</span>()                         <span class="cm"># ← sets training mode</span>
+    <span class="kw">for</span> X, y <span class="kw">in</span> train_loader:
+        X, y = X.<span class="fn">to</span>(device), y.<span class="fn">to</span>(device)
+
+        optimizer.<span class="fn">zero_grad</span>()             <span class="cm"># ① reset gradients</span>
+        logits = <span class="fn">model</span>(X)                 <span class="cm"># ② forward pass</span>
+        loss   = <span class="fn">criterion</span>(logits, y)     <span class="cm"># ③ compute loss</span>
+        loss.<span class="fn">backward</span>()                   <span class="cm"># ④ backprop</span>
+        optimizer.<span class="fn">step</span>()                  <span class="cm"># ⑤ update weights</span></code></pre>
+
+<div class="note">
+  <strong>Why in this exact order?</strong>
+  zero_grad → forward → loss → backward → step. Deviating breaks things: if you call backward() twice without zero_grad() gradients add; if you call step() before backward() you update on stale gradients.
+</div>
+
+<h3>Gradient clipping</h3>
+<pre data-label="python"><code><span class="cm"># Insert between backward() and step()</span>
+nn.utils.<span class="fn">clip_grad_norm_</span>(model.<span class="fn">parameters</span>(), max_norm=<span class="nm">1.0</span>)</code></pre>
+<p>Prevents exploding gradients — essential for RNNs and Transformers. Clips the global norm of all parameter gradients together.</p>
+
+<hr class="divider">
+
+<!-- OPTIMIZERS -->
+<h2 id="optim" data-n="12">Optimizers & LR Scheduling</h2>
+
+<pre data-label="python"><code><span class="cm"># Common optimizers</span>
+torch.optim.<span class="tp">SGD</span>(model.<span class="fn">parameters</span>(), lr=<span class="nm">0.01</span>, momentum=<span class="nm">0.9</span>)
+torch.optim.<span class="tp">Adam</span>(model.<span class="fn">parameters</span>(), lr=<span class="nm">1e-3</span>, weight_decay=<span class="nm">1e-4</span>)
+torch.optim.<span class="tp">AdamW</span>(model.<span class="fn">parameters</span>(), lr=<span class="nm">1e-3</span>, weight_decay=<span class="nm">0.01</span>)
+
+<span class="cm"># LR Schedulers (call scheduler.step() after each epoch)</span>
+scheduler = torch.optim.lr_scheduler.<span class="tp">StepLR</span>(optimizer, step_size=<span class="nm">10</span>, gamma=<span class="nm">0.1</span>)
+scheduler = torch.optim.lr_scheduler.<span class="tp">CosineAnnealingLR</span>(optimizer, T_max=<span class="nm">50</span>)
+scheduler = torch.optim.lr_scheduler.<span class="tp">OneCycleLR</span>(
+    optimizer, max_lr=<span class="nm">1e-2</span>, steps_per_epoch=<span class="fn">len</span>(train_loader), epochs=<span class="nm">10</span>
+)</code></pre>
+
+<div class="note">
+  <strong>Adam vs AdamW</strong>
+  Adam applies weight decay incorrectly (adds it to the gradient, so it interacts with the adaptive learning rate). AdamW decouples weight decay from the gradient update. For transformers especially, always prefer AdamW.
+</div>
+
+<hr class="divider">
+
+<!-- EVAL -->
+<h2 id="eval" data-n="13">Eval Mode & no_grad</h2>
+
+<pre data-label="python"><code>model.<span class="fn">eval</span>()    <span class="cm"># disables Dropout, fixes BatchNorm running stats</span>
+
+<span class="kw">with</span> torch.<span class="fn">no_grad</span>():
+    <span class="kw">for</span> X, y <span class="kw">in</span> val_loader:
+        logits = <span class="fn">model</span>(X.<span class="fn">to</span>(device))
+        preds = logits.<span class="fn">argmax</span>(dim=<span class="nm">-1</span>)</code></pre>
+
+<div class="warn">
+  <strong>model.eval() and no_grad() are independent</strong>
+  <code>eval()</code> changes layer behavior. <code>no_grad()</code> stops gradient tracking for memory/speed. You almost always want both during validation. Forgetting <code>eval()</code> means Dropout is still active and BatchNorm uses batch stats — your validation metrics will be silently wrong.
+</div>
+
+<h3>torch.inference_mode — the faster no_grad</h3>
+<pre data-label="python"><code><span class="cm"># Newer alternative to no_grad — more aggressive optimizations</span>
+<span class="cm"># Tensors created inside cannot be used in autograd later</span>
+<span class="kw">with</span> torch.<span class="fn">inference_mode</span>():
+    preds = <span class="fn">model</span>(X)   <span class="cm"># use this for inference/deployment</span>
+
+<span class="cm"># Use no_grad when you might need gradients from the result later</span>
+<span class="cm"># Use inference_mode for pure evaluation — it's faster</span></code></pre>
+
+<hr class="divider">
+
+<!-- METRICS -->
+<h2 id="metrics" data-n="14">Metrics</h2>
+<p>Computing metrics correctly requires accumulating over the full validation set, not averaging batch averages (which are biased when batch sizes differ).</p>
+
+<h3>Classification: accuracy, top-k</h3>
+<pre data-label="python"><code>model.<span class="fn">eval</span>()
+all_preds, all_labels = [], []
+
+<span class="kw">with</span> torch.<span class="fn">inference_mode</span>():
+    <span class="kw">for</span> X, y <span class="kw">in</span> val_loader:
+        logits = <span class="fn">model</span>(X.<span class="fn">to</span>(device))
+        all_preds.<span class="fn">append</span>(logits.<span class="fn">cpu</span>())
+        all_labels.<span class="fn">append</span>(y)
+
+all_preds  = torch.<span class="fn">cat</span>(all_preds)    <span class="cm"># (N, num_classes)</span>
+all_labels = torch.<span class="fn">cat</span>(all_labels)   <span class="cm"># (N,)</span>
+
+<span class="cm"># Top-1 accuracy</span>
+acc = (all_preds.<span class="fn">argmax</span>(<span class="nm">1</span>) == all_labels).<span class="fn">float</span>().<span class="fn">mean</span>().<span class="fn">item</span>()
+
+<span class="cm"># Top-5 accuracy</span>
+top5 = all_preds.<span class="fn">topk</span>(<span class="nm">5</span>, dim=<span class="nm">1</span>).indices   <span class="cm"># (N, 5)</span>
+top5_acc = (top5 == all_labels.<span class="fn">unsqueeze</span>(<span class="nm">1</span>)).<span class="fn">any</span>(dim=<span class="nm">1</span>).<span class="fn">float</span>().<span class="fn">mean</span>().<span class="fn">item</span>()</code></pre>
+
+<h3>Classification: precision, recall, F1 (manual)</h3>
+<pre data-label="python"><code><span class="cm"># Binary classification</span>
+preds  = (torch.<span class="fn">sigmoid</span>(logits) > <span class="nm">0.5</span>).<span class="fn">long</span>()
+labels = y
+
+TP = ((preds == <span class="nm">1</span>) & (labels == <span class="nm">1</span>)).<span class="fn">sum</span>().<span class="fn">float</span>()
+FP = ((preds == <span class="nm">1</span>) & (labels == <span class="nm">0</span>)).<span class="fn">sum</span>().<span class="fn">float</span>()
+FN = ((preds == <span class="nm">0</span>) & (labels == <span class="nm">1</span>)).<span class="fn">sum</span>().<span class="fn">float</span>()
+
+precision = TP / (TP + FP + <span class="nm">1e-8</span>)
+recall    = TP / (TP + FN + <span class="nm">1e-8</span>)
+f1        = <span class="nm">2</span> * precision * recall / (precision + recall + <span class="nm">1e-8</span>)</code></pre>
+
+<h3>Using torchmetrics (recommended for production)</h3>
+<pre data-label="python"><code><span class="cm"># pip install torchmetrics</span>
+<span class="kw">from</span> torchmetrics <span class="kw">import</span> Accuracy, F1Score, ConfusionMatrix
+
+acc_metric = <span class="tp">Accuracy</span>(task=<span class="st">'multiclass'</span>, num_classes=<span class="nm">10</span>).<span class="fn">to</span>(device)
+f1_metric  = <span class="tp">F1Score</span>(task=<span class="st">'multiclass'</span>, num_classes=<span class="nm">10</span>, average=<span class="st">'macro'</span>).<span class="fn">to</span>(device)
+
+model.<span class="fn">eval</span>()
+<span class="kw">with</span> torch.<span class="fn">inference_mode</span>():
+    <span class="kw">for</span> X, y <span class="kw">in</span> val_loader:
+        X, y = X.<span class="fn">to</span>(device), y.<span class="fn">to</span>(device)
+        preds = <span class="fn">model</span>(X)
+        acc_metric.<span class="fn">update</span>(preds, y)   <span class="cm"># accumulates correctly</span>
+        f1_metric.<span class="fn">update</span>(preds, y)
+
+print(acc_metric.<span class="fn">compute</span>())   <span class="cm"># final value over full val set</span>
+print(f1_metric.<span class="fn">compute</span>())
+acc_metric.<span class="fn">reset</span>()            <span class="cm"># clear state for next epoch</span></code></pre>
+
+<h3>Regression metrics</h3>
+<pre data-label="python"><code>preds  = <span class="fn">model</span>(X.<span class="fn">to</span>(device)).<span class="fn">squeeze</span>()
+labels = y.<span class="fn">to</span>(device)
+
+<span class="cm"># MSE and RMSE</span>
+mse  = F.<span class="fn">mse_loss</span>(preds, labels).<span class="fn">item</span>()
+rmse = mse ** <span class="nm">0.5</span>
+
+<span class="cm"># MAE</span>
+mae = F.<span class="fn">l1_loss</span>(preds, labels).<span class="fn">item</span>()
+
+<span class="cm"># R² (coefficient of determination)</span>
+ss_res = ((labels - preds) ** <span class="nm">2</span>).<span class="fn">sum</span>()
+ss_tot = ((labels - labels.<span class="fn">mean</span>()) ** <span class="nm">2</span>).<span class="fn">sum</span>()
+r2 = (<span class="nm">1</span> - ss_res / ss_tot).<span class="fn">item</span>()</code></pre>
+
+<h3>Validation loop — full template</h3>
+<pre data-label="python"><code><span class="kw">def</span> <span class="fn">evaluate</span>(model, loader, criterion, device):
+    model.<span class="fn">eval</span>()
+    total_loss = <span class="nm">0.0</span>
+    correct    = <span class="nm">0</span>
+    n          = <span class="nm">0</span>
+
+    <span class="kw">with</span> torch.<span class="fn">inference_mode</span>():
+        <span class="kw">for</span> X, y <span class="kw">in</span> loader:
+            X, y = X.<span class="fn">to</span>(device), y.<span class="fn">to</span>(device)
+            logits = <span class="fn">model</span>(X)
+            loss   = <span class="fn">criterion</span>(logits, y)
+
+            total_loss += loss.<span class="fn">item</span>() * X.<span class="fn">size</span>(<span class="nm">0</span>)  <span class="cm"># weight by batch size</span>
+            correct    += (logits.<span class="fn">argmax</span>(<span class="nm">1</span>) == y).<span class="fn">sum</span>().<span class="fn">item</span>()
+            n          += X.<span class="fn">size</span>(<span class="nm">0</span>)
+
+    <span class="kw">return</span> {
+        <span class="st">'loss'</span>: total_loss / n,
+        <span class="st">'acc'</span>:  correct / n
+    }
+
+<span class="cm"># In training loop:</span>
+val_metrics = <span class="fn">evaluate</span>(model, val_loader, criterion, device)
+print(<span class="fn">f</span><span class="st">"val_loss={val_metrics['loss']:.4f}  val_acc={val_metrics['acc']:.4f}"</span>)</code></pre>
+
+<hr class="divider">
+
+<!-- LOSS FUNCTIONS -->
+<h2 id="loss-fns" data-n="15">Loss Functions</h2>
+
+<table>
+  <tr><th>Loss</th><th>Task</th><th>Input format</th></tr>
+  <tr><td>nn.CrossEntropyLoss</td><td>Multi-class classification</td><td>logits (B, C) + labels (B,) as integers</td></tr>
+  <tr><td>nn.BCEWithLogitsLoss</td><td>Binary / multi-label</td><td>logits (B,) or (B, C) + float labels</td></tr>
+  <tr><td>nn.MSELoss</td><td>Regression</td><td>predictions (B,) + targets (B,)</td></tr>
+  <tr><td>nn.L1Loss</td><td>Regression (robust to outliers)</td><td>predictions + targets, same shape</td></tr>
+  <tr><td>nn.HuberLoss</td><td>Regression (MSE + MAE blend)</td><td>predictions + targets, same shape</td></tr>
+  <tr><td>nn.NLLLoss</td><td>Multi-class (with log-softmax)</td><td>log-probs (B, C) + labels (B,)</td></tr>
+  <tr><td>nn.KLDivLoss</td><td>Distribution matching, VAE</td><td>log-probs + target probs</td></tr>
+  <tr><td>nn.CosineEmbeddingLoss</td><td>Similarity learning</td><td>two embeddings + ±1 label</td></tr>
+  <tr><td>nn.TripletMarginLoss</td><td>Metric learning</td><td>anchor, positive, negative embeddings</td></tr>
+</table>
+
+<pre data-label="python"><code><span class="cm"># CrossEntropyLoss: takes raw logits (NOT softmax output)</span>
+criterion = nn.<span class="tp">CrossEntropyLoss</span>()
+loss = <span class="fn">criterion</span>(logits, labels)   <span class="cm"># logits: (B,C) float, labels: (B,) long</span>
+
+<span class="cm"># Label smoothing — prevents overconfidence</span>
+criterion = nn.<span class="tp">CrossEntropyLoss</span>(label_smoothing=<span class="nm">0.1</span>)
+
+<span class="cm"># Class weights — for imbalanced datasets</span>
+weights = torch.<span class="fn">tensor</span>([<span class="nm">1.0</span>, <span class="nm">5.0</span>, <span class="nm">2.0</span>])   <span class="cm"># class 1 is rare, upweight it</span>
+criterion = nn.<span class="tp">CrossEntropyLoss</span>(weight=weights.<span class="fn">to</span>(device))
+
+<span class="cm"># BCEWithLogitsLoss: binary or multi-label</span>
+criterion = nn.<span class="tp">BCEWithLogitsLoss</span>()
+loss = <span class="fn">criterion</span>(logits, labels.<span class="fn">float</span>())  <span class="cm"># labels must be float [0.0 or 1.0]</span>
+
+<span class="cm"># Positive weight for imbalanced binary classification</span>
+pos_weight = torch.<span class="fn">tensor</span>([<span class="nm">9.0</span>])   <span class="cm"># 1:9 negative:positive ratio</span>
+criterion  = nn.<span class="tp">BCEWithLogitsLoss</span>(pos_weight=pos_weight.<span class="fn">to</span>(device))
+
+<span class="cm"># Custom loss — just a function of tensors</span>
+<span class="kw">def</span> <span class="fn">focal_loss</span>(logits, labels, gamma=<span class="nm">2.0</span>):
+    bce  = F.<span class="fn">binary_cross_entropy_with_logits</span>(logits, labels, reduction=<span class="st">'none'</span>)
+    prob = torch.<span class="fn">sigmoid</span>(logits)
+    pt   = torch.<span class="fn">where</span>(labels == <span class="nm">1</span>, prob, <span class="nm">1</span> - prob)
+    <span class="kw">return</span> (((<span class="nm">1</span> - pt) ** gamma) * bce).<span class="fn">mean</span>()</code></pre>
+
+<div class="note">
+  <strong>reduction parameter</strong>
+  All loss functions accept <code>reduction='mean'</code> (default), <code>'sum'</code>, or <code>'none'</code>. Use <code>'none'</code> when you need per-sample losses (e.g. to apply sample weights manually, or to compute focal loss). Use <code>'sum'</code> carefully — it scales with batch size, which can destabilize training if your batch size varies.
+</div>
+
+<hr class="divider">
+
+<!-- INFERENCE PATTERNS -->
+<h2 id="inference" data-n="16">Inference Patterns</h2>
+
+<h3>Probabilities and predictions from logits</h3>
+<pre data-label="python"><code>model.<span class="fn">eval</span>()
+<span class="kw">with</span> torch.<span class="fn">inference_mode</span>():
+    logits = <span class="fn">model</span>(X.<span class="fn">to</span>(device))          <span class="cm"># raw scores (B, C)</span>
+
+<span class="cm"># Multi-class</span>
+probs = torch.<span class="fn">softmax</span>(logits, dim=<span class="nm">-1</span>)    <span class="cm"># probabilities, sum to 1</span>
+pred_class = logits.<span class="fn">argmax</span>(dim=<span class="nm">-1</span>)       <span class="cm"># class index (B,)</span>
+conf, pred = probs.<span class="fn">max</span>(dim=<span class="nm">-1</span>)           <span class="cm"># confidence + class together</span>
+
+<span class="cm"># Binary</span>
+prob_pos = torch.<span class="fn">sigmoid</span>(logits)          <span class="cm"># P(positive)</span>
+pred_bin = (prob_pos > <span class="nm">0.5</span>).<span class="fn">long</span>()
+
+<span class="cm"># Top-k predictions with confidence</span>
+top_confs, top_classes = probs.<span class="fn">topk</span>(<span class="nm">3</span>, dim=<span class="nm">-1</span>)  <span class="cm"># top 3 per sample</span></code></pre>
+
+<h3>Batched inference on a raw dataset</h3>
+<pre data-label="python"><code><span class="kw">def</span> <span class="fn">predict</span>(model, data_list, batch_size, device):
+    <span class="cm">"""Run inference on a list of inputs, return all predictions."""</span>
+    model.<span class="fn">eval</span>()
+    all_preds = []
+    loader = <span class="tp">DataLoader</span>(data_list, batch_size=batch_size)
+
+    <span class="kw">with</span> torch.<span class="fn">inference_mode</span>():
+        <span class="kw">for</span> batch <span class="kw">in</span> loader:
+            batch = batch.<span class="fn">to</span>(device)
+            logits = <span class="fn">model</span>(batch)
+            all_preds.<span class="fn">append</span>(logits.<span class="fn">cpu</span>())
+
+    <span class="kw">return</span> torch.<span class="fn">cat</span>(all_preds)</code></pre>
+
+<h3>Test-time augmentation (TTA)</h3>
+<pre data-label="python"><code><span class="cm"># Average predictions over multiple augmented versions of the same input</span>
+<span class="kw">def</span> <span class="fn">tta_predict</span>(model, x, augmentations, device):
+    model.<span class="fn">eval</span>()
+    preds = []
+    <span class="kw">with</span> torch.<span class="fn">inference_mode</span>():
+        <span class="kw">for</span> aug <span class="kw">in</span> augmentations:
+            x_aug = <span class="fn">aug</span>(x).<span class="fn">to</span>(device)
+            preds.<span class="fn">append</span>(torch.<span class="fn">softmax</span>(<span class="fn">model</span>(x_aug), dim=<span class="nm">-1</span>))
+    <span class="kw">return</span> torch.<span class="fn">stack</span>(preds).<span class="fn">mean</span>(<span class="nm">0</span>)   <span class="cm"># ensemble average</span></code></pre>
+
+<h3>Model export</h3>
+<pre data-label="python"><code><span class="cm"># TorchScript — serializes model to run without Python</span>
+scripted = torch.jit.<span class="fn">script</span>(model)
+scripted.<span class="fn">save</span>(<span class="st">"model_scripted.pt"</span>)
+loaded  = torch.jit.<span class="fn">load</span>(<span class="st">"model_scripted.pt"</span>)
+
+<span class="cm"># ONNX export — for cross-framework deployment</span>
+dummy_input = torch.<span class="fn">randn</span>(<span class="nm">1</span>, <span class="nm">3</span>, <span class="nm">224</span>, <span class="nm">224</span>).<span class="fn">to</span>(device)
+torch.onnx.<span class="fn">export</span>(
+    model, dummy_input, <span class="st">"model.onnx"</span>,
+    input_names=[<span class="st">'input'</span>], output_names=[<span class="st">'output'</span>],
+    dynamic_axes={<span class="st">'input'</span>: {<span class="nm">0</span>: <span class="st">'batch_size'</span>}}  <span class="cm"># dynamic batch dim</span>
+)</code></pre>
+
+<hr class="divider">
+
+<!-- DEVICES -->
+<h2 id="devices" data-n="17">Devices & CUDA</h2>
+
+<pre data-label="python"><code><span class="cm"># Detect device</span>
+device = <span class="st">"cuda"</span> <span class="kw">if</span> torch.cuda.<span class="fn">is_available</span>() <span class="kw">else</span> <span class="st">"cpu"</span>
+<span class="cm"># Apple Silicon</span>
+device = <span class="st">"mps"</span> <span class="kw">if</span> torch.backends.mps.<span class="fn">is_available</span>() <span class="kw">else</span> device
+
+<span class="cm"># Move model and data to device</span>
+model = model.<span class="fn">to</span>(device)
+X = X.<span class="fn">to</span>(device)
+
+<span class="cm"># Multi-GPU (data parallelism)</span>
+model = nn.<span class="tp">DataParallel</span>(model)   <span class="cm"># wraps model, splits batch across GPUs</span></code></pre>
+
+<div class="warn">
+  <strong>Device mismatch error</strong>
+  The most common PyTorch runtime error. Model on CUDA, input on CPU (or vice versa) → crash. Always move both model and batch to the same device inside the training loop.
+</div>
+
+<hr class="divider">
+
+<!-- SAVE/LOAD -->
+<h2 id="save" data-n="18">Save & Load</h2>
+
+<pre data-label="python"><code><span class="cm"># Save just the weights (recommended)</span>
+torch.<span class="fn">save</span>(model.<span class="fn">state_dict</span>(), <span class="st">"model.pt"</span>)
+
+<span class="cm"># Load weights back</span>
+model = <span class="tp">MLP</span>(<span class="nm">784</span>, <span class="nm">256</span>, <span class="nm">10</span>)   <span class="cm"># must re-instantiate architecture first</span>
+model.<span class="fn">load_state_dict</span>(torch.<span class="fn">load</span>(<span class="st">"model.pt"</span>, map_location=device))
+
+<span class="cm"># Full checkpoint (model + optimizer state + epoch)</span>
+torch.<span class="fn">save</span>({
+    <span class="st">"epoch"</span>: epoch,
+    <span class="st">"model_state"</span>: model.<span class="fn">state_dict</span>(),
+    <span class="st">"optim_state"</span>: optimizer.<span class="fn">state_dict</span>(),
+    <span class="st">"loss"</span>: loss
+}, <span class="st">"checkpoint.pt"</span>)
+
+<span class="cm"># Resume from checkpoint</span>
+ckpt = torch.<span class="fn">load</span>(<span class="st">"checkpoint.pt"</span>)
+model.<span class="fn">load_state_dict</span>(ckpt[<span class="st">"model_state"</span>])
+optimizer.<span class="fn">load_state_dict</span>(ckpt[<span class="st">"optim_state"</span>])</code></pre>
+
+<hr class="divider">
+
+<!-- DEBUG -->
+<h2 id="debug" data-n="19">Debug Tips</h2>
+
+<h3>Shape debugging</h3>
+<pre data-label="python"><code><span class="cm"># Print shapes through forward pass to trace mismatches</span>
+<span class="kw">def</span> <span class="fn">forward</span>(self, x):
+    print(x.shape)        <span class="cm"># (B, C, H, W) ?</span>
+    x = self.conv(x)
+    print(x.shape)        <span class="cm"># did conv change what I expected?</span>
+    <span class="kw">return</span> x</code></pre>
+
+<h3>NaN hunting</h3>
+<pre data-label="python"><code><span class="cm"># Detect NaN anywhere in the graph</span>
+torch.autograd.<span class="fn">set_detect_anomaly</span>(<span class="kw">True</span>)   <span class="cm"># slow, turn off in production</span>
+
+<span class="cm"># Manually check</span>
+torch.<span class="fn">isnan</span>(tensor).<span class="fn">any</span>()
+torch.<span class="fn">isinf</span>(tensor).<span class="fn">any</span>()</code></pre>
+
+<h3>Common errors → causes</h3>
+<table>
+  <tr><th>Error</th><th>Likely cause</th></tr>
+  <tr><td>RuntimeError: Expected all tensors on same device</td><td>Model on GPU, input on CPU (or reverse)</td></tr>
+  <tr><td>RuntimeError: size mismatch</td><td>Wrong input shape to Linear/Conv layer</td></tr>
+  <tr><td>loss is nan after a few steps</td><td>LR too high, missing gradient clip, log(0) in loss</td></tr>
+  <tr><td>CUDA out of memory</td><td>Batch too large, gradients not freed (missing no_grad in eval)</td></tr>
+  <tr><td>Model not learning at all</td><td>Forgot model.train(), optimizer.zero_grad(), or wrong loss</td></tr>
+</table>
+
+</main>
+</div>
+
+<script>
+  // Highlight active nav link on scroll
+  const sections = document.querySelectorAll('h2[id]');
+  const links = document.querySelectorAll('nav a');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const active = document.querySelector(`nav a[href="#${e.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { threshold: 0.5 });
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
