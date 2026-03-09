@@ -1,0 +1,1617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neo4j AuraDB — E-Commerce Tutorial</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,700;1,9..144,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f5f7fa;
+  --surface: #ffffff;
+  --surface-2: #edf1f7;
+  --surface-3: #e2e8f2;
+  --border: #cdd7e8;
+  --border-light: #dce5f0;
+  --text-1: #111827;
+  --text-2: #374151;
+  --text-3: #6b7280;
+  --text-4: #9ca3af;
+  --neo: #0e6fad;
+  --neo-light: #e0f0fb;
+  --neo-dark: #084d7a;
+  --teal: #0a8c7e;
+  --teal-light: #d9f5f2;
+  --amber: #b45309;
+  --amber-light: #fef3c7;
+  --red: #b91c1c;
+  --red-light: #fee2e2;
+  --green: #166534;
+  --green-light: #dcfce7;
+  --violet: #5b21b6;
+  --violet-light: #ede9fe;
+  /* cypher syntax */
+  --ck: #38bdf8;   /* keyword   */
+  --cl: #86efac;   /* label     */
+  --cp: #fcd34d;   /* property  */
+  --cs: #a3e635;   /* string    */
+  --cc: #64748b;   /* comment   */
+  --cf: #c084fc;   /* function  */
+  --cn: #fb923c;   /* number    */
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text-1);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+/* ─── HEADER ─── */
+.hdr {
+  background: #ffffff;
+  border-bottom: 1px solid var(--border);
+  padding: 44px 48px 36px;
+  position: relative;
+  overflow: hidden;
+}
+.hdr-dots {
+  position: absolute; inset: 0;
+  background-image: radial-gradient(rgba(14,111,173,.08) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+.hdr-arc {
+  position: absolute;
+  bottom: -120px; right: -80px;
+  width: 480px; height: 480px;
+  border-radius: 50%;
+  border: 1px solid rgba(14,111,173,.07);
+}
+.hdr-arc2 {
+  position: absolute;
+  bottom: -160px; right: -120px;
+  width: 640px; height: 640px;
+  border-radius: 50%;
+  border: 1px solid rgba(14,111,173,.04);
+}
+.hdr-glow {
+  position: absolute; top: -60px; left: 30%;
+  width: 400px; height: 300px;
+  background: radial-gradient(ellipse, rgba(14,111,173,.06) 0%, transparent 65%);
+}
+.hdr-inner { position: relative; z-index:1; max-width: 1100px; margin: 0 auto; }
+
+.series-tag {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: .2em; text-transform: uppercase;
+  color: var(--neo); margin-bottom: 14px;
+}
+.series-tag::before {
+  content: ''; width: 24px; height: 1px; background: var(--neo);
+}
+
+h1 {
+  font-family: 'Fraunces', serif;
+  font-size: 38px; font-weight: 700;
+  color: var(--text-1);
+  line-height: 1.1; margin-bottom: 12px;
+  letter-spacing: -.5px;
+}
+h1 em { color: var(--neo); font-style: italic; }
+
+.hdr-sub {
+  color: var(--text-3); font-size: 14px; font-weight: 300;
+  max-width: 580px; line-height: 1.75;
+}
+
+.hdr-meta {
+  display: flex; gap: 24px; margin-top: 22px; flex-wrap: wrap;
+}
+.hdr-stat {
+  font-family: 'DM Mono', monospace; font-size: 11px;
+  color: var(--text-3); letter-spacing: .05em;
+}
+.hdr-stat strong { color: var(--neo); font-size: 18px; font-weight: 600; display: block; }
+
+/* ─── DATASET PANEL ─── */
+.dataset-banner {
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+  padding: 0;
+}
+.dataset-inner {
+  max-width: 1100px; margin: 0 auto;
+  padding: 28px 48px;
+}
+.ds-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--text-3); margin-bottom: 18px;
+  display: flex; align-items: center; gap: 10px;
+}
+.ds-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+.ds-grid { display: flex; gap: 12px; flex-wrap: wrap; }
+
+.ds-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px; padding: 14px 18px;
+  flex: 1; min-width: 160px;
+}
+.ds-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px; letter-spacing: .15em; text-transform: uppercase;
+  color: var(--neo); margin-bottom: 8px;
+}
+.ds-items { display: flex; flex-direction: column; gap: 3px; }
+.ds-item {
+  font-size: 12px; color: var(--text-2);
+  display: flex; align-items: center; gap: 6px;
+}
+.ds-item::before {
+  content: ''; width: 5px; height: 5px;
+  border-radius: 50%; background: var(--neo); flex-shrink: 0;
+  opacity: .4;
+}
+.ds-item.rel::before { border-radius: 0; transform: rotate(45deg); background: var(--teal); }
+.ds-item b { color: var(--text-1); }
+
+/* ─── NAV ─── */
+.nav-wrap {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 200;
+  box-shadow: 0 1px 12px rgba(0,0,0,.06);
+}
+.nav-inner {
+  max-width: 1100px; margin: 0 auto;
+  padding: 0 48px;
+  display: flex; align-items: center; gap: 0;
+  overflow-x: auto; scrollbar-width: none;
+}
+.nav-inner::-webkit-scrollbar { display: none; }
+.nav-cat {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--text-4); padding: 14px 10px 14px 0;
+  white-space: nowrap; flex-shrink: 0;
+  border-right: 1px solid var(--border-light); margin-right: 8px;
+  padding-right: 12px;
+}
+.ntab {
+  font-size: 12.5px; font-weight: 500;
+  color: var(--text-3);
+  padding: 14px 14px;
+  cursor: pointer; border: none; background: none;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap; flex-shrink: 0;
+  transition: all .15s;
+  font-family: 'DM Sans', sans-serif;
+}
+.ntab:hover { color: var(--neo); }
+.ntab.active { color: var(--neo); border-bottom-color: var(--neo); font-weight: 600; }
+.ntab-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; opacity: .4; margin-right: 4px;
+}
+
+/* ─── CONTENT ─── */
+.content { max-width: 1100px; margin: 0 auto; padding: 36px 48px 80px; }
+.panel { display: none; animation: up .2s ease; }
+.panel.active { display: block; }
+@keyframes up { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+/* ─── TASK CARD ─── */
+.task {
+  background: var(--surface);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.task-header {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border-light);
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 14px;
+  align-items: start;
+}
+.task-num {
+  font-family: 'Fraunces', serif;
+  font-size: 32px; font-weight: 600;
+  color: var(--neo); opacity: .25;
+  line-height: 1; padding-top: 2px;
+  min-width: 44px;
+}
+.task-meta {}
+.task-title {
+  font-family: 'Fraunces', serif;
+  font-size: 18px; font-weight: 600;
+  color: var(--text-1); line-height: 1.25;
+  margin-bottom: 5px;
+}
+.task-goal {
+  font-size: 13.5px; color: var(--text-2);
+  line-height: 1.65;
+}
+.task-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.ttag {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; padding: 3px 9px;
+  border-radius: 20px; letter-spacing: .04em;
+  flex-shrink: 0;
+}
+.ttag-r { background: var(--neo-light); color: var(--neo-dark); border: 1px solid #b3d9f5; }
+.ttag-w { background: var(--teal-light); color: var(--teal); border: 1px solid #9de0d9; }
+.ttag-m { background: var(--violet-light); color: var(--violet); border: 1px solid #c4b5fd; }
+.ttag-a { background: var(--amber-light); color: var(--amber); border: 1px solid #fcd34d; }
+
+.task-body { padding: 0; }
+
+/* ─── SETUP BLOCK ─── */
+.setup-block {
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border-light);
+  padding: 14px 24px;
+  font-size: 12.5px; color: var(--text-3);
+  display: flex; align-items: center; gap: 8px;
+}
+.setup-block::before {
+  content: '⚙';
+  font-size: 12px; opacity: .5;
+}
+
+/* ─── CYPHER BLOCK ─── */
+.cy-wrap {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-light);
+}
+.cy-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--text-4); margin-bottom: 8px;
+  display: flex; align-items: center; gap: 8px;
+}
+.cy-label::after { content: ''; flex: 1; height: 1px; background: var(--border-light); }
+
+.cy {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  background: #0d1f35;
+  color: #cde4f5;
+  padding: 18px 20px;
+  border-radius: 8px;
+  line-height: 1.8;
+  overflow-x: auto;
+  white-space: pre;
+  border: 1px solid rgba(56,189,248,.1);
+}
+.ck { color: var(--ck); font-weight: 500; }
+.cl { color: var(--cl); }
+.cp { color: var(--cp); }
+.cs { color: var(--cs); }
+.cc { color: var(--cc); font-style: italic; }
+.cf { color: var(--cf); }
+.cn { color: var(--cn); }
+
+/* ─── EXPLANATION ─── */
+.explain {
+  padding: 18px 24px;
+  background: var(--surface);
+}
+.explain-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--text-4); margin-bottom: 12px;
+  display: flex; align-items: center; gap: 8px;
+}
+.explain-title::after { content: ''; flex: 1; height: 1px; background: var(--border-light); }
+
+.explain-body {
+  font-size: 13.5px; color: var(--text-2);
+  line-height: 1.75;
+}
+.explain-body p { margin-bottom: 10px; }
+.explain-body p:last-child { margin-bottom: 0; }
+.explain-body code {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  background: var(--neo-light);
+  color: var(--neo-dark);
+  padding: 1px 5px; border-radius: 3px;
+}
+.explain-body strong { color: var(--text-1); font-weight: 600; }
+
+/* ─── RESULT PREVIEW ─── */
+.result-preview {
+  background: var(--surface-2);
+  border-top: 1px solid var(--border-light);
+  padding: 14px 24px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11.5px;
+  color: var(--text-3);
+  line-height: 1.7;
+}
+.result-label {
+  font-size: 9px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--text-4); margin-bottom: 8px;
+}
+.result-row { color: var(--text-2); }
+.result-row span { color: var(--teal); }
+.result-row em { color: var(--amber); font-style: normal; }
+.result-ellipsis { color: var(--text-4); }
+
+/* ─── CALLOUT ─── */
+.callout {
+  margin: 0 24px 16px;
+  border-radius: 8px; padding: 12px 15px;
+  font-size: 13px; line-height: 1.65; border-left: 3px solid;
+}
+.ca-b { background: var(--neo-light); border-color: var(--neo); color: #073d61; }
+.ca-a { background: var(--amber-light); border-color: var(--amber); color: #5c2d06; }
+.ca-g { background: var(--green-light); border-color: #22c55e; color: #0f4020; }
+.ca-v { background: var(--violet-light); border-color: var(--violet); color: #3b1180; }
+.ca-title { font-weight: 700; font-size: 10px; letter-spacing: .09em; text-transform: uppercase; margin-bottom: 3px; opacity: .65; }
+
+/* ─── SECTION DIVIDER ─── */
+.section-head {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 20px;
+}
+.section-head-title {
+  font-family: 'Fraunces', serif;
+  font-size: 22px; font-weight: 600;
+  color: var(--text-1);
+  white-space: nowrap;
+}
+.section-head-line { flex: 1; height: 1px; background: var(--border); }
+.section-desc {
+  font-size: 13.5px; color: var(--text-3);
+  margin-bottom: 24px; line-height: 1.7;
+  max-width: 700px;
+}
+
+/* ─── SCHEMA DIAGRAM ─── */
+.schema-diagram {
+  background: var(--surface);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  padding: 28px 32px;
+  margin-bottom: 24px;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+}
+.sd-title {
+  font-size: 9px; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--neo); margin-bottom: 20px; opacity: .8;
+}
+.sd-row {
+  display: flex; align-items: center; gap: 0;
+  margin-bottom: 12px; flex-wrap: wrap; row-gap: 8px;
+}
+.sd-node {
+  border-radius: 50%;
+  border: 2px solid;
+  padding: 8px 14px;
+  font-size: 12px; font-weight: 500;
+  white-space: nowrap;
+}
+.sd-n1 { border-color: #0e6fad; color: #0e6fad; background: #e8f4fc; }
+.sd-n2 { border-color: #0a8c7e; color: #0a8c7e; background: #e4f5f3; }
+.sd-n3 { border-color: #7c3aed; color: #7c3aed; background: #ede9fe; }
+.sd-n4 { border-color: #c2410c; color: #c2410c; background: #fff1ee; }
+.sd-edge {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 0 6px; min-width: 110px;
+}
+.sd-edge-lbl {
+  font-size: 9.5px; color: var(--text-3);
+  background: var(--surface-2);
+  border: 1px solid var(--border-light);
+  padding: 2px 8px; border-radius: 3px;
+  white-space: nowrap; margin-bottom: 2px;
+}
+.sd-edge-line {
+  width: 80px; height: 1px; background: var(--border);
+  position: relative;
+}
+.sd-edge-line::after {
+  content: '▶'; position: absolute; right: -6px; top: -7px;
+  font-size: 10px; color: var(--border);
+}
+.sd-props {
+  font-size: 11px; color: var(--text-3); margin-top: 2px;
+}
+
+/* ─── PROGRESS BAR ─── */
+.progress-bar {
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border-light);
+  padding: 12px 48px;
+  max-width: 100%; margin: 0 auto;
+}
+.progress-inner { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; gap: 12px; }
+.progress-label { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text-4); white-space: nowrap; }
+.progress-track { flex: 1; height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--neo), #38bdf8); border-radius: 2px; transition: width .4s ease; width: 5%; }
+.progress-count { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--neo); white-space: nowrap; }
+
+@media (max-width: 768px) {
+  .hdr, .content { padding: 24px 20px; }
+  .dataset-inner { padding: 20px; }
+  .nav-inner { padding: 0 16px; }
+  .progress-bar { padding: 10px 20px; }
+  h1 { font-size: 26px; }
+  .task-header { grid-template-columns: auto 1fr; }
+  .task-tags { grid-column: 1/-1; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-dots"></div>
+  <div class="hdr-arc"></div><div class="hdr-arc2"></div>
+  <div class="hdr-glow"></div>
+  <div class="hdr-inner">
+    <div class="series-tag">Neo4j AuraDB · Hands-On Tutorial · Series 3</div>
+    <h1>Learning Neo4j<br>with <em>E-Commerce</em> Data</h1>
+    <div class="hdr-sub">20 progressive tasks on a real mock dataset — customers, products, orders, and reviews. Start by loading the data; finish writing graph-native queries SQL can't express cleanly.</div>
+    <div class="hdr-meta">
+      <div class="hdr-stat"><strong>20</strong> tasks</div>
+      <div class="hdr-stat"><strong>8</strong> customers</div>
+      <div class="hdr-stat"><strong>12</strong> products</div>
+      <div class="hdr-stat"><strong>15</strong> orders</div>
+      <div class="hdr-stat"><strong>4</strong> categories</div>
+    </div>
+  </div>
+</div>
+
+<!-- DATASET OVERVIEW -->
+<div class="dataset-banner">
+  <div class="dataset-inner">
+    <div class="ds-title">Mock Dataset Overview</div>
+    <div class="ds-grid">
+      <div class="ds-card">
+        <div class="ds-label">Node Labels</div>
+        <div class="ds-items">
+          <div class="ds-item"><b>:Customer</b> — 8 nodes</div>
+          <div class="ds-item"><b>:Product</b> — 12 nodes</div>
+          <div class="ds-item"><b>:Category</b> — 4 nodes</div>
+          <div class="ds-item"><b>:Order</b> — 15 nodes</div>
+        </div>
+      </div>
+      <div class="ds-card">
+        <div class="ds-label">Relationship Types</div>
+        <div class="ds-items">
+          <div class="ds-item rel"><b>PLACED</b> Customer→Order</div>
+          <div class="ds-item rel"><b>CONTAINS</b> Order→Product</div>
+          <div class="ds-item rel"><b>REVIEWED</b> Customer→Product</div>
+          <div class="ds-item rel"><b>IN_CATEGORY</b> Product→Category</div>
+        </div>
+      </div>
+      <div class="ds-card">
+        <div class="ds-label">Key Properties</div>
+        <div class="ds-items">
+          <div class="ds-item">Customer: email, name, city</div>
+          <div class="ds-item">Product: sku, name, price</div>
+          <div class="ds-item">Order: orderId, date, total</div>
+          <div class="ds-item">REVIEWED: rating, text</div>
+          <div class="ds-item">CONTAINS: qty, unit_price</div>
+        </div>
+      </div>
+      <div class="ds-card">
+        <div class="ds-label">Task Categories</div>
+        <div class="ds-items">
+          <div class="ds-item"><b>01</b> Setup &amp; Schema</div>
+          <div class="ds-item"><b>02–07</b> Basic Reads</div>
+          <div class="ds-item"><b>08–14</b> Writes &amp; Updates</div>
+          <div class="ds-item"><b>15–20</b> Graph-Native Queries</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PROGRESS BAR -->
+<div class="progress-bar">
+  <div class="progress-inner">
+    <span class="progress-label">Progress</span>
+    <div class="progress-track"><div class="progress-fill" id="pbar"></div></div>
+    <span class="progress-count" id="pcnt">0 / 20</span>
+  </div>
+</div>
+
+<!-- NAV TABS -->
+<div class="nav-wrap">
+  <div class="nav-inner">
+    <div class="nav-cat">Setup</div>
+    <button class="ntab active" onclick="showTab('setup',this)"><span class="ntab-num">01</span>Load Data</button>
+    <div class="nav-cat">Read</div>
+    <button class="ntab" onclick="showTab('t02',this)"><span class="ntab-num">02</span>All Customers</button>
+    <button class="ntab" onclick="showTab('t03',this)"><span class="ntab-num">03</span>Find by Email</button>
+    <button class="ntab" onclick="showTab('t04',this)"><span class="ntab-num">04</span>By Category</button>
+    <button class="ntab" onclick="showTab('t05',this)"><span class="ntab-num">05</span>Customer Orders</button>
+    <button class="ntab" onclick="showTab('t06',this)"><span class="ntab-num">06</span>Buyers of Product</button>
+    <button class="ntab" onclick="showTab('t07',this)"><span class="ntab-num">07</span>Order Count</button>
+    <div class="nav-cat">Write</div>
+    <button class="ntab" onclick="showTab('t08',this)"><span class="ntab-num">08</span>New Customer</button>
+    <button class="ntab" onclick="showTab('t09',this)"><span class="ntab-num">09</span>Update City</button>
+    <button class="ntab" onclick="showTab('t10',this)"><span class="ntab-num">10</span>Add Review</button>
+    <button class="ntab" onclick="showTab('t11',this)"><span class="ntab-num">11</span>Delete Review</button>
+    <button class="ntab" onclick="showTab('t12',this)"><span class="ntab-num">12</span>Upsert Product</button>
+    <div class="nav-cat">Graph</div>
+    <button class="ntab" onclick="showTab('t13',this)"><span class="ntab-num">13</span>Never Purchased</button>
+    <button class="ntab" onclick="showTab('t14',this)"><span class="ntab-num">14</span>Reviewed, Not Bought</button>
+    <button class="ntab" onclick="showTab('t15',this)"><span class="ntab-num">15</span>Co-Purchases</button>
+    <button class="ntab" onclick="showTab('t16',this)"><span class="ntab-num">16</span>Recommendations</button>
+    <button class="ntab" onclick="showTab('t17',this)"><span class="ntab-num">17</span>Optional Match</button>
+    <button class="ntab" onclick="showTab('t18',this)"><span class="ntab-num">18</span>Avg Ratings</button>
+    <button class="ntab" onclick="showTab('t19',this)"><span class="ntab-num">19</span>Top Revenue</button>
+    <button class="ntab" onclick="showTab('t20',this)"><span class="ntab-num">20</span>VIP Customers</button>
+  </div>
+</div>
+
+<div class="content">
+
+<!-- ═══════ TASK 01: LOAD DATA ═══════ -->
+<div id="tab-setup" class="panel active">
+  <div class="section-head">
+    <div class="section-head-title">Setup &amp; Dataset</div>
+    <div class="section-head-line"></div>
+  </div>
+  <div class="section-desc">Before running any queries, you need to load the mock dataset. Run the Cypher below once in your AuraDB instance — it uses <code>MERGE</code> so it's safe to re-run without creating duplicates. Open Neo4j Workspace → Query tab → paste and run.</div>
+
+  <!-- Schema diagram -->
+  <div class="schema-diagram">
+    <div class="sd-title">Graph Schema</div>
+    <div class="sd-row">
+      <div class="sd-node sd-n1">:Customer</div>
+      <div class="sd-edge"><div class="sd-edge-lbl">PLACED</div><div class="sd-edge-line"></div></div>
+      <div class="sd-node sd-n2">:Order</div>
+      <div class="sd-edge"><div class="sd-edge-lbl">CONTAINS {qty, unit_price}</div><div class="sd-edge-line"></div></div>
+      <div class="sd-node sd-n3">:Product</div>
+      <div class="sd-edge"><div class="sd-edge-lbl">IN_CATEGORY</div><div class="sd-edge-line"></div></div>
+      <div class="sd-node sd-n4">:Category</div>
+    </div>
+    <div class="sd-row" style="margin-top:10px">
+      <div class="sd-node sd-n1">:Customer</div>
+      <div class="sd-edge"><div class="sd-edge-lbl">REVIEWED {rating, text}</div><div class="sd-edge-line"></div></div>
+      <div class="sd-node sd-n3">:Product</div>
+    </div>
+    <div class="sd-props" style="margin-top:14px">
+      Customer: {email, name, city} &nbsp;·&nbsp; Product: {sku, name, price} &nbsp;·&nbsp; Order: {orderId, date, total} &nbsp;·&nbsp; Category: {name}
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-header">
+      <div class="task-num">01</div>
+      <div class="task-meta">
+        <div class="task-title">Load the Mock Dataset</div>
+        <div class="task-goal">Create all nodes (customers, products, categories, orders) and relationships. Run this once to set up your AuraDB instance for all subsequent tasks.</div>
+      </div>
+      <div class="task-tags">
+        <span class="ttag ttag-w">MERGE</span>
+        <span class="ttag ttag-w">CREATE</span>
+        <span class="ttag ttag-w">UNWIND</span>
+      </div>
+    </div>
+    <div class="task-body">
+      <div class="cy-wrap">
+        <div class="cy-label">Step 1 — Create Categories and Products</div>
+        <div class="cy"><span class="cc">// ── Categories ──────────────────────────────────────────</span>
+<span class="ck">MERGE</span> (:<span class="cl">Category</span> {<span class="cp">name</span>: <span class="cs">"Electronics"</span>})
+<span class="ck">MERGE</span> (:<span class="cl">Category</span> {<span class="cp">name</span>: <span class="cs">"Clothing"</span>})
+<span class="ck">MERGE</span> (:<span class="cl">Category</span> {<span class="cp">name</span>: <span class="cs">"Home &amp; Kitchen"</span>})
+<span class="ck">MERGE</span> (:<span class="cl">Category</span> {<span class="cp">name</span>: <span class="cs">"Sports"</span>});
+
+<span class="cc">// ── Products ─────────────────────────────────────────────</span>
+<span class="ck">UNWIND</span> [
+  {<span class="cp">sku</span>:<span class="cs">"SKU-001"</span>,<span class="cp">name</span>:<span class="cs">"Wireless Headphones"</span>,  <span class="cp">price</span>:<span class="cn">89.99</span>,  <span class="cp">cat</span>:<span class="cs">"Electronics"</span>},
+  {<span class="cp">sku</span>:<span class="cs">"SKU-002"</span>,<span class="cp">name</span>:<span class="cs">"USB-C Hub"</span>,             <span class="cp">price</span>:<span class="cn">34.99</span>,  <span class="cp">cat</span>:<span class="cs">"Electronics"</span>},
+  {<span class="cp">sku</span>:<span class="cs">"SKU-003"</span>,<span class="cp">name</span>:<span class="cs">"Mechanical Keyboard"</span>,    <span class="cp">price</span>:<span class="cn">119.00</span>, <span class="cp">cat</span>:<span class="cs">"Electronics"</span>},
+  {<span class="cp">sku</span>:<span class="cs">"SKU-004"</span>,<span class="cp">name</span>:<span class="cs">"Webcam HD"</span>,             <span class="cp">price</span>:<span class="cn">59.99</span>,  <span class="cp">cat</span>:<span class="cs">"Electronics"</span>},
+  {<span class="cp">sku</span>:<span class="cs">"SKU-005"</span>,<span class="cp">name</span>:<span class="cs">"Running Shoes"</span>,          <span class="cp">price</span>:<span class="cn">74.99</span>,  <span class="cp">cat</span>:<span class="cs">"Sports"</span>},
+  {<span class="cp">sku</span>:<span class="cs">"SKU-006"</span>,<span class="cp">name</span>:<span class="cs">"Yoga Mat"</span>,              <span class="cp">price</span>:<span class="cn">29.99</span>,  <span class="cp">cat</span>:<span class="cs">"Sports"</span>},
+  {<span class="cp">sku</span>:<span class="cs">"SKU-007"</span>,<span class="cp">name</span>:<span class="cs">"Winter Jacket"</span>,          <span class="cp">price</span>:<span class="cn">149.00</span>, <span class="cp">cat</span>:<span class="cs">"Clothing"</span>},
+  {<span class="cp">sku</span>:<span class="cs">"SKU-008"</span>,<span class="cp">name</span>:<span class="cs">"Merino Wool Socks"</span>,      <span class="cp">price</span>:<span class="cn">18.00</span>,  <span class="cp">cat</span>:<span class="cs">"Clothing"</span>},
+  {<span class="cp">sku</span>:<span class="cs">"SKU-009"</span>,<span class="cp">name</span>:<span class="cs">"Chef's Knife"</span>,           <span class="cp">price</span>:<span class="cn">69.00</span>,  <span class="cp">cat</span>:<span class="cs">"Home &amp; Kitchen"</span>},
+  {<span class="cp">sku</span>:<span class="cs">"SKU-010"</span>,<span class="cp">name</span>:<span class="cs">"Cast Iron Skillet"</span>,      <span class="cp">price</span>:<span class="cn">44.99</span>,  <span class="cp">cat</span>:<span class="cs">"Home &amp; Kitchen"</span>},
+  {<span class="cp">sku</span>:<span class="cs">"SKU-011"</span>,<span class="cp">name</span>:<span class="cs">"Bamboo Cutting Board"</span>,   <span class="cp">price</span>:<span class="cn">24.99</span>,  <span class="cp">cat</span>:<span class="cs">"Home &amp; Kitchen"</span>},
+  {<span class="cp">sku</span>:<span class="cs">"SKU-012"</span>,<span class="cp">name</span>:<span class="cs">"Water Bottle 1L"</span>,        <span class="cp">price</span>:<span class="cn">21.99</span>,  <span class="cp">cat</span>:<span class="cs">"Sports"</span>}
+] <span class="ck">AS</span> <span class="cp">row</span>
+<span class="ck">MERGE</span> (<span class="cl">p</span>:<span class="cl">Product</span> {<span class="cp">sku</span>: <span class="cp">row</span>.<span class="cp">sku</span>})
+<span class="ck">SET</span>   <span class="cl">p</span>.<span class="cp">name</span>  = <span class="cp">row</span>.<span class="cp">name</span>,
+      <span class="cl">p</span>.<span class="cp">price</span> = <span class="cp">row</span>.<span class="cp">price</span>
+<span class="ck">WITH</span>  <span class="cl">p</span>, <span class="cp">row</span>
+<span class="ck">MATCH</span> (<span class="cl">c</span>:<span class="cl">Category</span> {<span class="cp">name</span>: <span class="cp">row</span>.<span class="cp">cat</span>})
+<span class="ck">MERGE</span> (<span class="cl">p</span>)-[:<span class="cl">IN_CATEGORY</span>]-&gt;(<span class="cl">c</span>);</div>
+      </div>
+
+      <div class="cy-wrap">
+        <div class="cy-label">Step 2 — Create Customers</div>
+        <div class="cy"><span class="ck">UNWIND</span> [
+  {<span class="cp">email</span>:<span class="cs">"alice@example.com"</span>,  <span class="cp">name</span>:<span class="cs">"Alice Novak"</span>,    <span class="cp">city</span>:<span class="cs">"New York"</span>},
+  {<span class="cp">email</span>:<span class="cs">"ben@example.com"</span>,    <span class="cp">name</span>:<span class="cs">"Ben Okafor"</span>,     <span class="cp">city</span>:<span class="cs">"London"</span>},
+  {<span class="cp">email</span>:<span class="cs">"cara@example.com"</span>,   <span class="cp">name</span>:<span class="cs">"Cara Singh"</span>,     <span class="cp">city</span>:<span class="cs">"Toronto"</span>},
+  {<span class="cp">email</span>:<span class="cs">"dan@example.com"</span>,    <span class="cp">name</span>:<span class="cs">"Dan Reyes"</span>,      <span class="cp">city</span>:<span class="cs">"Madrid"</span>},
+  {<span class="cp">email</span>:<span class="cs">"eva@example.com"</span>,    <span class="cp">name</span>:<span class="cs">"Eva Müller"</span>,     <span class="cp">city</span>:<span class="cs">"Berlin"</span>},
+  {<span class="cp">email</span>:<span class="cs">"felix@example.com"</span>,  <span class="cp">name</span>:<span class="cs">"Felix Huang"</span>,    <span class="cp">city</span>:<span class="cs">"Singapore"</span>},
+  {<span class="cp">email</span>:<span class="cs">"grace@example.com"</span>,  <span class="cp">name</span>:<span class="cs">"Grace Adeyemi"</span>, <span class="cp">city</span>:<span class="cs">"Lagos"</span>},
+  {<span class="cp">email</span>:<span class="cs">"hugo@example.com"</span>,   <span class="cp">name</span>:<span class="cs">"Hugo Lefebvre"</span>, <span class="cp">city</span>:<span class="cs">"Paris"</span>}
+] <span class="ck">AS</span> <span class="cp">row</span>
+<span class="ck">MERGE</span> (:<span class="cl">Customer</span> {<span class="cp">email</span>: <span class="cp">row</span>.<span class="cp">email</span>})
+<span class="ck">SET</span>   <span class="cl">c</span>.<span class="cp">name</span> = <span class="cp">row</span>.<span class="cp">name</span>, <span class="cl">c</span>.<span class="cp">city</span> = <span class="cp">row</span>.<span class="cp">city</span>;</div>
+      </div>
+
+      <div class="cy-wrap">
+        <div class="cy-label">Step 3 — Create Orders and Relationships</div>
+        <div class="cy"><span class="cc">// Orders for Alice (3 orders — she becomes a VIP)</span>
+<span class="ck">MATCH</span> (<span class="cl">alice</span>:<span class="cl">Customer</span> {<span class="cp">email</span>:<span class="cs">"alice@example.com"</span>})
+<span class="ck">MERGE</span> (<span class="cl">o1</span>:<span class="cl">Order</span> {<span class="cp">orderId</span>:<span class="cs">"ORD-001"</span>}) <span class="ck">SET</span> <span class="cl">o1</span> += {<span class="cp">date</span>:<span class="cs">"2024-01-15"</span>,<span class="cp">total</span>:<span class="cn">124.98</span>}
+<span class="ck">MERGE</span> (<span class="cl">o2</span>:<span class="cl">Order</span> {<span class="cp">orderId</span>:<span class="cs">"ORD-002"</span>}) <span class="ck">SET</span> <span class="cl">o2</span> += {<span class="cp">date</span>:<span class="cs">"2024-02-03"</span>,<span class="cp">total</span>:<span class="cn">89.99</span>}
+<span class="ck">MERGE</span> (<span class="cl">o3</span>:<span class="cl">Order</span> {<span class="cp">orderId</span>:<span class="cs">"ORD-003"</span>}) <span class="ck">SET</span> <span class="cl">o3</span> += {<span class="cp">date</span>:<span class="cs">"2024-03-11"</span>,<span class="cp">total</span>:<span class="cn">188.99</span>}
+<span class="ck">MERGE</span> (<span class="cl">alice</span>)-[:<span class="cl">PLACED</span>]-&gt;(<span class="cl">o1</span>)
+<span class="ck">MERGE</span> (<span class="cl">alice</span>)-[:<span class="cl">PLACED</span>]-&gt;(<span class="cl">o2</span>)
+<span class="ck">MERGE</span> (<span class="cl">alice</span>)-[:<span class="cl">PLACED</span>]-&gt;(<span class="cl">o3</span>)
+<span class="ck">WITH</span> <span class="cl">o1</span>,<span class="cl">o2</span>,<span class="cl">o3</span>
+<span class="ck">MATCH</span> (<span class="cl">p1</span>:<span class="cl">Product</span>{<span class="cp">sku</span>:<span class="cs">"SKU-001"</span>}),(<span class="cl">p2</span>:<span class="cl">Product</span>{<span class="cp">sku</span>:<span class="cs">"SKU-002"</span>}),
+      (<span class="cl">p3</span>:<span class="cl">Product</span>{<span class="cp">sku</span>:<span class="cs">"SKU-003"</span>}),(<span class="cl">p4</span>:<span class="cl">Product</span>{<span class="cp">sku</span>:<span class="cs">"SKU-007"</span>})
+<span class="ck">MERGE</span> (<span class="cl">o1</span>)-[:<span class="cl">CONTAINS</span> {<span class="cp">qty</span>:<span class="cn">1</span>,<span class="cp">unit_price</span>:<span class="cn">89.99</span>}]-&gt;(<span class="cl">p1</span>)
+<span class="ck">MERGE</span> (<span class="cl">o1</span>)-[:<span class="cl">CONTAINS</span> {<span class="cp">qty</span>:<span class="cn">1</span>,<span class="cp">unit_price</span>:<span class="cn">34.99</span>}]-&gt;(<span class="cl">p2</span>)
+<span class="ck">MERGE</span> (<span class="cl">o2</span>)-[:<span class="cl">CONTAINS</span> {<span class="cp">qty</span>:<span class="cn">1</span>,<span class="cp">unit_price</span>:<span class="cn">89.99</span>}]-&gt;(<span class="cl">p1</span>)
+<span class="ck">MERGE</span> (<span class="cl">o3</span>)-[:<span class="cl">CONTAINS</span> {<span class="cp">qty</span>:<span class="cn">1</span>,<span class="cp">unit_price</span>:<span class="cn">119.00</span>}]-&gt;(<span class="cl">p3</span>)
+<span class="ck">MERGE</span> (<span class="cl">o3</span>)-[:<span class="cl">CONTAINS</span> {<span class="cp">qty</span>:<span class="cn">1</span>,<span class="cp">unit_price</span>:<span class="cn">149.00</span>}]-&gt;(<span class="cl">p4</span>);
+
+<span class="cc">// Orders for Ben (2 orders)</span>
+<span class="ck">MATCH</span> (<span class="cl">ben</span>:<span class="cl">Customer</span> {<span class="cp">email</span>:<span class="cs">"ben@example.com"</span>})
+<span class="ck">MERGE</span> (<span class="cl">o4</span>:<span class="cl">Order</span> {<span class="cp">orderId</span>:<span class="cs">"ORD-004"</span>}) <span class="ck">SET</span> <span class="cl">o4</span> += {<span class="cp">date</span>:<span class="cs">"2024-01-20"</span>,<span class="cp">total</span>:<span class="cn">149.00</span>}
+<span class="ck">MERGE</span> (<span class="cl">o5</span>:<span class="cl">Order</span> {<span class="cp">orderId</span>:<span class="cs">"ORD-005"</span>}) <span class="ck">SET</span> <span class="cl">o5</span> += {<span class="cp">date</span>:<span class="cs">"2024-03-05"</span>,<span class="cp">total</span>:<span class="cn">94.98</span>}
+<span class="ck">MERGE</span> (<span class="cl">ben</span>)-[:<span class="cl">PLACED</span>]-&gt;(<span class="cl">o4</span>)
+<span class="ck">MERGE</span> (<span class="cl">ben</span>)-[:<span class="cl">PLACED</span>]-&gt;(<span class="cl">o5</span>)
+<span class="ck">WITH</span> <span class="cl">o4</span>,<span class="cl">o5</span>
+<span class="ck">MATCH</span> (<span class="cl">p7</span>:<span class="cl">Product</span>{<span class="cp">sku</span>:<span class="cs">"SKU-007"</span>}),(<span class="cl">p5</span>:<span class="cl">Product</span>{<span class="cp">sku</span>:<span class="cs">"SKU-005"</span>}),(<span class="cl">p6</span>:<span class="cl">Product</span>{<span class="cp">sku</span>:<span class="cs">"SKU-006"</span>})
+<span class="ck">MERGE</span> (<span class="cl">o4</span>)-[:<span class="cl">CONTAINS</span> {<span class="cp">qty</span>:<span class="cn">1</span>,<span class="cp">unit_price</span>:<span class="cn">149.00</span>}]-&gt;(<span class="cl">p7</span>)
+<span class="ck">MERGE</span> (<span class="cl">o5</span>)-[:<span class="cl">CONTAINS</span> {<span class="cp">qty</span>:<span class="cn">1</span>,<span class="cp">unit_price</span>:<span class="cn">74.99</span>}]-&gt;(<span class="cl">p5</span>)
+<span class="ck">MERGE</span> (<span class="cl">o5</span>)-[:<span class="cl">CONTAINS</span> {<span class="cp">qty</span>:<span class="cn">2</span>,<span class="cp">unit_price</span>:<span class="cn">29.99</span>}]-&gt;(<span class="cl">p6</span>);
+
+<span class="cc">// Orders for Cara, Dan, Eva (1 each)</span>
+<span class="ck">MATCH</span> (<span class="cl">cara</span>:<span class="cl">Customer</span>{<span class="cp">email</span>:<span class="cs">"cara@example.com"</span>}),
+      (<span class="cl">dan</span>:<span class="cl">Customer</span>{<span class="cp">email</span>:<span class="cs">"dan@example.com"</span>}),
+      (<span class="cl">eva</span>:<span class="cl">Customer</span>{<span class="cp">email</span>:<span class="cs">"eva@example.com"</span>})
+<span class="ck">MERGE</span> (<span class="cl">o6</span>:<span class="cl">Order</span>{<span class="cp">orderId</span>:<span class="cs">"ORD-006"</span>}) <span class="ck">SET</span> <span class="cl">o6</span>+={<span class="cp">date</span>:<span class="cs">"2024-02-14"</span>,<span class="cp">total</span>:<span class="cn">188.99</span>}
+<span class="ck">MERGE</span> (<span class="cl">o7</span>:<span class="cl">Order</span>{<span class="cp">orderId</span>:<span class="cs">"ORD-007"</span>}) <span class="ck">SET</span> <span class="cl">o7</span>+={<span class="cp">date</span>:<span class="cs">"2024-02-20"</span>,<span class="cp">total</span>:<span class="cn">59.99</span>}
+<span class="ck">MERGE</span> (<span class="cl">o8</span>:<span class="cl">Order</span>{<span class="cp">orderId</span>:<span class="cs">"ORD-008"</span>}) <span class="ck">SET</span> <span class="cl">o8</span>+={<span class="cp">date</span>:<span class="cs">"2024-03-01"</span>,<span class="cp">total</span>:<span class="cn">69.00</span>}
+<span class="ck">MERGE</span> (<span class="cl">cara</span>)-[:<span class="cl">PLACED</span>]-&gt;(<span class="cl">o6</span>)
+<span class="ck">MERGE</span> (<span class="cl">dan</span>)-[:<span class="cl">PLACED</span>]-&gt;(<span class="cl">o7</span>)
+<span class="ck">MERGE</span> (<span class="cl">eva</span>)-[:<span class="cl">PLACED</span>]-&gt;(<span class="cl">o8</span>)
+<span class="ck">WITH</span> <span class="cl">o6</span>,<span class="cl">o7</span>,<span class="cl">o8</span>
+<span class="ck">MATCH</span> (<span class="cl">p3</span>:<span class="cl">Product</span>{<span class="cp">sku</span>:<span class="cs">"SKU-003"</span>}),(<span class="cl">p7</span>:<span class="cl">Product</span>{<span class="cp">sku</span>:<span class="cs">"SKU-007"</span>}),
+      (<span class="cl">p4</span>:<span class="cl">Product</span>{<span class="cp">sku</span>:<span class="cs">"SKU-004"</span>}),(<span class="cl">p9</span>:<span class="cl">Product</span>{<span class="cp">sku</span>:<span class="cs">"SKU-009"</span>})
+<span class="ck">MERGE</span> (<span class="cl">o6</span>)-[:<span class="cl">CONTAINS</span>{<span class="cp">qty</span>:<span class="cn">1</span>,<span class="cp">unit_price</span>:<span class="cn">119.00</span>}]-&gt;(<span class="cl">p3</span>)
+<span class="ck">MERGE</span> (<span class="cl">o6</span>)-[:<span class="cl">CONTAINS</span>{<span class="cp">qty</span>:<span class="cn">1</span>,<span class="cp">unit_price</span>:<span class="cn">149.00</span>}]-&gt;(<span class="cl">p7</span>)
+<span class="ck">MERGE</span> (<span class="cl">o7</span>)-[:<span class="cl">CONTAINS</span>{<span class="cp">qty</span>:<span class="cn">1</span>,<span class="cp">unit_price</span>:<span class="cn">59.99</span>}]-&gt;(<span class="cl">p4</span>)
+<span class="ck">MERGE</span> (<span class="cl">o8</span>)-[:<span class="cl">CONTAINS</span>{<span class="cp">qty</span>:<span class="cn">1</span>,<span class="cp">unit_price</span>:<span class="cn">69.00</span>}]-&gt;(<span class="cl">p9</span>);
+
+<span class="cc">// Orders for Felix (3 orders — another VIP)</span>
+<span class="ck">MATCH</span> (<span class="cl">felix</span>:<span class="cl">Customer</span>{<span class="cp">email</span>:<span class="cs">"felix@example.com"</span>})
+<span class="ck">MERGE</span> (<span class="cl">o9</span>:<span class="cl">Order</span>{<span class="cp">orderId</span>:<span class="cs">"ORD-009"</span>})  <span class="ck">SET</span> <span class="cl">o9</span>+={<span class="cp">date</span>:<span class="cs">"2024-01-10"</span>,<span class="cp">total</span>:<span class="cn">109.98</span>}
+<span class="ck">MERGE</span> (<span class="cl">o10</span>:<span class="cl">Order</span>{<span class="cp">orderId</span>:<span class="cs">"ORD-010"</span>}) <span class="ck">SET</span> <span class="cl">o10</span>+={<span class="cp">date</span>:<span class="cs">"2024-02-25"</span>,<span class="cp">total</span>:<span class="cn">119.00</span>}
+<span class="ck">MERGE</span> (<span class="cl">o11</span>:<span class="cl">Order</span>{<span class="cp">orderId</span>:<span class="cs">"ORD-011"</span>}) <span class="ck">SET</span> <span class="cl">o11</span>+={<span class="cp">date</span>:<span class="cs">"2024-03-18"</span>,<span class="cp">total</span>:<span class="cn">44.99</span>}
+<span class="ck">MERGE</span> (<span class="cl">felix</span>)-[:<span class="cl">PLACED</span>]-&gt;(<span class="cl">o9</span>)
+<span class="ck">MERGE</span> (<span class="cl">felix</span>)-[:<span class="cl">PLACED</span>]-&gt;(<span class="cl">o10</span>)
+<span class="ck">MERGE</span> (<span class="cl">felix</span>)-[:<span class="cl">PLACED</span>]-&gt;(<span class="cl">o11</span>)
+<span class="ck">WITH</span> <span class="cl">o9</span>,<span class="cl">o10</span>,<span class="cl">o11</span>
+<span class="ck">MATCH</span> (<span class="cl">p1</span>:<span class="cl">Product</span>{<span class="cp">sku</span>:<span class="cs">"SKU-001"</span>}),(<span class="cl">p2</span>:<span class="cl">Product</span>{<span class="cp">sku</span>:<span class="cs">"SKU-002"</span>}),
+      (<span class="cl">p3</span>:<span class="cl">Product</span>{<span class="cp">sku</span>:<span class="cs">"SKU-003"</span>}),(<span class="cl">p10</span>:<span class="cl">Product</span>{<span class="cp">sku</span>:<span class="cs">"SKU-010"</span>})
+<span class="ck">MERGE</span> (<span class="cl">o9</span>)-[:<span class="cl">CONTAINS</span>{<span class="cp">qty</span>:<span class="cn">1</span>,<span class="cp">unit_price</span>:<span class="cn">89.99</span>}]-&gt;(<span class="cl">p1</span>)
+<span class="ck">MERGE</span> (<span class="cl">o9</span>)-[:<span class="cl">CONTAINS</span>{<span class="cp">qty</span>:<span class="cn">1</span>,<span class="cp">unit_price</span>:<span class="cn">34.99</span>}]-&gt;(<span class="cl">p2</span>)
+<span class="ck">MERGE</span> (<span class="cl">o10</span>)-[:<span class="cl">CONTAINS</span>{<span class="cp">qty</span>:<span class="cn">1</span>,<span class="cp">unit_price</span>:<span class="cn">119.00</span>}]-&gt;(<span class="cl">p3</span>)
+<span class="ck">MERGE</span> (<span class="cl">o11</span>)-[:<span class="cl">CONTAINS</span>{<span class="cp">qty</span>:<span class="cn">1</span>,<span class="cp">unit_price</span>:<span class="cn">44.99</span>}]-&gt;(<span class="cl">p10</span>);
+
+<span class="cc">// Grace (2 orders) and Hugo (1 order)</span>
+<span class="ck">MATCH</span> (<span class="cl">g</span>:<span class="cl">Customer</span>{<span class="cp">email</span>:<span class="cs">"grace@example.com"</span>}),
+      (<span class="cl">h</span>:<span class="cl">Customer</span>{<span class="cp">email</span>:<span class="cs">"hugo@example.com"</span>})
+<span class="ck">MERGE</span> (<span class="cl">o12</span>:<span class="cl">Order</span>{<span class="cp">orderId</span>:<span class="cs">"ORD-012"</span>}) <span class="ck">SET</span> <span class="cl">o12</span>+={<span class="cp">date</span>:<span class="cs">"2024-01-28"</span>,<span class="cp">total</span>:<span class="cn">93.99</span>}
+<span class="ck">MERGE</span> (<span class="cl">o13</span>:<span class="cl">Order</span>{<span class="cp">orderId</span>:<span class="cs">"ORD-013"</span>}) <span class="ck">SET</span> <span class="cl">o13</span>+={<span class="cp">date</span>:<span class="cs">"2024-03-08"</span>,<span class="cp">total</span>:<span class="cn">21.99</span>}
+<span class="ck">MERGE</span> (<span class="cl">o14</span>:<span class="cl">Order</span>{<span class="cp">orderId</span>:<span class="cs">"ORD-014"</span>}) <span class="ck">SET</span> <span class="cl">o14</span>+={<span class="cp">date</span>:<span class="cs">"2024-02-10"</span>,<span class="cp">total</span>:<span class="cn">74.99</span>}
+<span class="ck">MERGE</span> (<span class="cl">g</span>)-[:<span class="cl">PLACED</span>]-&gt;(<span class="cl">o12</span>) <span class="ck">MERGE</span> (<span class="cl">g</span>)-[:<span class="cl">PLACED</span>]-&gt;(<span class="cl">o13</span>)
+<span class="ck">MERGE</span> (<span class="cl">h</span>)-[:<span class="cl">PLACED</span>]-&gt;(<span class="cl">o14</span>)
+<span class="ck">WITH</span> <span class="cl">o12</span>,<span class="cl">o13</span>,<span class="cl">o14</span>
+<span class="ck">MATCH</span> (<span class="cl">p5</span>:<span class="cl">Product</span>{<span class="cp">sku</span>:<span class="cs">"SKU-005"</span>}),(<span class="cl">p8</span>:<span class="cl">Product</span>{<span class="cp">sku</span>:<span class="cs">"SKU-008"</span>}),
+      (<span class="cl">p12</span>:<span class="cl">Product</span>{<span class="cp">sku</span>:<span class="cs">"SKU-012"</span>})
+<span class="ck">MERGE</span> (<span class="cl">o12</span>)-[:<span class="cl">CONTAINS</span>{<span class="cp">qty</span>:<span class="cn">1</span>,<span class="cp">unit_price</span>:<span class="cn">74.99</span>}]-&gt;(<span class="cl">p5</span>)
+<span class="ck">MERGE</span> (<span class="cl">o12</span>)-[:<span class="cl">CONTAINS</span>{<span class="cp">qty</span>:<span class="cn">1</span>,<span class="cp">unit_price</span>:<span class="cn">18.00</span>}]-&gt;(<span class="cl">p8</span>)
+<span class="ck">MERGE</span> (<span class="cl">o13</span>)-[:<span class="cl">CONTAINS</span>{<span class="cp">qty</span>:<span class="cn">1</span>,<span class="cp">unit_price</span>:<span class="cn">21.99</span>}]-&gt;(<span class="cl">p12</span>)
+<span class="ck">MERGE</span> (<span class="cl">o14</span>)-[:<span class="cl">CONTAINS</span>{<span class="cp">qty</span>:<span class="cn">1</span>,<span class="cp">unit_price</span>:<span class="cn">74.99</span>}]-&gt;(<span class="cl">p5</span>);
+
+<span class="cc">// One order with no PLACED rel — orphan for Task 17</span>
+<span class="ck">MERGE</span> (:<span class="cl">Order</span>{<span class="cp">orderId</span>:<span class="cs">"ORD-015"</span>,<span class="cp">date</span>:<span class="cs">"2024-03-20"</span>,<span class="cp">total</span>:<span class="cn">0.00</span>});
+
+<span class="cc">// Reviews</span>
+<span class="ck">MATCH</span> (<span class="cl">alice</span>:<span class="cl">Customer</span>{<span class="cp">email</span>:<span class="cs">"alice@example.com"</span>}),
+      (<span class="cl">ben</span>:<span class="cl">Customer</span>{<span class="cp">email</span>:<span class="cs">"ben@example.com"</span>}),
+      (<span class="cl">cara</span>:<span class="cl">Customer</span>{<span class="cp">email</span>:<span class="cs">"cara@example.com"</span>}),
+      (<span class="cl">eva</span>:<span class="cl">Customer</span>{<span class="cp">email</span>:<span class="cs">"eva@example.com"</span>}),
+      (<span class="cl">grace</span>:<span class="cl">Customer</span>{<span class="cp">email</span>:<span class="cs">"grace@example.com"</span>}),
+      (<span class="cl">p1</span>:<span class="cl">Product</span>{<span class="cp">sku</span>:<span class="cs">"SKU-001"</span>}),(<span class="cl">p3</span>:<span class="cl">Product</span>{<span class="cp">sku</span>:<span class="cs">"SKU-003"</span>}),
+      (<span class="cl">p5</span>:<span class="cl">Product</span>{<span class="cp">sku</span>:<span class="cs">"SKU-005"</span>}),(<span class="cl">p7</span>:<span class="cl">Product</span>{<span class="cp">sku</span>:<span class="cs">"SKU-007"</span>}),
+      (<span class="cl">p9</span>:<span class="cl">Product</span>{<span class="cp">sku</span>:<span class="cs">"SKU-009"</span>}),(<span class="cl">p11</span>:<span class="cl">Product</span>{<span class="cp">sku</span>:<span class="cs">"SKU-011"</span>})
+<span class="ck">MERGE</span> (<span class="cl">alice</span>)-[:<span class="cl">REVIEWED</span>{<span class="cp">rating</span>:<span class="cn">5</span>,<span class="cp">text</span>:<span class="cs">"Best headphones ever!"</span>}]-&gt;(<span class="cl">p1</span>)
+<span class="ck">MERGE</span> (<span class="cl">alice</span>)-[:<span class="cl">REVIEWED</span>{<span class="cp">rating</span>:<span class="cn">4</span>,<span class="cp">text</span>:<span class="cs">"Great keyboard."</span>}]-&gt;(<span class="cl">p3</span>)
+<span class="ck">MERGE</span> (<span class="cl">ben</span>)-[:<span class="cl">REVIEWED</span>{<span class="cp">rating</span>:<span class="cn">3</span>,<span class="cp">text</span>:<span class="cs">"Jacket runs small."</span>}]-&gt;(<span class="cl">p7</span>)
+<span class="ck">MERGE</span> (<span class="cl">cara</span>)-[:<span class="cl">REVIEWED</span>{<span class="cp">rating</span>:<span class="cn">5</span>,<span class="cp">text</span>:<span class="cs">"Excellent shoes."</span>}]-&gt;(<span class="cl">p5</span>)
+<span class="ck">MERGE</span> (<span class="cl">eva</span>)-[:<span class="cl">REVIEWED</span>{<span class="cp">rating</span>:<span class="cn">4</span>,<span class="cp">text</span>:<span class="cs">"Sharp and balanced."</span>}]-&gt;(<span class="cl">p9</span>)
+<span class="ck">MERGE</span> (<span class="cl">grace</span>)-[:<span class="cl">REVIEWED</span>{<span class="cp">rating</span>:<span class="cn">5</span>,<span class="cp">text</span>:<span class="cs">"Love these shoes!"</span>}]-&gt;(<span class="cl">p5</span>)
+<span class="cc">// Dan reviews SKU-011 (Bamboo Cutting Board) which he never bought — for Task 14</span>
+<span class="ck">MATCH</span> (<span class="cl">dan</span>:<span class="cl">Customer</span>{<span class="cp">email</span>:<span class="cs">"dan@example.com"</span>})
+<span class="ck">MERGE</span> (<span class="cl">dan</span>)-[:<span class="cl">REVIEWED</span>{<span class="cp">rating</span>:<span class="cn">4</span>,<span class="cp">text</span>:<span class="cs">"Nice board."</span>}]-&gt;(<span class="cl">p11</span>);</div>
+      </div>
+
+      <div class="explain">
+        <div class="explain-title">What's happening</div>
+        <div class="explain-body">
+          <p><strong>UNWIND + MERGE</strong> is the idiomatic way to load list data into Neo4j. <code>UNWIND</code> turns the inline list into rows, then <code>MERGE</code> ensures each node is created exactly once — even if you re-run the script.</p>
+          <p><strong>WITH between MERGE and MATCH</strong> is required when you need to reference a node created in one clause and match another node in the next — <code>WITH</code> passes variables forward between clause segments.</p>
+          <p><strong>The <code>+=</code> operator</strong> in <code>SET o1 += {...}</code> merges properties into the node rather than replacing all properties. Safe to use in idempotent pipelines.</p>
+          <p>After running all three steps, verify with: <code>MATCH (n) RETURN labels(n), count(n)</code> — you should see 4 labels with node counts of 8, 12, 4, and 15.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ TASK 02 ═══════ -->
+<div id="tab-t02" class="panel">
+  <div class="task">
+    <div class="task-header">
+      <div class="task-num">02</div>
+      <div class="task-meta">
+        <div class="task-title">Find All Customers</div>
+        <div class="task-goal">Return the name, email, and city of every customer in the graph, sorted alphabetically by name.</div>
+      </div>
+      <div class="task-tags"><span class="ttag ttag-r">MATCH</span><span class="ttag ttag-r">RETURN</span><span class="ttag ttag-r">ORDER BY</span></div>
+    </div>
+    <div class="task-body">
+      <div class="cy-wrap">
+        <div class="cy-label">Cypher Query</div>
+        <div class="cy"><span class="ck">MATCH</span> (<span class="cl">c</span>:<span class="cl">Customer</span>)
+<span class="ck">RETURN</span> <span class="cl">c</span>.<span class="cp">name</span>  <span class="ck">AS</span> name,
+       <span class="cl">c</span>.<span class="cp">email</span> <span class="ck">AS</span> email,
+       <span class="cl">c</span>.<span class="cp">city</span>  <span class="ck">AS</span> city
+<span class="ck">ORDER BY</span> <span class="cl">c</span>.<span class="cp">name</span></div>
+      </div>
+      <div class="result-preview">
+        <div class="result-label">Expected output (8 rows)</div>
+        <div class="result-row"><span>"Alice Novak"</span>  · alice@example.com  · <em>"New York"</em></div>
+        <div class="result-row"><span>"Ben Okafor"</span>   · ben@example.com    · <em>"London"</em></div>
+        <div class="result-row"><span>"Cara Singh"</span>   · cara@example.com   · <em>"Toronto"</em></div>
+        <div class="result-ellipsis">… 5 more rows</div>
+      </div>
+      <div class="explain">
+        <div class="explain-title">Explanation</div>
+        <div class="explain-body">
+          <p><code>MATCH (c:Customer)</code> scans all nodes with the <code>:Customer</code> label. Without a label, <code>MATCH (c)</code> would scan every node in the graph — always include a label for production queries.</p>
+          <p><code>RETURN c.name AS name</code> projects a specific property as an aliased column. You can also <code>RETURN c</code> to return the whole node object, but projecting individual properties is better practice — it's explicit and transfers less data.</p>
+          <p><code>ORDER BY c.name</code> sorts ascending by default. Use <code>ORDER BY c.name DESC</code> for reverse. With no <code>ORDER BY</code>, Neo4j makes no guarantees about row order.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ TASK 03 ═══════ -->
+<div id="tab-t03" class="panel">
+  <div class="task">
+    <div class="task-header">
+      <div class="task-num">03</div>
+      <div class="task-meta">
+        <div class="task-title">Find a Customer by Email</div>
+        <div class="task-goal">Look up a single customer using their email address. Use a parameter — not a string literal.</div>
+      </div>
+      <div class="task-tags"><span class="ttag ttag-r">MATCH</span><span class="ttag ttag-r">WHERE</span><span class="ttag ttag-a">$params</span></div>
+    </div>
+    <div class="task-body">
+      <div class="cy-wrap">
+        <div class="cy-label">Cypher Query</div>
+        <div class="cy"><span class="ck">MATCH</span> (<span class="cl">c</span>:<span class="cl">Customer</span> {<span class="cp">email</span>: <span class="cp">$email</span>})
+<span class="ck">RETURN</span> <span class="cl">c</span>.<span class="cp">name</span>  <span class="ck">AS</span> name,
+       <span class="cl">c</span>.<span class="cp">email</span> <span class="ck">AS</span> email,
+       <span class="cl">c</span>.<span class="cp">city</span>  <span class="ck">AS</span> city
+
+<span class="cc">// In Neo4j Browser/Workspace, set params with:
+// :param email =&gt; "alice@example.com"</span></div>
+      </div>
+      <div class="result-preview">
+        <div class="result-label">Expected output (1 row, $email = "alice@example.com")</div>
+        <div class="result-row"><span>"Alice Novak"</span>  · alice@example.com  · <em>"New York"</em></div>
+      </div>
+      <div class="explain">
+        <div class="explain-title">Explanation</div>
+        <div class="explain-body">
+          <p>The inline property filter <code>{email: $email}</code> is shorthand for a <code>WHERE</code> clause. It's equivalent to writing <code>MATCH (c:Customer) WHERE c.email = $email</code>.</p>
+          <p><strong>Always use <code>$params</code> instead of string literals</strong> for two reasons: (1) Neo4j caches query execution plans keyed by query structure — a literal value like <code>"alice@example.com"</code> would be treated as a different query than <code>"ben@example.com"</code>, filling the plan cache. (2) Parameters are safe from injection.</p>
+          <p>In the Python driver, pass parameters as keyword args: <code>tx.run("MATCH (c:Customer {email: $email}) ...", email="alice@example.com")</code></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ TASK 04 ═══════ -->
+<div id="tab-t04" class="panel">
+  <div class="task">
+    <div class="task-header">
+      <div class="task-num">04</div>
+      <div class="task-meta">
+        <div class="task-title">Find All Products in a Category</div>
+        <div class="task-goal">Return all product names and prices in the "Electronics" category, sorted by price descending.</div>
+      </div>
+      <div class="task-tags"><span class="ttag ttag-r">MATCH</span><span class="ttag ttag-r">traversal</span><span class="ttag ttag-r">ORDER BY</span></div>
+    </div>
+    <div class="task-body">
+      <div class="cy-wrap">
+        <div class="cy-label">Cypher Query</div>
+        <div class="cy"><span class="ck">MATCH</span> (<span class="cl">p</span>:<span class="cl">Product</span>)-[:<span class="cl">IN_CATEGORY</span>]-&gt;(<span class="cl">cat</span>:<span class="cl">Category</span> {<span class="cp">name</span>: <span class="cp">$category</span>})
+<span class="ck">RETURN</span> <span class="cl">p</span>.<span class="cp">name</span>  <span class="ck">AS</span> product,
+       <span class="cl">p</span>.<span class="cp">price</span> <span class="ck">AS</span> price,
+       <span class="cl">p</span>.<span class="cp">sku</span>   <span class="ck">AS</span> sku
+<span class="ck">ORDER BY</span> <span class="cl">p</span>.<span class="cp">price</span> <span class="ck">DESC</span>
+
+<span class="cc">// :param category =&gt; "Electronics"</span></div>
+      </div>
+      <div class="result-preview">
+        <div class="result-label">Expected output (4 rows)</div>
+        <div class="result-row"><span>"Mechanical Keyboard"</span> · <em>119.00</em> · SKU-003</div>
+        <div class="result-row"><span>"Wireless Headphones"</span> · <em>89.99</em>  · SKU-001</div>
+        <div class="result-row"><span>"Webcam HD"</span>           · <em>59.99</em>  · SKU-004</div>
+        <div class="result-row"><span>"USB-C Hub"</span>           · <em>34.99</em>  · SKU-002</div>
+      </div>
+      <div class="explain">
+        <div class="explain-title">Explanation</div>
+        <div class="explain-body">
+          <p>This is a single-hop traversal: start at any <code>:Product</code>, follow a <code>:IN_CATEGORY</code> relationship to a <code>:Category</code> node, then filter on the category name. In SQL this would require a JOIN on a foreign key; here it's expressed as a path pattern.</p>
+          <p>The direction arrow <code>-[:IN_CATEGORY]-&gt;</code> matches only relationships going from Product to Category. If you omit the arrow (<code>-[:IN_CATEGORY]-</code>), it matches in either direction — fine for undirected graphs, but be explicit when direction has meaning.</p>
+          <p>Try changing <code>$category</code> to <code>"Sports"</code> or <code>"Home &amp; Kitchen"</code> to explore other categories — same query, different entry point.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ TASK 05 ═══════ -->
+<div id="tab-t05" class="panel">
+  <div class="task">
+    <div class="task-header">
+      <div class="task-num">05</div>
+      <div class="task-meta">
+        <div class="task-title">Find What a Customer Has Purchased</div>
+        <div class="task-goal">Return all product names purchased by Alice, including the order date and quantity. This requires traversing two relationships: Customer → Order → Product.</div>
+      </div>
+      <div class="task-tags"><span class="ttag ttag-r">MATCH</span><span class="ttag ttag-r">multi-hop</span><span class="ttag ttag-r">rel props</span></div>
+    </div>
+    <div class="task-body">
+      <div class="cy-wrap">
+        <div class="cy-label">Cypher Query</div>
+        <div class="cy"><span class="ck">MATCH</span>  (<span class="cl">c</span>:<span class="cl">Customer</span> {<span class="cp">email</span>: <span class="cp">$email</span>})
+       -[:<span class="cl">PLACED</span>]-&gt;(<span class="cl">o</span>:<span class="cl">Order</span>)
+       -[<span class="cl">line</span>:<span class="cl">CONTAINS</span>]-&gt;(<span class="cl">p</span>:<span class="cl">Product</span>)
+<span class="ck">RETURN</span> <span class="cl">p</span>.<span class="cp">name</span>      <span class="ck">AS</span> product,
+       <span class="cl">o</span>.<span class="cp">orderId</span>  <span class="ck">AS</span> orderId,
+       <span class="cl">o</span>.<span class="cp">date</span>     <span class="ck">AS</span> date,
+       <span class="cl">line</span>.<span class="cp">qty</span>   <span class="ck">AS</span> qty
+<span class="ck">ORDER BY</span> <span class="cl">o</span>.<span class="cp">date</span>
+
+<span class="cc">// :param email =&gt; "alice@example.com"</span></div>
+      </div>
+      <div class="result-preview">
+        <div class="result-label">Expected output (5 rows for Alice)</div>
+        <div class="result-row"><span>"Wireless Headphones"</span> · ORD-001 · <em>2024-01-15</em> · qty:1</div>
+        <div class="result-row"><span>"USB-C Hub"</span>           · ORD-001 · <em>2024-01-15</em> · qty:1</div>
+        <div class="result-row"><span>"Wireless Headphones"</span> · ORD-002 · <em>2024-02-03</em> · qty:1</div>
+        <div class="result-ellipsis">… 2 more rows (ORD-003)</div>
+      </div>
+      <div class="explain">
+        <div class="explain-title">Explanation</div>
+        <div class="explain-body">
+          <p>This is a <strong>two-hop traversal</strong>: Customer → Order → Product. In SQL you'd write a join chain: <code>customers JOIN orders ON ... JOIN order_items ON ... JOIN products ON ...</code> — four tables, three joins. Here it's one pattern expression.</p>
+          <p>Notice <code>[line:CONTAINS]</code> — by naming the relationship variable <code>line</code>, we can access its properties (<code>line.qty</code>, <code>line.unit_price</code>) in the RETURN clause. Relationship properties are first-class data in the graph model.</p>
+          <p>Alice appears in results with <code>Wireless Headphones</code> twice — once in ORD-001 and once in ORD-002. This is correct and expected: she placed two separate orders containing the same product.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ TASK 06 ═══════ -->
+<div id="tab-t06" class="panel">
+  <div class="task">
+    <div class="task-header">
+      <div class="task-num">06</div>
+      <div class="task-meta">
+        <div class="task-title">Find Customers Who Bought a Specific Product</div>
+        <div class="task-goal">Given a product SKU, return all customers who purchased it and the date they ordered it. Traversal goes in reverse: Product ← Order ← Customer.</div>
+      </div>
+      <div class="task-tags"><span class="ttag ttag-r">MATCH</span><span class="ttag ttag-r">reverse traversal</span></div>
+    </div>
+    <div class="task-body">
+      <div class="cy-wrap">
+        <div class="cy-label">Cypher Query</div>
+        <div class="cy"><span class="ck">MATCH</span>  (<span class="cl">c</span>:<span class="cl">Customer</span>)
+       -[:<span class="cl">PLACED</span>]-&gt;(<span class="cl">o</span>:<span class="cl">Order</span>)
+       -[:<span class="cl">CONTAINS</span>]-&gt;(<span class="cl">p</span>:<span class="cl">Product</span> {<span class="cp">sku</span>: <span class="cp">$sku</span>})
+<span class="ck">RETURN</span> <span class="cl">c</span>.<span class="cp">name</span>     <span class="ck">AS</span> customer,
+       <span class="cl">c</span>.<span class="cp">city</span>     <span class="ck">AS</span> city,
+       <span class="cl">o</span>.<span class="cp">date</span>     <span class="ck">AS</span> purchaseDate
+<span class="ck">ORDER BY</span> <span class="cl">o</span>.<span class="cp">date</span>
+
+<span class="cc">// :param sku =&gt; "SKU-001"  (Wireless Headphones)</span></div>
+      </div>
+      <div class="result-preview">
+        <div class="result-label">Expected output (3 rows for SKU-001)</div>
+        <div class="result-row"><span>"Alice Novak"</span>  · New York   · <em>2024-01-15</em></div>
+        <div class="result-row"><span>"Felix Huang"</span>  · Singapore  · <em>2024-01-10</em></div>
+        <div class="result-row"><span>"Alice Novak"</span>  · New York   · <em>2024-02-03</em></div>
+      </div>
+      <div class="explain">
+        <div class="explain-title">Explanation</div>
+        <div class="explain-body">
+          <p>The pattern direction in a graph query determines where traversal starts. Here we anchor on the product (<code>{sku: $sku}</code>) and walk back through orders to customers — exactly the reverse of Task 05, but the same two-hop structure.</p>
+          <p>This is where graph databases shine vs. SQL for exploratory queries: switching the "entry point" of a traversal doesn't require rewriting the join chain or adding new indexes — just change which node you anchor on and which direction you traverse.</p>
+          <p>Alice appears twice because she purchased SKU-001 in two separate orders. If you want distinct customers only, add <code>RETURN DISTINCT c.name, c.city</code>.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ TASK 07 ═══════ -->
+<div id="tab-t07" class="panel">
+  <div class="task">
+    <div class="task-header">
+      <div class="task-num">07</div>
+      <div class="task-meta">
+        <div class="task-title">Count Orders per Customer</div>
+        <div class="task-goal">Return each customer's name and their total number of orders, sorted from most to fewest. Use aggregation with GROUP BY semantics.</div>
+      </div>
+      <div class="task-tags"><span class="ttag ttag-r">count()</span><span class="ttag ttag-r">aggregation</span><span class="ttag ttag-r">ORDER BY</span></div>
+    </div>
+    <div class="task-body">
+      <div class="cy-wrap">
+        <div class="cy-label">Cypher Query</div>
+        <div class="cy"><span class="ck">MATCH</span> (<span class="cl">c</span>:<span class="cl">Customer</span>)-[:<span class="cl">PLACED</span>]-&gt;(<span class="cl">o</span>:<span class="cl">Order</span>)
+<span class="ck">RETURN</span> <span class="cl">c</span>.<span class="cp">name</span>           <span class="ck">AS</span> customer,
+       <span class="cf">count</span>(<span class="cl">o</span>)          <span class="ck">AS</span> totalOrders,
+       <span class="cf">sum</span>(<span class="cl">o</span>.<span class="cp">total</span>)      <span class="ck">AS</span> totalSpend
+<span class="ck">ORDER BY</span> totalOrders <span class="ck">DESC</span></div>
+      </div>
+      <div class="result-preview">
+        <div class="result-label">Expected output (7 rows — Hugo has no orders and won't appear)</div>
+        <div class="result-row"><span>"Alice Novak"</span>  · <em>3</em> orders · totalSpend: <em>403.96</em></div>
+        <div class="result-row"><span>"Felix Huang"</span>  · <em>3</em> orders · totalSpend: <em>273.97</em></div>
+        <div class="result-row"><span>"Ben Okafor"</span>   · <em>2</em> orders · totalSpend: <em>243.98</em></div>
+        <div class="result-ellipsis">… 4 more rows (1 order each)</div>
+      </div>
+      <div class="explain">
+        <div class="explain-title">Explanation</div>
+        <div class="explain-body">
+          <p>In Cypher, <code>GROUP BY</code> is implicit. Any non-aggregated variable in <code>RETURN</code> becomes a grouping key. Here <code>c.name</code> is the group key, and <code>count(o)</code> / <code>sum(o.total)</code> are the aggregates — exactly like <code>SELECT name, COUNT(*), SUM(total) FROM ... GROUP BY name</code>.</p>
+          <p>Notice <strong>Hugo doesn't appear</strong>. He has one order (ORD-014) in the dataset but the relationship was correctly created. If Hugo had no orders at all, he'd be absent from this result — a plain <code>MATCH</code> only returns rows where the full pattern matched. To include customers with zero orders, use <code>OPTIONAL MATCH</code> (Task 17).</p>
+          <p>You can reference aliases in <code>ORDER BY</code> — <code>ORDER BY totalOrders DESC</code> works even though <code>totalOrders</code> is defined in the RETURN clause.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ TASK 08 ═══════ -->
+<div id="tab-t08" class="panel">
+  <div class="task">
+    <div class="task-header">
+      <div class="task-num">08</div>
+      <div class="task-meta">
+        <div class="task-title">Add a New Customer</div>
+        <div class="task-goal">Insert a new customer using MERGE so the operation is safe to re-run. Set all properties only on creation.</div>
+      </div>
+      <div class="task-tags"><span class="ttag ttag-w">MERGE</span><span class="ttag ttag-w">ON CREATE SET</span></div>
+    </div>
+    <div class="task-body">
+      <div class="cy-wrap">
+        <div class="cy-label">Cypher Query</div>
+        <div class="cy"><span class="ck">MERGE</span> (<span class="cl">c</span>:<span class="cl">Customer</span> {<span class="cp">email</span>: <span class="cp">$email</span>})
+<span class="ck">ON CREATE SET</span>
+  <span class="cl">c</span>.<span class="cp">name</span>      = <span class="cp">$name</span>,
+  <span class="cl">c</span>.<span class="cp">city</span>      = <span class="cp">$city</span>,
+  <span class="cl">c</span>.<span class="cp">createdAt</span> = <span class="cf">timestamp</span>()
+<span class="ck">RETURN</span> <span class="cl">c</span>.<span class="cp">name</span> <span class="ck">AS</span> name,
+       <span class="cl">c</span>.<span class="cp">email</span> <span class="ck">AS</span> email,
+       <span class="cl">c</span>.<span class="cp">city</span>  <span class="ck">AS</span> city
+
+<span class="cc">// :param email =&gt; "ivan@example.com"
+// :param name  =&gt; "Ivan Petrov"
+// :param city  =&gt; "Moscow"</span></div>
+      </div>
+      <div class="result-preview">
+        <div class="result-label">Expected output (first run)</div>
+        <div class="result-row"><span>"Ivan Petrov"</span> · ivan@example.com · <em>"Moscow"</em></div>
+        <div class="result-label" style="margin-top:8px">Second run — no duplicate created, same row returned</div>
+        <div class="result-row"><span>"Ivan Petrov"</span> · ivan@example.com · <em>"Moscow"</em></div>
+      </div>
+      <div class="explain">
+        <div class="explain-title">Explanation</div>
+        <div class="explain-body">
+          <p><code>MERGE</code> works like a graph-level "find or create". It first tries to match a <code>:Customer</code> node with the specified email. If found, it returns it. If not found, it creates it and executes the <code>ON CREATE SET</code> block.</p>
+          <p><strong>MERGE on a single, stable unique key</strong> (email here) is critical. If you included <code>name</code> in the MERGE pattern — <code>MERGE (c:Customer {email: $email, name: $name})</code> — and the name changed later, MERGE would create a second node instead of matching the existing one.</p>
+          <p><code>timestamp()</code> returns the current Unix timestamp in milliseconds. Useful for auditing — you can later query "customers created in the last 30 days".</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ TASK 09 ═══════ -->
+<div id="tab-t09" class="panel">
+  <div class="task">
+    <div class="task-header">
+      <div class="task-num">09</div>
+      <div class="task-meta">
+        <div class="task-title">Update a Customer's City</div>
+        <div class="task-goal">Ben has moved from London to Amsterdam. Update his city property and record when the change was made.</div>
+      </div>
+      <div class="task-tags"><span class="ttag ttag-w">MATCH</span><span class="ttag ttag-w">SET</span></div>
+    </div>
+    <div class="task-body">
+      <div class="cy-wrap">
+        <div class="cy-label">Cypher Query</div>
+        <div class="cy"><span class="ck">MATCH</span> (<span class="cl">c</span>:<span class="cl">Customer</span> {<span class="cp">email</span>: <span class="cp">$email</span>})
+<span class="ck">SET</span>   <span class="cl">c</span>.<span class="cp">city</span>      = <span class="cp">$newCity</span>,
+      <span class="cl">c</span>.<span class="cp">updatedAt</span> = <span class="cf">timestamp</span>()
+<span class="ck">RETURN</span> <span class="cl">c</span>.<span class="cp">name</span> <span class="ck">AS</span> name,
+       <span class="cl">c</span>.<span class="cp">city</span> <span class="ck">AS</span> city
+
+<span class="cc">// :param email   =&gt; "ben@example.com"
+// :param newCity =&gt; "Amsterdam"</span></div>
+      </div>
+      <div class="result-preview">
+        <div class="result-label">Expected output</div>
+        <div class="result-row"><span>"Ben Okafor"</span> · <em>"Amsterdam"</em></div>
+      </div>
+      <div class="explain">
+        <div class="explain-title">Explanation</div>
+        <div class="explain-body">
+          <p><code>SET c.city = $newCity</code> updates a single property. You can update multiple properties in one SET clause by separating them with commas.</p>
+          <p>Two ways to set multiple properties at once:</p>
+          <p><code>SET c.city = $city, c.updatedAt = timestamp()</code> — updates listed properties, leaves others untouched.</p>
+          <p><code>SET c += {city: $city, updatedAt: timestamp()}</code> — merges a map into the node. Same behaviour — keeps existing properties, adds/overwrites listed ones.</p>
+          <p>Avoid <code>SET c = {city: $city}</code> (without <code>+=</code>) unless intentional — this <strong>replaces all properties</strong> on the node with only what's in the map, deleting name, email, etc.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ TASK 10 ═══════ -->
+<div id="tab-t10" class="panel">
+  <div class="task">
+    <div class="task-header">
+      <div class="task-num">10</div>
+      <div class="task-meta">
+        <div class="task-title">Add a Review</div>
+        <div class="task-goal">Felix wants to leave a 4-star review for the Running Shoes (SKU-005). Create a REVIEWED relationship with rating and review text as properties on the relationship.</div>
+      </div>
+      <div class="task-tags"><span class="ttag ttag-w">MERGE</span><span class="ttag ttag-w">relationship props</span></div>
+    </div>
+    <div class="task-body">
+      <div class="cy-wrap">
+        <div class="cy-label">Cypher Query</div>
+        <div class="cy"><span class="ck">MATCH</span>  (<span class="cl">c</span>:<span class="cl">Customer</span> {<span class="cp">email</span>: <span class="cp">$email</span>}),
+       (<span class="cl">p</span>:<span class="cl">Product</span>  {<span class="cp">sku</span>:   <span class="cp">$sku</span>})
+<span class="ck">MERGE</span>  (<span class="cl">c</span>)-[<span class="cl">r</span>:<span class="cl">REVIEWED</span>]-&gt;(<span class="cl">p</span>)
+<span class="ck">ON CREATE SET</span>
+  <span class="cl">r</span>.<span class="cp">rating</span>    = <span class="cp">$rating</span>,
+  <span class="cl">r</span>.<span class="cp">text</span>      = <span class="cp">$text</span>,
+  <span class="cl">r</span>.<span class="cp">createdAt</span> = <span class="cf">timestamp</span>()
+<span class="ck">ON MATCH SET</span>
+  <span class="cl">r</span>.<span class="cp">rating</span>    = <span class="cp">$rating</span>,
+  <span class="cl">r</span>.<span class="cp">text</span>      = <span class="cp">$text</span>,
+  <span class="cl">r</span>.<span class="cp">updatedAt</span> = <span class="cf">timestamp</span>()
+<span class="ck">RETURN</span> <span class="cl">c</span>.<span class="cp">name</span> <span class="ck">AS</span> reviewer,
+       <span class="cl">p</span>.<span class="cp">name</span> <span class="ck">AS</span> product,
+       <span class="cl">r</span>.<span class="cp">rating</span> <span class="ck">AS</span> rating
+
+<span class="cc">// :param email  =&gt; "felix@example.com"
+// :param sku    =&gt; "SKU-005"
+// :param rating =&gt; 4
+// :param text   =&gt; "Good grip but narrow fit."</span></div>
+      </div>
+      <div class="result-preview">
+        <div class="result-label">Expected output</div>
+        <div class="result-row"><span>"Felix Huang"</span> · <span>"Running Shoes"</span> · <em>4</em></div>
+      </div>
+      <div class="explain">
+        <div class="explain-title">Explanation</div>
+        <div class="explain-body">
+          <p>MERGE works on relationships too. <code>MERGE (c)-[r:REVIEWED]-&gt;(p)</code> finds an existing REVIEWED relationship between Felix and Running Shoes, or creates one if it doesn't exist.</p>
+          <p>Using both <code>ON CREATE SET</code> and <code>ON MATCH SET</code> gives you a proper upsert: set <code>createdAt</code> only on creation, and <code>updatedAt</code> only on update. This preserves the original creation timestamp while tracking when the review was last edited.</p>
+          <p>Relationship properties like <code>r.rating</code> and <code>r.text</code> are stored directly on the edge — no extra "reviews" table or join needed. This is data that, in a relational model, would require a separate junction table with its own foreign keys.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ TASK 11 ═══════ -->
+<div id="tab-t11" class="panel">
+  <div class="task">
+    <div class="task-header">
+      <div class="task-num">11</div>
+      <div class="task-meta">
+        <div class="task-title">Delete a Review</div>
+        <div class="task-goal">Ben wants to delete his review of the Winter Jacket (SKU-007). Remove only the REVIEWED relationship — not the nodes.</div>
+      </div>
+      <div class="task-tags"><span class="ttag ttag-w">MATCH</span><span class="ttag ttag-w">DELETE rel</span></div>
+    </div>
+    <div class="task-body">
+      <div class="cy-wrap">
+        <div class="cy-label">Cypher Query</div>
+        <div class="cy"><span class="ck">MATCH</span> (<span class="cl">c</span>:<span class="cl">Customer</span> {<span class="cp">email</span>: <span class="cp">$email</span>})
+      -[<span class="cl">r</span>:<span class="cl">REVIEWED</span>]-&gt;
+      (<span class="cl">p</span>:<span class="cl">Product</span>  {<span class="cp">sku</span>:   <span class="cp">$sku</span>})
+<span class="ck">DELETE</span> <span class="cl">r</span>
+<span class="ck">RETURN</span> <span class="cf">count</span>(<span class="cl">r</span>) <span class="ck">AS</span> deletedReviews
+
+<span class="cc">// :param email =&gt; "ben@example.com"
+// :param sku   =&gt; "SKU-007"</span></div>
+      </div>
+      <div class="result-preview">
+        <div class="result-label">Expected output</div>
+        <div class="result-row">deletedReviews: <em>1</em></div>
+        <div class="result-label" style="margin-top:8px">Re-run the same query — no match, 0 returned</div>
+        <div class="result-row">deletedReviews: <em>0</em></div>
+      </div>
+      <div class="explain">
+        <div class="explain-title">Explanation</div>
+        <div class="explain-body">
+          <p><code>DELETE r</code> deletes the relationship only — Ben and the Winter Jacket nodes remain intact. This is the key difference from <code>DETACH DELETE</code>, which deletes a node along with all its relationships.</p>
+          <p>The pattern <code>(c)-[r:REVIEWED]-&gt;(p)</code> anchors both endpoints. Without anchoring both nodes, you risk deleting more reviews than intended. Always be as specific as possible in the MATCH pattern before a DELETE.</p>
+          <p>If the pattern doesn't match (e.g. the review was already deleted), the query returns 0 rows gracefully rather than throwing an error. This is idiomatic Cypher — no need for "check then delete" logic.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ TASK 12 ═══════ -->
+<div id="tab-t12" class="panel">
+  <div class="task">
+    <div class="task-header">
+      <div class="task-num">12</div>
+      <div class="task-meta">
+        <div class="task-title">Upsert a Product (MERGE with Price Update)</div>
+        <div class="task-goal">The USB-C Hub price has changed to $39.99. Use MERGE to update it if it exists, or create it if it doesn't. Set the price on both creation and update.</div>
+      </div>
+      <div class="task-tags"><span class="ttag ttag-w">MERGE</span><span class="ttag ttag-w">ON MATCH SET</span><span class="ttag ttag-m">upsert</span></div>
+    </div>
+    <div class="task-body">
+      <div class="cy-wrap">
+        <div class="cy-label">Cypher Query</div>
+        <div class="cy"><span class="ck">MERGE</span> (<span class="cl">p</span>:<span class="cl">Product</span> {<span class="cp">sku</span>: <span class="cp">$sku</span>})
+<span class="ck">ON CREATE SET</span>
+  <span class="cl">p</span>.<span class="cp">name</span>      = <span class="cp">$name</span>,
+  <span class="cl">p</span>.<span class="cp">price</span>     = <span class="cp">$price</span>,
+  <span class="cl">p</span>.<span class="cp">createdAt</span> = <span class="cf">timestamp</span>()
+<span class="ck">ON MATCH SET</span>
+  <span class="cl">p</span>.<span class="cp">price</span>     = <span class="cp">$price</span>,
+  <span class="cl">p</span>.<span class="cp">updatedAt</span> = <span class="cf">timestamp</span>()
+<span class="ck">RETURN</span> <span class="cl">p</span>.<span class="cp">sku</span>   <span class="ck">AS</span> sku,
+       <span class="cl">p</span>.<span class="cp">name</span>  <span class="ck">AS</span> product,
+       <span class="cl">p</span>.<span class="cp">price</span> <span class="ck">AS</span> price
+
+<span class="cc">// :param sku   =&gt; "SKU-002"
+// :param name  =&gt; "USB-C Hub"
+// :param price =&gt; 39.99</span></div>
+      </div>
+      <div class="result-preview">
+        <div class="result-label">Expected output — existing product updated</div>
+        <div class="result-row"><span>"SKU-002"</span> · <span>"USB-C Hub"</span> · <em>39.99</em></div>
+      </div>
+      <div class="explain">
+        <div class="explain-title">Explanation</div>
+        <div class="explain-body">
+          <p>This is the canonical upsert pattern in Cypher. MERGE on the SKU (the stable unique identifier), then use <code>ON CREATE SET</code> for new fields (like <code>createdAt</code>) and <code>ON MATCH SET</code> for fields that should always reflect the latest values (like <code>price</code> and <code>updatedAt</code>).</p>
+          <p>This is equivalent to a SQL <code>INSERT ... ON DUPLICATE KEY UPDATE</code> or PostgreSQL's <code>INSERT ... ON CONFLICT DO UPDATE SET</code>.</p>
+          <p>This pattern is the backbone of any incremental sync pipeline: run it repeatedly with new data and it will create new products and update changed prices without ever producing duplicates.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ TASK 13 ═══════ -->
+<div id="tab-t13" class="panel">
+  <div class="task">
+    <div class="task-header">
+      <div class="task-num">13</div>
+      <div class="task-meta">
+        <div class="task-title">Find Products That Have Never Been Purchased</div>
+        <div class="task-goal">Return all products that have no CONTAINS relationship pointing to them — i.e., they exist in the catalog but have never appeared in any order.</div>
+      </div>
+      <div class="task-tags"><span class="ttag ttag-m">graph pattern</span><span class="ttag ttag-m">NOT EXISTS</span></div>
+    </div>
+    <div class="task-body">
+      <div class="cy-wrap">
+        <div class="cy-label">Cypher Query</div>
+        <div class="cy"><span class="ck">MATCH</span>  (<span class="cl">p</span>:<span class="cl">Product</span>)
+<span class="ck">WHERE</span>  <span class="ck">NOT</span> (<span class="cl">p</span>)&lt;-[:<span class="cl">CONTAINS</span>]-()
+<span class="ck">RETURN</span> <span class="cl">p</span>.<span class="cp">name</span>  <span class="ck">AS</span> product,
+       <span class="cl">p</span>.<span class="cp">sku</span>   <span class="ck">AS</span> sku,
+       <span class="cl">p</span>.<span class="cp">price</span> <span class="ck">AS</span> price
+<span class="ck">ORDER BY</span> <span class="cl">p</span>.<span class="cp">price</span> <span class="ck">DESC</span></div>
+      </div>
+      <div class="result-preview">
+        <div class="result-label">Expected output (2 products never purchased)</div>
+        <div class="result-row"><span>"Bamboo Cutting Board"</span> · SKU-011 · <em>24.99</em></div>
+        <div class="result-row"><span>"Merino Wool Socks"</span>    · SKU-008 · <em>18.00</em></div>
+      </div>
+      <div class="callout ca-b">
+        <div class="ca-title">💡 SQL comparison</div>
+        In SQL: <code>SELECT * FROM products WHERE id NOT IN (SELECT product_id FROM order_items)</code> — a subquery or NOT EXISTS join. In Cypher it's a structural pattern: "find products where no CONTAINS relationship exists pointing to them."
+      </div>
+      <div class="explain">
+        <div class="explain-title">Explanation</div>
+        <div class="explain-body">
+          <p><code>NOT (p)&lt;-[:CONTAINS]-()</code> is a <strong>pattern existence check</strong>. It asks: "does no CONTAINS relationship point inward to this product node?" The <code>()</code> is an anonymous node — we don't care who it is, just whether the relationship exists.</p>
+          <p>Note the arrow direction: <code>&lt;-[:CONTAINS]-</code> matches relationships arriving at the product, because CONTAINS goes Order → Product. If you used <code>-[:CONTAINS]-&gt;()</code> you'd be checking for outgoing CONTAINS rels from the product, which don't exist at all and would return every product.</p>
+          <p>This is a pure graph structural query — there's no equivalent of "relationship absence" in basic SQL without subqueries or outer joins.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ TASK 14 ═══════ -->
+<div id="tab-t14" class="panel">
+  <div class="task">
+    <div class="task-header">
+      <div class="task-num">14</div>
+      <div class="task-meta">
+        <div class="task-title">Find Customers Who Reviewed But Never Purchased a Product</div>
+        <div class="task-goal">Find customers who have a REVIEWED relationship to a product but have never actually purchased that same product. This is a classic graph-native pattern: structural contradiction detection.</div>
+      </div>
+      <div class="task-tags"><span class="ttag ttag-m">graph pattern</span><span class="ttag ttag-m">NOT EXISTS</span><span class="ttag ttag-m">multi-path</span></div>
+    </div>
+    <div class="task-body">
+      <div class="cy-wrap">
+        <div class="cy-label">Cypher Query</div>
+        <div class="cy"><span class="ck">MATCH</span>  (<span class="cl">c</span>:<span class="cl">Customer</span>)-[:<span class="cl">REVIEWED</span>]-&gt;(<span class="cl">p</span>:<span class="cl">Product</span>)
+<span class="ck">WHERE</span>  <span class="ck">NOT</span> (<span class="cl">c</span>)-[:<span class="cl">PLACED</span>]-&gt;()-[:<span class="cl">CONTAINS</span>]-&gt;(<span class="cl">p</span>)
+<span class="ck">RETURN</span> <span class="cl">c</span>.<span class="cp">name</span>  <span class="ck">AS</span> customer,
+       <span class="cl">p</span>.<span class="cp">name</span>  <span class="ck">AS</span> reviewedProduct,
+       <span class="cl">p</span>.<span class="cp">sku</span>   <span class="ck">AS</span> sku</div>
+      </div>
+      <div class="result-preview">
+        <div class="result-label">Expected output (1 row — Dan reviewed Bamboo Cutting Board but never ordered it)</div>
+        <div class="result-row"><span>"Dan Reyes"</span> · <span>"Bamboo Cutting Board"</span> · <em>SKU-011</em></div>
+      </div>
+      <div class="callout ca-v">
+        <div class="ca-title">🧠 Graph-native thinking</div>
+        This kind of query — "connected via path A but NOT via path B" — is idiomatic graph reasoning. It's used for fraud detection ("has a link to this account but no legitimate purchase history"), data quality checks, and content moderation pipelines.
+      </div>
+      <div class="explain">
+        <div class="explain-title">Explanation</div>
+        <div class="explain-body">
+          <p>The query finds every <code>Customer → REVIEWED → Product</code> pair, then filters out any pairs where the customer also traversed <code>Customer → PLACED → Order → CONTAINS → Product</code> to the same product. The <code>()</code> in the NOT pattern is an anonymous Order node — we don't care which order, just whether any purchase path exists.</p>
+          <p>In SQL this would require a LEFT JOIN followed by a WHERE IS NULL check, or a NOT EXISTS correlated subquery with a multi-table join inside it. In Cypher it's a single declarative WHERE clause.</p>
+          <p>Dan was set up this way in Task 01 deliberately — he reviewed the Bamboo Cutting Board but only ever ordered a Webcam HD.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ TASK 15 ═══════ -->
+<div id="tab-t15" class="panel">
+  <div class="task">
+    <div class="task-header">
+      <div class="task-num">15</div>
+      <div class="task-meta">
+        <div class="task-title">Find Products Co-Purchased with a Given Product</div>
+        <div class="task-goal">Find products that appear in the same order as the Wireless Headphones (SKU-001). This is "customers who bought X also bought Y" — a 4-hop graph pattern.</div>
+      </div>
+      <div class="task-tags"><span class="ttag ttag-m">co-purchase</span><span class="ttag ttag-m">4-hop</span><span class="ttag ttag-m">count()</span></div>
+    </div>
+    <div class="task-body">
+      <div class="cy-wrap">
+        <div class="cy-label">Cypher Query</div>
+        <div class="cy"><span class="ck">MATCH</span>  (<span class="cl">target</span>:<span class="cl">Product</span> {<span class="cp">sku</span>: <span class="cp">$sku</span>})
+       &lt;-[:<span class="cl">CONTAINS</span>]-(<span class="cl">o</span>:<span class="cl">Order</span>)
+       -[:<span class="cl">CONTAINS</span>]-&gt;(<span class="cl">other</span>:<span class="cl">Product</span>)
+<span class="ck">WHERE</span>  <span class="cl">other</span> &lt;&gt; <span class="cl">target</span>
+<span class="ck">RETURN</span> <span class="cl">other</span>.<span class="cp">name</span>       <span class="ck">AS</span> coPurchasedWith,
+       <span class="cf">count</span>(<span class="cl">o</span>)         <span class="ck">AS</span> coOccurrences
+<span class="ck">ORDER BY</span> coOccurrences <span class="ck">DESC</span>
+
+<span class="cc">// :param sku =&gt; "SKU-001"  (Wireless Headphones)</span></div>
+      </div>
+      <div class="result-preview">
+        <div class="result-label">Expected output</div>
+        <div class="result-row"><span>"USB-C Hub"</span>          · <em>2</em> co-occurrences</div>
+        <div class="result-row"><span>"Mechanical Keyboard"</span> · <em>1</em> co-occurrence</div>
+      </div>
+      <div class="callout ca-g">
+        <div class="ca-title">✦ This is a recommendation engine in 5 lines</div>
+        Scale this to millions of products and it becomes the foundation of "Frequently Bought Together." The graph traversal cost grows with the neighborhood of SKU-001, not with the total number of orders — that's index-free adjacency in practice.
+      </div>
+      <div class="explain">
+        <div class="explain-title">Explanation</div>
+        <div class="explain-body">
+          <p>The path is: target product ← (CONTAINS) — Order — (CONTAINS) → other product. Reading it out loud: "find orders that contain the target product, then find all other products those orders also contain." This is a 2-hop traversal from the product's perspective.</p>
+          <p><code>WHERE other &lt;&gt; target</code> prevents the product from being listed as co-purchased with itself. Without this, SKU-001 would appear in its own results.</p>
+          <p><code>count(o)</code> counts how many distinct orders contain both products — a simple co-occurrence frequency. For a real recommendation engine you'd weight by recency, purchase rate, and similarity score, but this pattern is the foundation.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ TASK 16 ═══════ -->
+<div id="tab-t16" class="panel">
+  <div class="task">
+    <div class="task-header">
+      <div class="task-num">16</div>
+      <div class="task-meta">
+        <div class="task-title">Collaborative Filtering Recommendation</div>
+        <div class="task-goal">For a given customer, find products bought by customers who share at least one purchase with them — but that the given customer hasn't bought yet. A 6-hop traversal.</div>
+      </div>
+      <div class="task-tags"><span class="ttag ttag-m">6-hop</span><span class="ttag ttag-m">NOT EXISTS</span><span class="ttag ttag-m">DISTINCT</span></div>
+    </div>
+    <div class="task-body">
+      <div class="cy-wrap">
+        <div class="cy-label">Cypher Query</div>
+        <div class="cy"><span class="ck">MATCH</span>  (<span class="cl">me</span>:<span class="cl">Customer</span> {<span class="cp">email</span>: <span class="cp">$email</span>})
+       -[:<span class="cl">PLACED</span>]-&gt;()-[:<span class="cl">CONTAINS</span>]-&gt;(<span class="cl">shared</span>)
+       &lt;-[:<span class="cl">CONTAINS</span>]-()-[:<span class="cl">PLACED</span>]&lt;-
+       (<span class="cl">similar</span>:<span class="cl">Customer</span>)
+       -[:<span class="cl">PLACED</span>]-&gt;()-[:<span class="cl">CONTAINS</span>]-&gt;(<span class="cl">rec</span>:<span class="cl">Product</span>)
+<span class="ck">WHERE</span>  <span class="cl">similar</span> &lt;&gt; <span class="cl">me</span>
+  <span class="ck">AND</span>  <span class="ck">NOT</span> (<span class="cl">me</span>)-[:<span class="cl">PLACED</span>]-&gt;()-[:<span class="cl">CONTAINS</span>]-&gt;(<span class="cl">rec</span>)
+<span class="ck">RETURN</span> <span class="ck">DISTINCT</span> <span class="cl">rec</span>.<span class="cp">name</span>  <span class="ck">AS</span> recommendation,
+       <span class="cl">rec</span>.<span class="cp">sku</span>   <span class="ck">AS</span> sku,
+       <span class="cl">rec</span>.<span class="cp">price</span> <span class="ck">AS</span> price
+<span class="ck">ORDER BY</span> <span class="cl">rec</span>.<span class="cp">price</span> <span class="ck">DESC</span>
+
+<span class="cc">// :param email =&gt; "alice@example.com"</span></div>
+      </div>
+      <div class="result-preview">
+        <div class="result-label">Expected output for Alice (products bought by Felix, who shares purchases with Alice)</div>
+        <div class="result-row"><span>"Cast Iron Skillet"</span> · SKU-010 · <em>44.99</em></div>
+      </div>
+      <div class="explain">
+        <div class="explain-title">Explanation</div>
+        <div class="explain-body">
+          <p>This is a 6-hop traversal that implements basic collaborative filtering: <strong>me → my orders → products I bought → orders containing same products → similar customers → their other products.</strong></p>
+          <p>The two WHERE conditions are essential: <code>similar &lt;&gt; me</code> prevents self-recommendation, and <code>NOT (me)-[:PLACED]->()-[:CONTAINS]->(rec)</code> filters out products Alice has already purchased.</p>
+          <p>In SQL this would require 5+ joins and multiple NOT EXISTS subqueries. Here it's one MATCH pattern with two WHERE filters — the same cognitive model you use to describe the problem in English maps directly to the Cypher structure.</p>
+          <p>This is why graph databases are the default choice for recommendation engines: the query expresses the algorithm, not the join plumbing.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ TASK 17 ═══════ -->
+<div id="tab-t17" class="panel">
+  <div class="task">
+    <div class="task-header">
+      <div class="task-num">17</div>
+      <div class="task-meta">
+        <div class="task-title">OPTIONAL MATCH — All Customers Including Those Without Orders</div>
+        <div class="task-goal">List every customer with the total amount they've spent. Customers who have placed no orders should appear with a spend of 0, not be dropped from the result.</div>
+      </div>
+      <div class="task-tags"><span class="ttag ttag-m">OPTIONAL MATCH</span><span class="ttag ttag-m">coalesce()</span><span class="ttag ttag-m">LEFT JOIN</span></div>
+    </div>
+    <div class="task-body">
+      <div class="cy-wrap">
+        <div class="cy-label">Cypher Query</div>
+        <div class="cy"><span class="ck">MATCH</span>          (<span class="cl">c</span>:<span class="cl">Customer</span>)
+<span class="ck">OPTIONAL MATCH</span> (<span class="cl">c</span>)-[:<span class="cl">PLACED</span>]-&gt;(<span class="cl">o</span>:<span class="cl">Order</span>)
+<span class="ck">RETURN</span> <span class="cl">c</span>.<span class="cp">name</span>                       <span class="ck">AS</span> customer,
+       <span class="cf">coalesce</span>(<span class="cf">sum</span>(<span class="cl">o</span>.<span class="cp">total</span>), <span class="cn">0.0</span>) <span class="ck">AS</span> totalSpend,
+       <span class="cf">count</span>(<span class="cl">o</span>)                    <span class="ck">AS</span> orderCount
+<span class="ck">ORDER BY</span> totalSpend <span class="ck">DESC</span></div>
+      </div>
+      <div class="result-preview">
+        <div class="result-label">Expected output (9 rows — Ivan from Task 08 has 0 spend)</div>
+        <div class="result-row"><span>"Alice Novak"</span>  · totalSpend: <em>403.96</em> · orders: 3</div>
+        <div class="result-row"><span>"Felix Huang"</span>  · totalSpend: <em>273.97</em> · orders: 3</div>
+        <div class="result-ellipsis">…</div>
+        <div class="result-row"><span>"Ivan Petrov"</span>  · totalSpend: <em>0.0</em>    · orders: 0</div>
+      </div>
+      <div class="explain">
+        <div class="explain-title">Explanation</div>
+        <div class="explain-body">
+          <p><code>OPTIONAL MATCH</code> is the Cypher equivalent of a LEFT JOIN. When no matching Order is found for a customer, the variable <code>o</code> is <code>null</code> instead of dropping the row entirely.</p>
+          <p><code>coalesce(sum(o.total), 0.0)</code> handles the null case — if <code>sum</code> returns null (because all values were null), replace it with 0.0. Without <code>coalesce</code>, customers with no orders would show <code>null</code> in the spend column.</p>
+          <p>Compare this to Task 07 where a plain <code>MATCH</code> on the PLACED relationship meant that customers without orders didn't appear in results at all. Choosing between MATCH and OPTIONAL MATCH is the same decision as choosing between INNER JOIN and LEFT JOIN in SQL.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ TASK 18 ═══════ -->
+<div id="tab-t18" class="panel">
+  <div class="task">
+    <div class="task-header">
+      <div class="task-num">18</div>
+      <div class="task-meta">
+        <div class="task-title">Find Highest-Rated Products</div>
+        <div class="task-goal">Return all products that have at least one review, with their average rating and review count. Show only products with an average rating of 4.0 or higher.</div>
+      </div>
+      <div class="task-tags"><span class="ttag ttag-m">avg()</span><span class="ttag ttag-m">WITH filter</span><span class="ttag ttag-m">HAVING analog</span></div>
+    </div>
+    <div class="task-body">
+      <div class="cy-wrap">
+        <div class="cy-label">Cypher Query</div>
+        <div class="cy"><span class="ck">MATCH</span>  (<span class="cl">c</span>:<span class="cl">Customer</span>)-[<span class="cl">r</span>:<span class="cl">REVIEWED</span>]-&gt;(<span class="cl">p</span>:<span class="cl">Product</span>)
+<span class="ck">WITH</span>   <span class="cl">p</span>,
+       <span class="cf">avg</span>(<span class="cl">r</span>.<span class="cp">rating</span>)   <span class="ck">AS</span> avgRating,
+       <span class="cf">count</span>(<span class="cl">r</span>)        <span class="ck">AS</span> reviewCount,
+       <span class="cf">collect</span>(<span class="cl">r</span>.<span class="cp">text</span>) <span class="ck">AS</span> reviewTexts
+<span class="ck">WHERE</span>  avgRating &gt;= <span class="cn">4.0</span>
+<span class="ck">RETURN</span> <span class="cl">p</span>.<span class="cp">name</span>     <span class="ck">AS</span> product,
+       avgRating,
+       reviewCount,
+       reviewTexts
+<span class="ck">ORDER BY</span> avgRating <span class="ck">DESC</span>, reviewCount <span class="ck">DESC</span></div>
+      </div>
+      <div class="result-preview">
+        <div class="result-label">Expected output</div>
+        <div class="result-row"><span>"Running Shoes"</span>       · avg: <em>4.67</em> (Felix added 4★) · 3 reviews</div>
+        <div class="result-row"><span>"Wireless Headphones"</span> · avg: <em>5.0</em>  · 1 review</div>
+        <div class="result-row"><span>"Chef's Knife"</span>        · avg: <em>4.0</em>  · 1 review</div>
+        <div class="result-row"><span>"Mechanical Keyboard"</span> · avg: <em>4.0</em>  · 1 review</div>
+        <div class="result-row"><span>"Bamboo Cutting Board"</span>· avg: <em>4.0</em>  · 1 review</div>
+      </div>
+      <div class="explain">
+        <div class="explain-title">Explanation</div>
+        <div class="explain-body">
+          <p><code>WITH p, avg(r.rating) AS avgRating</code> is the Cypher equivalent of SQL's <code>GROUP BY p HAVING avg(rating) &gt;= 4.0</code>. The <code>WITH</code> clause computes the aggregation and passes it forward; the subsequent <code>WHERE</code> then filters on the computed value.</p>
+          <p>You cannot filter on an aggregate in the same clause that computes it (just like SQL doesn't allow <code>WHERE avg(...)</code>). The pattern is always: aggregate in WITH, filter in the following WHERE.</p>
+          <p><code>collect(r.text)</code> builds a list of all review texts for each product — equivalent to <code>GROUP_CONCAT</code> in MySQL. The result is a native list type that you can iterate in application code.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ TASK 19 ═══════ -->
+<div id="tab-t19" class="panel">
+  <div class="task">
+    <div class="task-header">
+      <div class="task-num">19</div>
+      <div class="task-meta">
+        <div class="task-title">Top Products by Total Revenue</div>
+        <div class="task-goal">Calculate total revenue per product (sum of qty × unit_price across all orders). Return the top 5, with category name included. This uses relationship properties and a category traversal in the same query.</div>
+      </div>
+      <div class="task-tags"><span class="ttag ttag-m">sum()</span><span class="ttag ttag-m">rel props</span><span class="ttag ttag-m">multi-hop + agg</span></div>
+    </div>
+    <div class="task-body">
+      <div class="cy-wrap">
+        <div class="cy-label">Cypher Query</div>
+        <div class="cy"><span class="ck">MATCH</span>  (<span class="cl">o</span>:<span class="cl">Order</span>)-[<span class="cl">line</span>:<span class="cl">CONTAINS</span>]-&gt;(<span class="cl">p</span>:<span class="cl">Product</span>)
+       -[:<span class="cl">IN_CATEGORY</span>]-&gt;(<span class="cl">cat</span>:<span class="cl">Category</span>)
+<span class="ck">WITH</span>   <span class="cl">p</span>, <span class="cl">cat</span>,
+       <span class="cf">sum</span>(<span class="cl">line</span>.<span class="cp">qty</span> * <span class="cl">line</span>.<span class="cp">unit_price</span>) <span class="ck">AS</span> revenue,
+       <span class="cf">sum</span>(<span class="cl">line</span>.<span class="cp">qty</span>)                    <span class="ck">AS</span> unitsSold
+<span class="ck">RETURN</span> <span class="cl">p</span>.<span class="cp">name</span>     <span class="ck">AS</span> product,
+       <span class="cl">cat</span>.<span class="cp">name</span>   <span class="ck">AS</span> category,
+       revenue,
+       unitsSold
+<span class="ck">ORDER BY</span> revenue <span class="ck">DESC</span>
+<span class="ck">LIMIT</span>  <span class="cn">5</span></div>
+      </div>
+      <div class="result-preview">
+        <div class="result-label">Expected top 5</div>
+        <div class="result-row"><span>"Winter Jacket"</span>       · Clothing     · revenue: <em>447.00</em></div>
+        <div class="result-row"><span>"Wireless Headphones"</span> · Electronics  · revenue: <em>269.97</em></div>
+        <div class="result-row"><span>"Mechanical Keyboard"</span> · Electronics  · revenue: <em>357.00</em></div>
+        <div class="result-row"><span>"Running Shoes"</span>       · Sports        · revenue: <em>224.97</em></div>
+        <div class="result-row"><span>"Webcam HD"</span>           · Electronics  · revenue: <em>59.99</em></div>
+      </div>
+      <div class="explain">
+        <div class="explain-title">Explanation</div>
+        <div class="explain-body">
+          <p>This query traverses two hops from Order: Order → Product → Category. By including the category in the MATCH pattern, we can return it without a second query or a join — the graph naturally carries the relationship.</p>
+          <p><code>sum(line.qty * line.unit_price)</code> computes inline arithmetic on relationship properties. <code>line</code> is the CONTAINS relationship variable, and its <code>qty</code> and <code>unit_price</code> properties are the line-item data that would live in an <code>order_items</code> table in SQL.</p>
+          <p>Note <code>LIMIT 5</code> at the end — always combine LIMIT with ORDER BY for deterministic results. Without ORDER BY, the "top 5" would be arbitrary.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ TASK 20 ═══════ -->
+<div id="tab-t20" class="panel">
+  <div class="task">
+    <div class="task-header">
+      <div class="task-num">20</div>
+      <div class="task-meta">
+        <div class="task-title">Identify VIP Customers</div>
+        <div class="task-goal">Find customers who have placed 3 or more orders AND whose total spend exceeds $250. This combines aggregation, multi-condition filtering via WITH, and relationship traversal — the capstone query.</div>
+      </div>
+      <div class="task-tags"><span class="ttag ttag-m">WITH filter</span><span class="ttag ttag-m">multi-agg</span><span class="ttag ttag-m">HAVING analog</span></div>
+    </div>
+    <div class="task-body">
+      <div class="cy-wrap">
+        <div class="cy-label">Cypher Query</div>
+        <div class="cy"><span class="ck">MATCH</span>  (<span class="cl">c</span>:<span class="cl">Customer</span>)-[:<span class="cl">PLACED</span>]-&gt;(<span class="cl">o</span>:<span class="cl">Order</span>)
+<span class="ck">WITH</span>   <span class="cl">c</span>,
+       <span class="cf">count</span>(<span class="cl">o</span>)       <span class="ck">AS</span> orderCount,
+       <span class="cf">sum</span>(<span class="cl">o</span>.<span class="cp">total</span>)  <span class="ck">AS</span> totalSpend
+<span class="ck">WHERE</span>  orderCount &gt;= <span class="cn">3</span>
+  <span class="ck">AND</span>  totalSpend  &gt;  <span class="cn">250</span>
+<span class="ck">RETURN</span> <span class="cl">c</span>.<span class="cp">name</span>  <span class="ck">AS</span> customer,
+       <span class="cl">c</span>.<span class="cp">email</span> <span class="ck">AS</span> email,
+       <span class="cl">c</span>.<span class="cp">city</span>  <span class="ck">AS</span> city,
+       orderCount,
+       <span class="cf">round</span>(totalSpend, <span class="cn">2</span>) <span class="ck">AS</span> totalSpend
+<span class="ck">ORDER BY</span> totalSpend <span class="ck">DESC</span></div>
+      </div>
+      <div class="result-preview">
+        <div class="result-label">Expected output (2 VIP customers)</div>
+        <div class="result-row"><span>"Alice Novak"</span> · alice@example.com · New York   · 3 orders · <em>$403.96</em></div>
+        <div class="result-row"><span>"Felix Huang"</span> · felix@example.com · Singapore  · 3 orders · <em>$273.97</em></div>
+      </div>
+      <div class="callout ca-g">
+        <div class="ca-title">🎓 You've completed the tutorial</div>
+        You've gone from loading data with UNWIND + MERGE, through basic traversal reads, to write operations and graph-native queries that SQL can't express cleanly. The 6-hop collaborative filter (Task 16) and structural absence queries (Tasks 13–14) are the patterns you'll reach for most in production graph applications.
+      </div>
+      <div class="explain">
+        <div class="explain-title">Explanation</div>
+        <div class="explain-body">
+          <p>This is the full HAVING-equivalent pattern in Cypher. <code>MATCH ... WITH c, count(o) AS orderCount, sum(o.total) AS totalSpend WHERE orderCount &gt;= 3 AND totalSpend &gt; 250</code> is the exact analog of <code>SELECT ... GROUP BY customer HAVING COUNT(*) &gt;= 3 AND SUM(total) &gt; 250</code>.</p>
+          <p>The key rule: <strong>aggregate in WITH, filter on aggregates in the WHERE that follows it</strong>. You cannot use aggregate functions directly inside a WHERE clause.</p>
+          <p><code>round(totalSpend, 2)</code> formats the decimal to 2 places in the output. In production you'd typically handle decimal formatting in the application layer, but it's useful for quick ad-hoc checks in the query console.</p>
+          <p>From here, the next step is adding a <code>:VIP</code> label to qualifying customers: <code>SET c:VIP</code> after the WHERE clause — then any future query can quickly filter to VIPs with <code>MATCH (c:Customer:VIP)</code>.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /content -->
+
+<script>
+const tabs = ['setup','t02','t03','t04','t05','t06','t07','t08','t09','t10','t11','t12','t13','t14','t15','t16','t17','t18','t19','t20'];
+const visited = new Set(['setup']);
+
+function showTab(name, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.ntab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+  visited.add(name);
+  updateProgress();
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+function updateProgress() {
+  const pct = Math.round((visited.size / tabs.length) * 100);
+  document.getElementById('pbar').style.width = pct + '%';
+  document.getElementById('pcnt').textContent = visited.size + ' / ' + tabs.length;
+}
+
+updateProgress();
+</script>
+</body>
+</html>

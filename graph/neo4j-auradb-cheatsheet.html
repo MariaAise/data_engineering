@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neo4j + AuraDB — Reference Cheatsheet</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#eef3f8;--surface:#fff;--surface-alt:#e6eef6;--border:#c2d4e6;--border-light:#d8e6f0;
+  --text-primary:#162130;--text-secondary:#3d5a72;--text-muted:#6d8fa8;
+  --neo4j:#0e6fad;--neo4j-dark:#005f85;--neo4j-bg:#d9eef8;
+  --teal:#0b8f82;--teal-bg:#daf2ef;--amber:#a85c00;--amber-bg:#fef0d8;
+  --red:#b01c1c;--red-bg:#fde8e8;--green:#156030;--green-bg:#dcf5e6;
+  --cypher-bg:#0d1f35;--cypher-text:#e2f0fb;
+  --cypher-kw:#5bc8f5;--cypher-lbl:#7dd3b0;--cypher-prop:#f0c27f;
+  --cypher-cmt:#5a7a94;--cypher-str:#a8d8a0;--cypher-fn:#c792ea;
+  --python-bg:#0f1a14;--python-text:#d4e8d4;
+  --python-kw:#79c0a4;--python-str:#c3e88d;--python-cmt:#4a7060;--python-fn:#82aaff;--python-val:#f0c27f;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text-primary);font-size:14px;line-height:1.6}
+
+/* HEADER */
+.header{background:linear-gradient(135deg,#081525 0%,#0d2a4a 45%,#0a3d5c 75%,#085070 100%);padding:38px 44px 30px;position:relative;overflow:hidden}
+.hgrid{position:absolute;inset:0;background-image:linear-gradient(rgba(14,111,173,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(14,111,173,.07) 1px,transparent 1px);background-size:32px 32px}
+.hglow1{position:absolute;top:-80px;right:-40px;width:320px;height:320px;background:radial-gradient(circle,rgba(0,140,193,.18) 0%,transparent 65%)}
+.hglow2{position:absolute;bottom:-60px;left:20%;width:500px;height:200px;background:radial-gradient(ellipse,rgba(11,143,130,.1) 0%,transparent 70%)}
+.hi{position:relative;z-index:1;max-width:1200px;margin:0 auto}
+.series{font-family:'DM Mono',monospace;font-size:10.5px;color:#5b9ec9;letter-spacing:.18em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:10px}
+.series::before{content:'';display:inline-block;width:20px;height:1px;background:#5b9ec9}
+.header h1{font-family:'Syne',sans-serif;font-size:34px;font-weight:800;color:#fff;letter-spacing:-.5px;line-height:1.1;margin-bottom:10px}
+.header h1 .n{color:#5bc8f5}.header h1 .a{color:#7dd3b0}
+.hsub{color:#7aafc8;font-size:13.5px;font-weight:300;max-width:620px;line-height:1.7}
+.hpills{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap}
+.hp{font-family:'DM Mono',monospace;font-size:10px;padding:3px 11px;border-radius:20px;letter-spacing:.05em}
+.hp-b{background:rgba(91,200,245,.15);color:#5bc8f5;border:1px solid rgba(91,200,245,.25)}
+.hp-t{background:rgba(125,211,176,.15);color:#7dd3b0;border:1px solid rgba(125,211,176,.25)}
+.hp-s{background:rgba(255,255,255,.07);color:#8fb5cc;border:1px solid rgba(255,255,255,.12)}
+
+/* NAV */
+.nav-wrap{background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;box-shadow:0 2px 10px rgba(13,42,74,.1)}
+.nav{display:flex;max-width:1200px;margin:0 auto;padding:0 44px;overflow-x:auto;scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}
+.ntab{font-family:'DM Sans',sans-serif;font-size:12.5px;font-weight:500;color:var(--text-muted);padding:13px 15px;cursor:pointer;border:none;background:none;border-bottom:2.5px solid transparent;white-space:nowrap;transition:all .15s ease}
+.ntab:hover{color:var(--neo4j);background:var(--neo4j-bg)}
+.ntab.active{color:var(--neo4j);border-bottom-color:var(--neo4j);font-weight:600}
+.tn{font-family:'DM Mono',monospace;font-size:10px;opacity:.45;margin-right:5px}
+
+/* LAYOUT */
+.content{max-width:1200px;margin:0 auto;padding:32px 44px 60px}
+.panel{display:none;animation:fadeUp .2s ease}
+.panel.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.full{grid-column:1/-1}
+.sec{margin-bottom:30px}
+.sec-t{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:var(--text-primary);margin-bottom:5px;letter-spacing:-.3px}
+.sec-d{color:var(--text-secondary);font-size:13px;margin-bottom:22px;max-width:720px;line-height:1.75}
+.divider{height:1px;background:var(--border-light);margin:24px 0}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border-light);border-radius:10px;padding:20px}
+.ct{font-family:'Syne',sans-serif;font-size:12.5px;font-weight:700;color:var(--text-primary);letter-spacing:.04em;margin-bottom:14px;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.dot-b{background:var(--neo4j)}.dot-t{background:var(--teal)}.dot-a{background:#f59e0b}.dot-s{background:#64748b}
+.mt8{margin-top:8px}.mt10{margin-top:10px}.mt12{margin-top:12px}.mt16{margin-top:16px}
+.mb8{margin-bottom:8px}.mb12{margin-bottom:12px}.mb16{margin-bottom:16px}
+
+/* CYPHER */
+.cy{font-family:'DM Mono',monospace;font-size:12.5px;background:var(--cypher-bg);color:var(--cypher-text);padding:16px 18px;border-radius:8px;border-left:3px solid var(--neo4j);line-height:1.75;overflow-x:auto;margin:8px 0;white-space:pre;position:relative}
+.cy::before{content:'CYPHER';position:absolute;top:8px;right:12px;font-size:9px;color:var(--cypher-cmt);letter-spacing:.12em}
+.kw{color:var(--cypher-kw);font-weight:500}
+.lb{color:var(--cypher-lbl)}
+.pr{color:var(--cypher-prop)}
+.st{color:var(--cypher-str)}
+.cm{color:var(--cypher-cmt);font-style:italic}
+.fn{color:var(--cypher-fn)}
+
+/* PYTHON */
+.py{font-family:'DM Mono',monospace;font-size:12px;background:var(--python-bg);color:var(--python-text);padding:16px 18px;border-radius:8px;border-left:3px solid var(--teal);line-height:1.8;overflow-x:auto;margin:8px 0;white-space:pre;position:relative}
+.py::before{content:'PYTHON';position:absolute;top:8px;right:12px;font-size:9px;color:var(--python-cmt);letter-spacing:.12em}
+.pk{color:var(--python-kw);font-weight:500}
+.ps{color:var(--python-str)}
+.pc{color:var(--python-cmt);font-style:italic}
+.pf{color:var(--python-fn)}
+.pv{color:var(--python-val)}
+
+/* INLINE CODE */
+code{font-family:'DM Mono',monospace;font-size:12px;background:var(--neo4j-bg);color:var(--neo4j-dark);padding:2px 6px;border-radius:4px}
+
+/* CALLOUTS */
+.ca{border-radius:8px;padding:13px 16px;margin:10px 0;font-size:13px;line-height:1.65;border-left:3px solid}
+.ca-b{background:var(--neo4j-bg);border-color:var(--neo4j);color:#0a304f}
+.ca-t{background:var(--teal-bg);border-color:var(--teal);color:#083830}
+.ca-a{background:var(--amber-bg);border-color:#f59e0b;color:#6b3800}
+.ca-r{background:var(--red-bg);border-color:var(--red);color:#6b0a0a}
+.ca-ttl{font-weight:700;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px;opacity:.65}
+
+/* KV */
+.kv{display:flex;flex-direction:column;gap:8px}
+.kvr{display:flex;align-items:flex-start;gap:10px;font-size:13px}
+.kvk{font-family:'DM Mono',monospace;font-size:11px;min-width:140px;color:var(--text-muted);padding-top:2px;flex-shrink:0}
+.kvv{color:var(--text-primary);line-height:1.55}
+
+/* TAGS */
+.tag{display:inline-block;font-family:'DM Mono',monospace;font-size:10px;padding:2px 8px;border-radius:12px;letter-spacing:.04em}
+.tag-g{background:var(--green-bg);color:var(--green);border:1px solid #86efac}
+.tag-w{background:var(--amber-bg);color:var(--amber);border:1px solid #fcd34d}
+.tag-r{background:var(--red-bg);color:var(--red);border:1px solid #fca5a5}
+.tag-n{background:var(--neo4j-bg);color:var(--neo4j-dark);border:1px solid #9acfe8}
+
+/* TABLE */
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.09em;text-transform:uppercase;padding:10px 14px;text-align:left;border-bottom:2px solid var(--border);color:var(--text-muted)}
+.tbl td{padding:9px 14px;border-bottom:1px solid var(--border-light);vertical-align:top;line-height:1.5}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:var(--surface-alt)}
+.tw{overflow-x:auto}
+.tf{background:rgba(13,148,136,.04)}.tp{background:rgba(0,140,193,.05)}.te{background:rgba(88,28,135,.05)}
+
+/* CLAUSE GRID */
+.cg{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:8px}
+.ci{background:var(--surface-alt);border:1px solid var(--border-light);border-radius:8px;padding:10px 12px}
+.ckw{font-family:'DM Mono',monospace;font-size:12.5px;color:var(--neo4j);font-weight:500;margin-bottom:3px}
+.cd{font-size:11.5px;color:var(--text-secondary);line-height:1.4}
+
+/* QUICK REF ROWS */
+.qr{display:grid;grid-template-columns:155px 1fr;gap:0;border-bottom:1px solid var(--border-light)}
+.qr:last-child{border-bottom:none}
+.qrl{font-family:'DM Mono',monospace;font-size:11px;color:var(--text-muted);padding:9px 12px;background:var(--surface-alt);display:flex;align-items:center;border-right:1px solid var(--border-light)}
+.qrc .cy{margin:0;border-radius:0;border-left:none;padding:9px 14px;font-size:12px}
+.qrc .cy::before{display:none}
+
+/* ALGO CARDS */
+.ac{background:var(--surface);border:1px solid var(--border-light);border-radius:9px;padding:15px}
+.an{font-family:'Syne',sans-serif;font-weight:700;font-size:13.5px;color:var(--text-primary);margin-bottom:3px}
+.acat{font-family:'DM Mono',monospace;font-size:10px;color:var(--text-muted);margin-bottom:8px;letter-spacing:.06em;text-transform:uppercase}
+.au{font-size:12.5px;color:var(--text-secondary);line-height:1.55}
+
+/* ERROR TABLE */
+.er{background:var(--surface);border:1px solid var(--border-light);border-radius:10px;overflow:hidden}
+.err{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;border-bottom:1px solid var(--border-light);font-size:12.5px}
+.err:last-child{border-bottom:none}
+.err>div{padding:11px 14px;line-height:1.5}
+.err>div:not(:last-child){border-right:1px solid var(--border-light)}
+.erh{background:var(--surface-alt);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted)}
+
+/* PATTERN ANATOMY */
+.pa{background:var(--cypher-bg);border-radius:10px;padding:20px 22px;font-family:'DM Mono',monospace;font-size:13px;color:var(--cypher-text);line-height:2}
+
+/* STEP BOXES */
+.step{text-align:center;padding:16px;background:var(--surface-alt);border-radius:8px;border:1px solid var(--border-light)}
+.step-n{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--neo4j);margin-bottom:6px}
+.step-t{font-family:'DM Mono',monospace;font-size:12px;color:var(--text-primary);font-weight:600;margin-bottom:6px}
+.step-d{font-size:12px;color:var(--text-secondary);line-height:1.5}
+
+@media(max-width:768px){
+  .header,.content{padding:22px 20px}
+  .nav{padding:0 16px}
+  .g2,.g3{grid-template-columns:1fr}
+  .qr,.err{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="hgrid"></div><div class="hglow1"></div><div class="hglow2"></div>
+  <div class="hi">
+    <div class="series">Graph Databases Series · Sheet 2 of 2</div>
+    <h1><span class="n">Neo4j</span> + <span class="a">AuraDB</span><br>Reference Cheatsheet</h1>
+    <div class="hsub">Hands-on reference for engineers moving from graph fundamentals to actually using Neo4j on AuraDB. Covers Cypher syntax, schema, the Python driver with full working snippets, data import, and GDS essentials.</div>
+    <div class="hpills">
+      <span class="hp hp-b">AuraDB only</span>
+      <span class="hp hp-t">Full Python snippets</span>
+      <span class="hp hp-s">Assumes Sheet 1 concepts</span>
+      <span class="hp hp-s">Cypher · not Gremlin</span>
+    </div>
+  </div>
+</div>
+
+<div class="nav-wrap">
+  <div class="nav">
+    <button class="ntab active" onclick="show('aura',this)"><span class="tn">01</span>AuraDB Orientation</button>
+    <button class="ntab" onclick="show('cypher',this)"><span class="tn">02</span>Cypher Fundamentals</button>
+    <button class="ntab" onclick="show('read',this)"><span class="tn">03</span>Reading Data</button>
+    <button class="ntab" onclick="show('write',this)"><span class="tn">04</span>Writing Data</button>
+    <button class="ntab" onclick="show('schema',this)"><span class="tn">05</span>Schema &amp; Indexes</button>
+    <button class="ntab" onclick="show('adv',this)"><span class="tn">06</span>Advanced Cypher</button>
+    <button class="ntab" onclick="show('python',this)"><span class="tn">07</span>Python Driver</button>
+    <button class="ntab" onclick="show('import',this)"><span class="tn">08</span>Importing Data</button>
+    <button class="ntab" onclick="show('gds',this)"><span class="tn">09</span>GDS Reference</button>
+    <button class="ntab" onclick="show('qref',this)"><span class="tn">10</span>Quick Reference</button>
+  </div>
+</div>
+
+<div class="content">
+
+<!-- ═══════════ 01 AURA ═══════════ -->
+<div id="tab-aura" class="panel active">
+<div class="sec">
+  <div class="sec-t">AuraDB Orientation</div>
+  <div class="sec-d">AuraDB is Neo4j's fully managed cloud service. You get the native graph engine without managing infrastructure — but with constraints on config, plugins, and scaling that differ from self-hosted Neo4j.</div>
+
+  <div class="card mb12">
+    <div class="ct"><span class="dot dot-b"></span>AuraDB vs. Self-Hosted Neo4j</div>
+    <div class="kv">
+      <div class="kvr"><div class="kvk">What you get</div><div class="kvv">Full Neo4j engine, Cypher, ACID transactions, GDS (Pro+), Bloom, Browser/Workspace tools</div></div>
+      <div class="kvr"><div class="kvk">What you don't control</div><div class="kvv">OS, JVM settings, neo4j.conf, plugin installation, raw file system access, custom ports</div></div>
+      <div class="kvr"><div class="kvk">APOC on Aura</div><div class="kvv">A subset of APOC is available on Pro/Enterprise — not all procedures. Always verify before building a dependency on a specific APOC proc.</div></div>
+      <div class="kvr"><div class="kvk">Upgrades</div><div class="kvv">Neo4j version upgrades are managed by Aura — you don't control timing on Free tier</div></div>
+      <div class="kvr"><div class="kvk">Region</div><div class="kvv">GCP, AWS, Azure availability varies by tier. Choose region at creation — cannot be changed later without recreating the instance</div></div>
+    </div>
+  </div>
+
+  <div class="card mb12">
+    <div class="ct"><span class="dot dot-t"></span>AuraDB Tier Comparison</div>
+    <div class="tw mt8">
+      <table class="tbl">
+        <thead><tr><th>Feature</th><th class="tf">Free</th><th class="tp">Professional</th><th class="te">Enterprise</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Nodes</strong></td><td class="tf">200K</td><td class="tp">Unlimited*</td><td class="te">Unlimited*</td></tr>
+          <tr><td><strong>Relationships</strong></td><td class="tf">400K</td><td class="tp">Unlimited*</td><td class="te">Unlimited*</td></tr>
+          <tr><td><strong>Storage</strong></td><td class="tf">200MB</td><td class="tp">1GB – 64GB+</td><td class="te">Custom</td></tr>
+          <tr><td><strong>GDS (Graph Data Science)</strong></td><td class="tf">✗</td><td class="tp">✓</td><td class="te">✓</td></tr>
+          <tr><td><strong>APOC procedures</strong></td><td class="tf">Core subset</td><td class="tp">Extended subset</td><td class="te">Extended subset</td></tr>
+          <tr><td><strong>Multi-DB</strong></td><td class="tf">✗</td><td class="tp">✗</td><td class="te">✓</td></tr>
+          <tr><td><strong>VPC peering / private link</strong></td><td class="tf">✗</td><td class="tp">✗</td><td class="te">✓</td></tr>
+          <tr><td><strong>SLA</strong></td><td class="tf">None</td><td class="tp">99.95%</td><td class="te">99.99%</td></tr>
+          <tr><td><strong>Snapshots</strong></td><td class="tf">Manual only</td><td class="tp">Daily auto + manual</td><td class="te">Configurable</td></tr>
+          <tr><td><strong>Auto-pause (idle)</strong></td><td class="tf">After ~3 days</td><td class="tp">No auto-pause</td><td class="te">No auto-pause</td></tr>
+          <tr><td><strong>Price</strong></td><td class="tf">Free</td><td class="tp">Pay-per-GB-RAM</td><td class="te">Custom contract</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="ca ca-a mt8" style="font-size:12.5px"><strong>Free tier auto-pause:</strong> An idle Free instance pauses after ~3 days. Data is preserved and resumes on next connection — but expect a cold-start delay. Not suitable for production or always-on apps.</div>
+  </div>
+
+  <div class="g2">
+    <div class="card">
+      <div class="ct"><span class="dot dot-b"></span>Connecting to AuraDB</div>
+      <div class="kv">
+        <div class="kvr"><div class="kvk">URI format</div><div class="kvv"><code>neo4j+s://&lt;id&gt;.databases.neo4j.io</code></div></div>
+        <div class="kvr"><div class="kvk">Protocol</div><div class="kvv"><code>neo4j+s://</code> = Bolt over TLS. Always use this for Aura — never plain <code>bolt://</code></div></div>
+        <div class="kvr"><div class="kvk">Auth</div><div class="kvv">Username (<code>neo4j</code>) + password set at instance creation. Store in env vars, not code.</div></div>
+        <div class="kvr"><div class="kvk">Credentials file</div><div class="kvv">Aura console offers a <code>.env</code> download at creation — password shown only once</div></div>
+      </div>
+      <div class="ca ca-r mt8" style="font-size:12px"><strong>Password shown once.</strong> Download the credentials file immediately at instance creation. There is no way to retrieve the password later — only reset it.</div>
+    </div>
+    <div class="card">
+      <div class="ct"><span class="dot dot-t"></span>Tools — When to Use Which</div>
+      <div class="kv">
+        <div class="kvr"><div class="kvk">Neo4j Workspace</div><div class="kvv">All-in-one UI: query editor, data import, graph explorer. Recommended starting point for Aura.</div></div>
+        <div class="kvr"><div class="kvk">Neo4j Browser</div><div class="kvv">Classic web UI for Cypher interactively, visualizing graph results. Good for debugging.</div></div>
+        <div class="kvr"><div class="kvk">Bloom</div><div class="kvv">Visual no-code graph explorer. Good for business stakeholders / demos, not development.</div></div>
+        <div class="kvr"><div class="kvk">Python driver</div><div class="kvv">Production application queries, bulk data loads, scripted pipelines. See Tab 07.</div></div>
+        <div class="kvr"><div class="kvk">cypher-shell</div><div class="kvv">CLI — no direct shell access on Aura. Available via Docker for local scripting against Aura.</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════ 02 CYPHER FUNDAMENTALS ═══════════ -->
+<div id="tab-cypher" class="panel">
+<div class="sec">
+  <div class="sec-t">Cypher Fundamentals</div>
+  <div class="sec-d">Cypher uses ASCII-art to describe graph patterns — you draw what you want to find, and the engine finds it. If you know SQL, Cypher will feel familiar in structure but very different in what it expresses natively.</div>
+
+  <div class="card mb12">
+    <div class="ct"><span class="dot dot-b"></span>Pattern Anatomy</div>
+    <div class="pa mt8">
+<span class="kw">MATCH</span> (<span class="lb">a</span>:<span class="lb">Person</span> {<span class="pr">name</span>: <span class="st">"Alice"</span>})-[<span class="lb">r</span>:<span class="lb">WORKS_AT</span> {<span class="pr">since</span>: <span class="st">"2022"</span>}]-&gt;(<span class="lb">c</span>:<span class="lb">Company</span>)
+<span class="kw">RETURN</span> <span class="lb">a</span>.<span class="pr">name</span>, <span class="lb">c</span>.<span class="pr">name</span>, <span class="lb">r</span>.<span class="pr">since</span></div>
+    <div class="kv mt12">
+      <div class="kvr"><div class="kvk"><code>(a:Person)</code></div><div class="kvv">Node with variable <code>a</code> and label <code>:Person</code>. Variable lets you reference it in RETURN/WHERE.</div></div>
+      <div class="kvr"><div class="kvk"><code>{name:"Alice"}</code></div><div class="kvv">Inline property filter — shorthand for <code>WHERE a.name = "Alice"</code></div></div>
+      <div class="kvr"><div class="kvk"><code>-[r:WORKS_AT]-&gt;</code></div><div class="kvv">Directed relationship of type WORKS_AT, variable <code>r</code>. Arrow shows direction.</div></div>
+      <div class="kvr"><div class="kvk"><code>-[:WORKS_AT]-</code></div><div class="kvv">No arrow = undirected match — finds the rel regardless of storage direction.</div></div>
+      <div class="kvr"><div class="kvk"><code>()</code></div><div class="kvv">Anonymous node — exists in the pattern but you don't reference it.</div></div>
+      <div class="kvr"><div class="kvk"><code>[:A|B]</code></div><div class="kvv">Match multiple relationship types using pipe separator.</div></div>
+    </div>
+  </div>
+
+  <div class="card mb12">
+    <div class="ct"><span class="dot dot-t"></span>Core Clause Map</div>
+    <div class="cg mt8">
+      <div class="ci"><div class="ckw">MATCH</div><div class="cd">Find patterns. Primary read clause. Analog of SELECT + FROM + JOIN.</div></div>
+      <div class="ci"><div class="ckw">OPTIONAL MATCH</div><div class="cd">Like MATCH but returns null if pattern not found. Analog of LEFT JOIN.</div></div>
+      <div class="ci"><div class="ckw">WHERE</div><div class="cd">Filter results after MATCH. Supports property predicates and functions.</div></div>
+      <div class="ci"><div class="ckw">RETURN</div><div class="cd">Specify output. Can return nodes, rels, properties, or expressions.</div></div>
+      <div class="ci"><div class="ckw">WITH</div><div class="cd">Pipe results between clauses. Allows mid-query aggregation. Analog of CTE.</div></div>
+      <div class="ci"><div class="ckw">CREATE</div><div class="cd">Create nodes/rels. Always creates new — no duplicate check.</div></div>
+      <div class="ci"><div class="ckw">MERGE</div><div class="cd">Match or create. Idempotent write. Analog of INSERT OR IGNORE + UPDATE.</div></div>
+      <div class="ci"><div class="ckw">SET</div><div class="cd">Update/add properties on a node or rel. Also used to add labels.</div></div>
+      <div class="ci"><div class="ckw">REMOVE</div><div class="cd">Delete a property or remove a label from a node.</div></div>
+      <div class="ci"><div class="ckw">DELETE</div><div class="cd">Delete node or relationship. Node must have no relationships first.</div></div>
+      <div class="ci"><div class="ckw">DETACH DELETE</div><div class="cd">Delete a node and all its relationships in one operation.</div></div>
+      <div class="ci"><div class="ckw">UNWIND</div><div class="cd">Expand a list into individual rows. Batch-write workhorse.</div></div>
+      <div class="ci"><div class="ckw">CALL {}</div><div class="cd">Subquery — correlated (uses outer vars) or uncorrelated (independent).</div></div>
+      <div class="ci"><div class="ckw">FOREACH</div><div class="cd">Apply write operations to each element in a list. Side-effects only.</div></div>
+      <div class="ci"><div class="ckw">LOAD CSV</div><div class="cd">Read CSV line by line and execute Cypher per row. Built-in import tool.</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ct"><span class="dot dot-a"></span>Parameters — Always Use in Production</div>
+    <div style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;line-height:1.7">Parameters prevent query plan cache misses and protect against injection. Neo4j caches plans keyed by query structure — literal values create a new cache entry every call.</div>
+    <div class="g2">
+      <div>
+        <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--red);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">✗ Literals (bad in production)</div>
+        <div class="cy"><span class="kw">MATCH</span> (<span class="lb">p</span>:<span class="lb">Person</span> {<span class="pr">email</span>: <span class="st">"<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="dfbeb3b6bcba9fbcb0f1bcb0b2">[email&#160;protected]</a>"</span>})
+<span class="kw">RETURN</span> <span class="lb">p</span></div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--teal);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">✓ Parameters (correct)</div>
+        <div class="cy"><span class="kw">MATCH</span> (<span class="lb">p</span>:<span class="lb">Person</span> {<span class="pr">email</span>: <span class="pr">$email</span>})
+<span class="kw">RETURN</span> <span class="lb">p</span>
+<span class="cm">// pass {"email": "<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="22434e4b414762414d0c414d4f">[email&#160;protected]</a>"} from driver</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════ 03 READING ═══════════ -->
+<div id="tab-read" class="panel">
+<div class="sec">
+  <div class="sec-t">Reading Data</div>
+  <div class="sec-d">All reads start with MATCH. WHERE filters, WITH pipes and reshapes, aggregation functions summarise. The WITH clause is the structural tool for complex multi-step queries.</div>
+
+  <div class="g2 mb12">
+    <div class="card">
+      <div class="ct"><span class="dot dot-b"></span>MATCH + WHERE Filtering</div>
+      <div class="cy"><span class="cm">-- equality + AND</span>
+<span class="kw">MATCH</span> (<span class="lb">p</span>:<span class="lb">Person</span>)
+<span class="kw">WHERE</span> <span class="lb">p</span>.<span class="pr">age</span> &gt; 30 <span class="kw">AND</span> <span class="lb">p</span>.<span class="pr">city</span> = <span class="pr">$city</span>
+<span class="kw">RETURN</span> <span class="lb">p</span>.<span class="pr">name</span>, <span class="lb">p</span>.<span class="pr">age</span>
+
+<span class="cm">-- IN list</span>
+<span class="kw">WHERE</span> <span class="lb">p</span>.<span class="pr">status</span> <span class="kw">IN</span> [<span class="st">'active'</span>, <span class="st">'trial'</span>]
+
+<span class="cm">-- string predicates</span>
+<span class="kw">WHERE</span> <span class="lb">p</span>.<span class="pr">name</span>  <span class="kw">STARTS WITH</span> <span class="st">'Al'</span>
+<span class="kw">WHERE</span> <span class="lb">p</span>.<span class="pr">bio</span>   <span class="kw">CONTAINS</span>    <span class="st">'engineer'</span>
+
+<span class="cm">-- null checks</span>
+<span class="kw">WHERE</span> <span class="lb">p</span>.<span class="pr">phone</span> <span class="kw">IS NOT NULL</span></div>
+    </div>
+    <div class="card">
+      <div class="ct"><span class="dot dot-t"></span>OPTIONAL MATCH — the LEFT JOIN</div>
+      <div class="cy"><span class="cm">-- returns Person even if no Company found</span>
+<span class="kw">MATCH</span> (<span class="lb">p</span>:<span class="lb">Person</span>)
+<span class="kw">OPTIONAL MATCH</span> (<span class="lb">p</span>)-[:<span class="lb">WORKS_AT</span>]-&gt;(<span class="lb">c</span>:<span class="lb">Company</span>)
+<span class="kw">RETURN</span> <span class="lb">p</span>.<span class="pr">name</span>,
+       <span class="fn">coalesce</span>(<span class="lb">c</span>.<span class="pr">name</span>, <span class="st">'unemployed'</span>)
+
+<span class="cm">-- c and c.name are null when no rel found
+-- coalesce() = IFNULL() analog</span></div>
+      <div class="ca ca-a mt8" style="font-size:12px">Plain <code>MATCH</code> drops the row if pattern not found — like INNER JOIN. Use <code>OPTIONAL MATCH</code> when the relationship may not exist.</div>
+    </div>
+  </div>
+
+  <div class="card mb12">
+    <div class="ct"><span class="dot dot-b"></span>WITH — Piping and Reshaping (CTE Analog)</div>
+    <div style="font-size:13px;color:var(--text-secondary);margin-bottom:10px;line-height:1.7"><code>WITH</code> ends one clause segment and starts another. Use it to aggregate mid-query, filter on aggregated values, or pass only certain variables forward to the next MATCH.</div>
+    <div class="g2">
+      <div>
+        <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--text-muted);margin-bottom:6px;letter-spacing:.06em;text-transform:uppercase">Filter after aggregation (HAVING analog)</div>
+        <div class="cy"><span class="kw">MATCH</span> (<span class="lb">p</span>:<span class="lb">Person</span>)-[:<span class="lb">KNOWS</span>]-&gt;(<span class="lb">f</span>)
+<span class="kw">WITH</span> <span class="lb">p</span>, <span class="fn">count</span>(<span class="lb">f</span>) <span class="kw">AS</span> <span class="pr">numFriends</span>
+<span class="kw">WHERE</span> <span class="pr">numFriends</span> &gt; 5
+<span class="kw">RETURN</span> <span class="lb">p</span>.<span class="pr">name</span>, <span class="pr">numFriends</span>
+<span class="kw">ORDER BY</span> <span class="pr">numFriends</span> <span class="kw">DESC</span></div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--text-muted);margin-bottom:6px;letter-spacing:.06em;text-transform:uppercase">Multi-hop with intermediate reshaping</div>
+        <div class="cy"><span class="kw">MATCH</span> (<span class="lb">p</span>:<span class="lb">Person</span> {<span class="pr">name</span>: <span class="pr">$name</span>})
+<span class="kw">WITH</span> <span class="lb">p</span>
+<span class="kw">MATCH</span> (<span class="lb">p</span>)-[:<span class="lb">PURCHASED</span>]-&gt;(<span class="lb">prod</span>:<span class="lb">Product</span>)
+<span class="kw">WITH</span> <span class="lb">prod</span>, <span class="fn">count</span>(*) <span class="kw">AS</span> <span class="pr">times</span>
+<span class="kw">RETURN</span> <span class="lb">prod</span>.<span class="pr">name</span>, <span class="pr">times</span>
+<span class="kw">ORDER BY</span> <span class="pr">times</span> <span class="kw">DESC LIMIT</span> 10</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div class="card">
+      <div class="ct"><span class="dot dot-t"></span>Aggregation Functions</div>
+      <div class="cy"><span class="kw">MATCH</span> (<span class="lb">p</span>:<span class="lb">Person</span>)-[<span class="lb">r</span>:<span class="lb">PURCHASED</span>]-&gt;(<span class="lb">prod</span>)
+<span class="kw">RETURN</span>
+  <span class="lb">p</span>.<span class="pr">name</span>,
+  <span class="fn">count</span>(<span class="lb">prod</span>)           <span class="kw">AS</span> <span class="pr">total</span>,
+  <span class="fn">sum</span>(<span class="lb">r</span>.<span class="pr">amount</span>)        <span class="kw">AS</span> <span class="pr">spend</span>,
+  <span class="fn">avg</span>(<span class="lb">r</span>.<span class="pr">amount</span>)        <span class="kw">AS</span> <span class="pr">avgOrder</span>,
+  <span class="fn">min</span>(<span class="lb">r</span>.<span class="pr">amount</span>)        <span class="kw">AS</span> <span class="pr">minOrder</span>,
+  <span class="fn">max</span>(<span class="lb">r</span>.<span class="pr">amount</span>)        <span class="kw">AS</span> <span class="pr">maxOrder</span>,
+  <span class="fn">collect</span>(<span class="lb">prod</span>.<span class="pr">name</span>)  <span class="kw">AS</span> <span class="pr">productList</span>
+<span class="cm">// collect() builds a list — analog of GROUP_CONCAT</span></div>
+    </div>
+    <div class="card">
+      <div class="ct"><span class="dot dot-b"></span>Sorting and Pagination</div>
+      <div class="cy"><span class="kw">MATCH</span> (<span class="lb">p</span>:<span class="lb">Person</span>)
+<span class="kw">RETURN</span> <span class="lb">p</span>.<span class="pr">name</span>, <span class="lb">p</span>.<span class="pr">age</span>
+<span class="kw">ORDER BY</span> <span class="lb">p</span>.<span class="pr">age</span> <span class="kw">DESC</span>, <span class="lb">p</span>.<span class="pr">name</span> <span class="kw">ASC</span>
+<span class="kw">SKIP</span>  20   <span class="cm">// offset — skip first N rows</span>
+<span class="kw">LIMIT</span> 10   <span class="cm">// return max N rows</span>
+
+<span class="cm">// SKIP + LIMIT = pagination
+// Always pair LIMIT with ORDER BY for
+// deterministic paging across requests</span></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════ 04 WRITING ═══════════ -->
+<div id="tab-write" class="panel">
+<div class="sec">
+  <div class="sec-t">Writing Data</div>
+  <div class="sec-d">The most important concept: CREATE always makes something new. MERGE makes it only if it doesn't already exist. Getting this wrong is the most common source of duplicate nodes.</div>
+
+  <div class="card mb12">
+    <div class="ct"><span class="dot dot-b"></span>CREATE vs. MERGE — The Critical Distinction</div>
+    <div class="g2">
+      <div>
+        <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--red);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">CREATE — always inserts</div>
+        <div class="cy"><span class="cm">// Runs twice → two Alice nodes</span>
+<span class="kw">CREATE</span> (<span class="lb">p</span>:<span class="lb">Person</span> {
+  <span class="pr">name</span>:  <span class="st">"Alice"</span>,
+  <span class="pr">email</span>: <span class="st">"<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="0b6a6762686e4b686425686466">[email&#160;protected]</a>"</span>
+})
+<span class="kw">RETURN</span> <span class="lb">p</span></div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-top:8px">Use when you're certain the entity doesn't exist yet and want to fail fast on duplicates.</div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--teal);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">MERGE — match or create</div>
+        <div class="cy"><span class="cm">// Runs twice → still one Alice node</span>
+<span class="kw">MERGE</span> (<span class="lb">p</span>:<span class="lb">Person</span> {<span class="pr">email</span>: <span class="st">"<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="a6c7cacfc5c3e6c5c988c5c9cb">[email&#160;protected]</a>"</span>})
+<span class="kw">ON CREATE SET</span>
+  <span class="lb">p</span>.<span class="pr">name</span>      = <span class="st">"Alice"</span>,
+  <span class="lb">p</span>.<span class="pr">createdAt</span> = <span class="fn">timestamp</span>()
+<span class="kw">ON MATCH SET</span>
+  <span class="lb">p</span>.<span class="pr">lastSeen</span>  = <span class="fn">timestamp</span>()
+<span class="kw">RETURN</span> <span class="lb">p</span></div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-top:8px">Use for idempotent writes — pipelines, retryable imports, upsert semantics.</div>
+      </div>
+    </div>
+    <div class="ca ca-r mt12" style="font-size:12.5px"><strong>MERGE pitfall:</strong> MERGE matches on the exact combination of properties you specify. Always MERGE on a stable unique key (email, UUID, external ID) — not display names or mutable values that might change.</div>
+  </div>
+
+  <div class="g2 mb12">
+    <div class="card">
+      <div class="ct"><span class="dot dot-t"></span>SET and REMOVE</div>
+      <div class="cy"><span class="cm">-- update a property</span>
+<span class="kw">MATCH</span> (<span class="lb">p</span>:<span class="lb">Person</span> {<span class="pr">email</span>: <span class="pr">$email</span>})
+<span class="kw">SET</span> <span class="lb">p</span>.<span class="pr">name</span> = <span class="pr">$newName</span>
+
+<span class="cm">-- merge props (keeps existing, adds new)</span>
+<span class="kw">SET</span> <span class="lb">p</span> += {<span class="pr">city</span>: <span class="st">"NYC"</span>, <span class="pr">verified</span>: <span class="kw">true</span>}
+<span class="cm">// += merges;  = replaces ALL properties</span>
+
+<span class="cm">-- add a label</span>
+<span class="kw">SET</span> <span class="lb">p</span>:<span class="lb">Admin</span>
+
+<span class="cm">-- remove a property</span>
+<span class="kw">REMOVE</span> <span class="lb">p</span>.<span class="pr">tempToken</span>
+
+<span class="cm">-- remove a label</span>
+<span class="kw">REMOVE</span> <span class="lb">p</span>:<span class="lb">Trial</span></div>
+    </div>
+    <div class="card">
+      <div class="ct"><span class="dot dot-b"></span>DELETE vs. DETACH DELETE</div>
+      <div class="cy"><span class="cm">-- DELETE fails if node has relationships</span>
+<span class="kw">MATCH</span> (<span class="lb">p</span>:<span class="lb">Person</span> {<span class="pr">id</span>: <span class="pr">$id</span>})
+<span class="kw">DELETE</span> <span class="lb">p</span>  <span class="cm">// ✗ errors if p has any rels</span>
+
+<span class="cm">-- DETACH DELETE removes node + all rels</span>
+<span class="kw">MATCH</span> (<span class="lb">p</span>:<span class="lb">Person</span> {<span class="pr">id</span>: <span class="pr">$id</span>})
+<span class="kw">DETACH DELETE</span> <span class="lb">p</span>
+
+<span class="cm">-- delete a single relationship only</span>
+<span class="kw">MATCH</span> (<span class="lb">a</span>)-[<span class="lb">r</span>:<span class="lb">FOLLOWS</span>]-&gt;(<span class="lb">b</span>)
+<span class="kw">WHERE</span> <span class="lb">a</span>.<span class="pr">id</span> = <span class="pr">$aId</span> <span class="kw">AND</span> <span class="lb">b</span>.<span class="pr">id</span> = <span class="pr">$bId</span>
+<span class="kw">DELETE</span> <span class="lb">r</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ct"><span class="dot dot-t"></span>UNWIND — Batch Inserts from a List</div>
+    <div style="font-size:13px;color:var(--text-secondary);margin-bottom:10px;line-height:1.7"><code>UNWIND</code> expands a list parameter into individual rows, then runs the rest of the query once per element. This is the equivalent of multi-row <code>INSERT ... VALUES (...), (...)</code>.</div>
+    <div class="cy"><span class="cm">// params: {"people": [{"name":"Alice","email":"<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="c3a283a0aceda0acae">[email&#160;protected]</a>"}, ...]}</span>
+<span class="kw">UNWIND</span> <span class="pr">$people</span> <span class="kw">AS</span> <span class="pr">row</span>
+<span class="kw">MERGE</span>  (<span class="lb">p</span>:<span class="lb">Person</span> {<span class="pr">email</span>: <span class="pr">row</span>.<span class="pr">email</span>})
+<span class="kw">ON CREATE SET</span>
+  <span class="lb">p</span>.<span class="pr">name</span>      = <span class="pr">row</span>.<span class="pr">name</span>,
+  <span class="lb">p</span>.<span class="pr">createdAt</span> = <span class="fn">timestamp</span>()
+<span class="kw">ON MATCH SET</span>
+  <span class="lb">p</span>.<span class="pr">name</span>      = <span class="pr">row</span>.<span class="pr">name</span>
+<span class="kw">RETURN</span> <span class="fn">count</span>(<span class="lb">p</span>) <span class="kw">AS</span> <span class="pr">processed</span>
+
+<span class="cm">// Recommended batch size: 500–1000 rows per transaction
+// Too large = memory pressure; too small = too many round trips</span></div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════ 05 SCHEMA ═══════════ -->
+<div id="tab-schema" class="panel">
+<div class="sec">
+  <div class="sec-t">Schema &amp; Indexes</div>
+  <div class="sec-d">Neo4j is schema-optional — nodes don't need to conform to a rigid structure. But constraints and indexes are essential for correctness and performance. Create them before loading data.</div>
+
+  <div class="card mb12">
+    <div class="ct"><span class="dot dot-b"></span>Constraints</div>
+    <div class="g2">
+      <div class="cy"><span class="cm">-- UNIQUE (also creates a backing index)</span>
+<span class="kw">CREATE CONSTRAINT</span> person_email_unique
+<span class="kw">FOR</span> (<span class="lb">p</span>:<span class="lb">Person</span>)
+<span class="kw">REQUIRE</span> <span class="lb">p</span>.<span class="pr">email</span> <span class="kw">IS UNIQUE</span>
+
+<span class="cm">-- NODE KEY (multi-prop uniqueness)</span>
+<span class="kw">CREATE CONSTRAINT</span> order_key
+<span class="kw">FOR</span> (<span class="lb">o</span>:<span class="lb">Order</span>)
+<span class="kw">REQUIRE</span> (<span class="lb">o</span>.<span class="pr">userId</span>, <span class="lb">o</span>.<span class="pr">orderId</span>) <span class="kw">IS NODE KEY</span>
+
+<span class="cm">-- existence (property must be present)</span>
+<span class="kw">CREATE CONSTRAINT</span> person_name_exists
+<span class="kw">FOR</span> (<span class="lb">p</span>:<span class="lb">Person</span>)
+<span class="kw">REQUIRE</span> <span class="lb">p</span>.<span class="pr">name</span> <span class="kw">IS NOT NULL</span>
+
+<span class="cm">-- manage
+SHOW CONSTRAINTS
+DROP CONSTRAINT person_email_unique</span></div>
+      <div class="kv">
+        <div class="kvr"><div class="kvk">UNIQUE</div><div class="kvv">Enforces uniqueness + creates a backing range index. Most common constraint.</div></div>
+        <div class="kvr"><div class="kvk">NODE KEY</div><div class="kvv">Multi-property uniqueness + all listed properties must exist. Stronger than UNIQUE.</div></div>
+        <div class="kvr"><div class="kvk">IS NOT NULL</div><div class="kvv">Property must be present on every node with this label. No index created.</div></div>
+        <div class="kvr"><div class="kvk">On relationships</div><div class="kvv">Same syntax: <code>FOR ()-[r:TYPE]-() REQUIRE r.prop IS UNIQUE</code></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb12">
+    <div class="ct"><span class="dot dot-t"></span>Index Types — Decision Table</div>
+    <div class="tw mt8">
+      <table class="tbl">
+        <thead><tr><th>Type</th><th>Use when</th><th>Create syntax hint</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Range</strong></td><td>Equality, range (&gt;, &lt;), ORDER BY on numeric or string. Default and most common.</td><td><code>CREATE INDEX FOR (n:L) ON (n.prop)</code></td></tr>
+          <tr><td><strong>Text</strong></td><td><code>STARTS WITH</code>, <code>ENDS WITH</code>, <code>CONTAINS</code> on string properties.</td><td><code>CREATE TEXT INDEX … FOR (n:L) ON (n.prop)</code></td></tr>
+          <tr><td><strong>Full-text</strong></td><td>Free-text Lucene search across multiple properties. Returns scored results.</td><td><code>CREATE FULLTEXT INDEX … FOR (n:L|M) ON EACH [n.a,n.b]</code></td></tr>
+          <tr><td><strong>Point</strong></td><td>Geospatial — distance, bounding box — on <code>point()</code> property values.</td><td><code>CREATE POINT INDEX … FOR (n:L) ON (n.location)</code></td></tr>
+          <tr><td><strong>Composite</strong></td><td>Multiple properties queried together. All props in the filter must be in the index.</td><td><code>CREATE INDEX … FOR (n:L) ON (n.a, n.b)</code></td></tr>
+          <tr><td><strong>Relationship</strong></td><td>Filtering on relationship property (e.g. <code>r.since</code>, <code>r.amount</code>).</td><td><code>CREATE INDEX … FOR ()-[r:TYPE]-() ON (r.prop)</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ct"><span class="dot dot-b"></span>EXPLAIN and PROFILE — Reading the Query Plan</div>
+    <div class="g2">
+      <div class="kv">
+        <div class="kvr"><div class="kvk">EXPLAIN</div><div class="kvv">Shows planned execution tree without running the query. Zero cost. Use to check if an index will be used.</div></div>
+        <div class="kvr"><div class="kvk">PROFILE</div><div class="kvv">Runs the query and shows actual rows + db hits per operator. Use to find the expensive step.</div></div>
+        <div class="kvr"><div class="kvk">NodeIndexSeek</div><div class="kvv">Good — index lookup used for entry-point node. This is what you want to see.</div></div>
+        <div class="kvr"><div class="kvk">NodeByLabelScan</div><div class="kvv">Full label scan — no index used. Add a range/unique index on the filter property.</div></div>
+        <div class="kvr"><div class="kvk">db hits</div><div class="kvv">The cost metric. Minimize db hits on the critical path of your most frequent queries.</div></div>
+      </div>
+      <div class="cy"><span class="cm">-- prepend EXPLAIN or PROFILE to any query</span>
+<span class="kw">EXPLAIN</span>
+<span class="kw">MATCH</span> (<span class="lb">p</span>:<span class="lb">Person</span> {<span class="pr">email</span>: <span class="pr">$email</span>})
+<span class="kw">RETURN</span> <span class="lb">p</span>
+
+<span class="kw">PROFILE</span>
+<span class="kw">MATCH</span> (<span class="lb">p</span>:<span class="lb">Person</span>)-[:<span class="lb">KNOWS</span>*1..3]-&gt;(<span class="lb">f</span>)
+<span class="kw">RETURN</span> <span class="lb">f</span>.<span class="pr">name</span>
+
+<span class="cm">// Green flags:  NodeIndexSeek
+// Red flags:    NodeByLabelScan
+//               CartesianProduct
+// Run in Browser/Workspace to see
+// the visual plan tree</span></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════ 06 ADVANCED ═══════════ -->
+<div id="tab-adv" class="panel">
+<div class="sec">
+  <div class="sec-t">Advanced Cypher</div>
+  <div class="sec-d">Variable-length traversal, path algorithms, subqueries, and list operations — the patterns that make Cypher genuinely more expressive than SQL for graph problems.</div>
+
+  <div class="g2 mb12">
+    <div class="card">
+      <div class="ct"><span class="dot dot-b"></span>Variable-Length Paths</div>
+      <div class="cy"><span class="cm">-- exact depth</span>
+<span class="kw">MATCH</span> (<span class="lb">a</span>)-[:<span class="lb">KNOWS</span>*3]-&gt;(<span class="lb">b</span>)
+
+<span class="cm">-- range (1 to 5 hops)</span>
+<span class="kw">MATCH</span> (<span class="lb">a</span>)-[:<span class="lb">KNOWS</span>*1..5]-&gt;(<span class="lb">b</span>)
+
+<span class="cm">-- 1 or more hops (unbounded — use carefully)</span>
+<span class="kw">MATCH</span> (<span class="lb">a</span>)-[:<span class="lb">KNOWS</span>*]-&gt;(<span class="lb">b</span>)
+
+<span class="cm">-- multiple rel types</span>
+<span class="kw">MATCH</span> (<span class="lb">a</span>)-[:<span class="lb">KNOWS</span>|<span class="lb">FOLLOWS</span>*1..3]-&gt;(<span class="lb">b</span>)
+
+<span class="cm">-- capture relationships, compute hop count</span>
+<span class="kw">MATCH</span> (<span class="lb">a</span>)-[<span class="lb">rels</span>:<span class="lb">KNOWS</span>*1..3]-&gt;(<span class="lb">b</span>)
+<span class="kw">RETURN</span> <span class="lb">b</span>.<span class="pr">name</span>, <span class="fn">size</span>(<span class="lb">rels</span>) <span class="kw">AS</span> <span class="pr">hops</span></div>
+      <div class="ca ca-a mt8" style="font-size:12px">Unbounded <code>*</code> on a dense graph can exhaust memory. Always use an upper bound in production. Start with <code>*1..5</code> and profile before relaxing.</div>
+    </div>
+
+    <div class="card">
+      <div class="ct"><span class="dot dot-t"></span>shortestPath and allShortestPaths</div>
+      <div class="cy"><span class="kw">MATCH</span>
+  (<span class="lb">a</span>:<span class="lb">Person</span> {<span class="pr">name</span>: <span class="pr">$from</span>}),
+  (<span class="lb">b</span>:<span class="lb">Person</span> {<span class="pr">name</span>: <span class="pr">$to</span>})
+<span class="kw">MATCH</span> <span class="pr">path</span> = <span class="fn">shortestPath</span>(
+  (<span class="lb">a</span>)-[:<span class="lb">KNOWS</span>*]-(<span class="lb">b</span>)
+)
+<span class="kw">RETURN</span> <span class="fn">length</span>(<span class="pr">path</span>), <span class="fn">nodes</span>(<span class="pr">path</span>)
+
+<span class="cm">-- all paths of the same minimum length</span>
+<span class="kw">MATCH</span> <span class="pr">path</span> = <span class="fn">allShortestPaths</span>(
+  (<span class="lb">a</span>)-[:<span class="lb">KNOWS</span>*]-(<span class="lb">b</span>)
+)
+<span class="kw">RETURN</span> <span class="pr">path</span>
+
+<span class="cm">// Note: shortestPath uses unweighted BFS.
+// For weighted shortest path → GDS Dijkstra.</span></div>
+    </div>
+  </div>
+
+  <div class="g2 mb12">
+    <div class="card">
+      <div class="ct"><span class="dot dot-b"></span>CALL {} Subqueries</div>
+      <div class="cy"><span class="cm">-- uncorrelated (independent)</span>
+<span class="kw">CALL</span> {
+  <span class="kw">MATCH</span> (<span class="lb">p</span>:<span class="lb">Person</span>)
+  <span class="kw">RETURN</span> <span class="fn">count</span>(<span class="lb">p</span>) <span class="kw">AS</span> <span class="pr">total</span>
+}
+<span class="kw">RETURN</span> <span class="pr">total</span>
+
+<span class="cm">-- correlated (uses outer variable)</span>
+<span class="kw">MATCH</span> (<span class="lb">p</span>:<span class="lb">Person</span>)
+<span class="kw">CALL</span> {
+  <span class="kw">WITH</span> <span class="lb">p</span>   <span class="cm">// import outer variable</span>
+  <span class="kw">MATCH</span> (<span class="lb">p</span>)-[:<span class="lb">PURCHASED</span>]-&gt;(<span class="lb">prod</span>)
+  <span class="kw">RETURN</span> <span class="fn">count</span>(<span class="lb">prod</span>) <span class="kw">AS</span> <span class="pr">purchases</span>
+}
+<span class="kw">RETURN</span> <span class="lb">p</span>.<span class="pr">name</span>, <span class="pr">purchases</span></div>
+    </div>
+
+    <div class="card">
+      <div class="ct"><span class="dot dot-t"></span>List Comprehension + CASE</div>
+      <div class="cy"><span class="cm">-- list comprehension: filter + transform</span>
+<span class="kw">MATCH</span> (<span class="lb">p</span>:<span class="lb">Person</span>)-[:<span class="lb">KNOWS</span>]-&gt;(<span class="lb">f</span>)
+<span class="kw">WITH</span> <span class="lb">p</span>, <span class="fn">collect</span>(<span class="lb">f</span>) <span class="kw">AS</span> <span class="pr">friends</span>
+<span class="kw">RETURN</span>
+  [<span class="lb">x</span> <span class="kw">IN</span> <span class="pr">friends</span> <span class="kw">WHERE</span> <span class="lb">x</span>.<span class="pr">age</span>&gt;30 | <span class="lb">x</span>.<span class="pr">name</span>]
+  <span class="kw">AS</span> <span class="pr">olderFriends</span>
+
+<span class="cm">-- CASE expression</span>
+<span class="kw">RETURN</span> <span class="lb">p</span>.<span class="pr">name</span>,
+  <span class="kw">CASE</span>
+    <span class="kw">WHEN</span> <span class="lb">p</span>.<span class="pr">age</span> &lt; 25 <span class="kw">THEN</span> <span class="st">'junior'</span>
+    <span class="kw">WHEN</span> <span class="lb">p</span>.<span class="pr">age</span> &lt; 40 <span class="kw">THEN</span> <span class="st">'mid'</span>
+    <span class="kw">ELSE</span> <span class="st">'senior'</span>
+  <span class="kw">END</span> <span class="kw">AS</span> <span class="pr">tier</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ct"><span class="dot dot-a"></span>FOREACH — Side-Effect Writes Inside a Read</div>
+    <div style="font-size:13px;color:var(--text-secondary);margin-bottom:10px;line-height:1.7"><code>FOREACH</code> applies write operations to each element of a list or path. You can't RETURN from inside it — it's purely for side effects when you need to write while traversing.</div>
+    <div class="cy"><span class="cm">-- mark all nodes along a path</span>
+<span class="kw">MATCH</span> <span class="pr">p</span> = <span class="fn">shortestPath</span>(
+  (<span class="lb">a</span>:<span class="lb">Person</span> {<span class="pr">name</span>:<span class="pr">$a</span>})-[*]-(<span class="lb">b</span>:<span class="lb">Person</span> {<span class="pr">name</span>:<span class="pr">$b</span>})
+)
+<span class="kw">FOREACH</span> (<span class="lb">node</span> <span class="kw">IN</span> <span class="fn">nodes</span>(<span class="pr">p</span>) |
+  <span class="kw">SET</span> <span class="lb">node</span>.<span class="pr">visited</span> = <span class="kw">true</span>
+)
+<span class="kw">RETURN</span> <span class="fn">length</span>(<span class="pr">p</span>) <span class="kw">AS</span> <span class="pr">pathLength</span></div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════ 07 PYTHON ═══════════ -->
+<div id="tab-python" class="panel">
+<div class="sec">
+  <div class="sec-t">Python Driver</div>
+  <div class="sec-d">The official <code>neo4j</code> Python driver is the production path for application queries and data pipelines. It uses Bolt protocol and manages connection pooling, retry logic, and transactions.</div>
+
+  <div class="card mb12">
+    <div class="ct"><span class="dot dot-t"></span>Install + AuraDB Connection</div>
+    <div class="py"><span class="pc"># Install</span>
+pip install neo4j
+
+<span class="pk">from</span> neo4j <span class="pk">import</span> GraphDatabase
+<span class="pk">import</span> os
+
+<span class="pc"># Load from environment — never hardcode credentials</span>
+<span class="pv">URI</span>      = os.environ[<span class="ps">"NEO4J_URI"</span>]      <span class="pc"># neo4j+s://xxxx.databases.neo4j.io</span>
+<span class="pv">USER</span>     = os.environ[<span class="ps">"NEO4J_USERNAME"</span>]  <span class="pc"># "neo4j"</span>
+<span class="pv">PASSWORD</span> = os.environ[<span class="ps">"NEO4J_PASSWORD"</span>]
+
+<span class="pc"># Create driver once at app startup — it manages the connection pool</span>
+driver = GraphDatabase.<span class="pf">driver</span>(<span class="pv">URI</span>, auth=(<span class="pv">USER</span>, <span class="pv">PASSWORD</span>))
+driver.<span class="pf">verify_connectivity</span>()  <span class="pc"># raises ServiceUnavailable on failure</span>
+<span class="pk">print</span>(<span class="ps">"Connected to AuraDB"</span>)
+
+<span class="pc"># Close when shutting down (releases the pool)</span>
+<span class="pc"># driver.close()</span></div>
+  </div>
+
+  <div class="card mb12">
+    <div class="ct"><span class="dot dot-b"></span>Driver / Session / Transaction — Three Layers</div>
+    <div class="kv">
+      <div class="kvr"><div class="kvk">Driver</div><div class="kvv">Manages the connection pool. One per application. Thread-safe. Create once, reuse everywhere.</div></div>
+      <div class="kvr"><div class="kvk">Session</div><div class="kvv">Logical context for running queries. Not thread-safe — don't share across threads. Cheap to create per request.</div></div>
+      <div class="kvr"><div class="kvk">Transaction</div><div class="kvv">ACID unit of work. Use <code>execute_read</code> / <code>execute_write</code> (managed) over explicit transactions — they handle transient error retries automatically.</div></div>
+    </div>
+    <div class="ca ca-t mt10" style="font-size:12.5px"><strong>Prefer managed transactions.</strong> <code>execute_read</code> / <code>execute_write</code> automatically retry on transient errors (deadlocks, temporary unavailability) — critical for AuraDB's cloud environment.</div>
+  </div>
+
+  <div class="g2 mb12">
+    <div class="card">
+      <div class="ct"><span class="dot dot-t"></span>Read Transaction Pattern</div>
+      <div class="py"><span class="pk">def</span> <span class="pf">get_person</span>(tx, email: str):
+    result = tx.<span class="pf">run</span>(
+        <span class="ps">"""
+        MATCH (p:Person {email: $email})
+        RETURN p.name AS name,
+               p.age  AS age
+        """</span>,
+        email=email
+    )
+    <span class="pk">return</span> [record.<span class="pf">data</span>() <span class="pk">for</span> record <span class="pk">in</span> result]
+
+<span class="pk">with</span> driver.<span class="pf">session</span>() <span class="pk">as</span> session:
+    people = session.<span class="pf">execute_read</span>(
+        get_person,
+        email=<span class="ps">"<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="593835303a3c193a36773a3634">[email&#160;protected]</a>"</span>
+    )
+    <span class="pk">print</span>(people)
+    <span class="pc"># [{'name': 'Alice', 'age': 31}]</span></div>
+    </div>
+    <div class="card">
+      <div class="ct"><span class="dot dot-b"></span>Write Transaction Pattern</div>
+      <div class="py"><span class="pk">def</span> <span class="pf">upsert_person</span>(tx, name: str, email: str):
+    result = tx.<span class="pf">run</span>(
+        <span class="ps">"""
+        MERGE (p:Person {email: $email})
+        ON CREATE SET
+          p.name      = $name,
+          p.createdAt = timestamp()
+        ON MATCH SET
+          p.name      = $name
+        RETURN p.name AS name
+        """</span>,
+        name=name, email=email
+    )
+    <span class="pk">return</span> result.<span class="pf">single</span>()[<span class="ps">"name"</span>]
+
+<span class="pk">with</span> driver.<span class="pf">session</span>() <span class="pk">as</span> session:
+    name = session.<span class="pf">execute_write</span>(
+        upsert_person,
+        name=<span class="ps">"Alice"</span>,
+        email=<span class="ps">"<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="5e3f32373d3b1e3d31703d3133">[email&#160;protected]</a>"</span>
+    )
+    <span class="pk">print</span>(<span class="ps">f"Upserted: {name}"</span>)</div>
+    </div>
+  </div>
+
+  <div class="card mb12">
+    <div class="ct"><span class="dot dot-t"></span>Batch Write with UNWIND</div>
+    <div class="py"><span class="pk">def</span> <span class="pf">batch_upsert</span>(tx, people: list[dict]):
+    <span class="ps">"""people = [{'name': 'Alice', 'email': '<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="66072605094805090b">[email&#160;protected]</a>'}, ...]"""</span>
+    result = tx.<span class="pf">run</span>(
+        <span class="ps">"""
+        UNWIND $people AS row
+        MERGE  (p:Person {email: row.email})
+        ON CREATE SET p.name = row.name, p.createdAt = timestamp()
+        ON MATCH  SET p.name = row.name
+        RETURN count(p) AS processed
+        """</span>,
+        people=people
+    )
+    <span class="pk">return</span> result.<span class="pf">single</span>()[<span class="ps">"processed"</span>]
+
+<span class="pv">BATCH_SIZE</span> = <span class="pv">500</span>
+
+<span class="pk">def</span> <span class="pf">load_all</span>(driver, all_records: list[dict]) -&gt; int:
+    total = <span class="pv">0</span>
+    <span class="pk">with</span> driver.<span class="pf">session</span>() <span class="pk">as</span> session:
+        <span class="pk">for</span> i <span class="pk">in</span> <span class="pf">range</span>(<span class="pv">0</span>, <span class="pf">len</span>(all_records), <span class="pv">BATCH_SIZE</span>):
+            batch = all_records[i : i + <span class="pv">BATCH_SIZE</span>]
+            n     = session.<span class="pf">execute_write</span>(batch_upsert, batch)
+            total += n
+            <span class="pk">print</span>(<span class="ps">f"  batch {i//BATCH_SIZE+1}: {n} processed"</span>)
+    <span class="pk">return</span> total</div>
+  </div>
+
+  <div class="g2">
+    <div class="card">
+      <div class="ct"><span class="dot dot-b"></span>Connection Pool Config</div>
+      <div class="py"><span class="pc"># Tune for your AuraDB tier's connection limit</span>
+driver = GraphDatabase.<span class="pf">driver</span>(
+    <span class="pv">URI</span>,
+    auth=(<span class="pv">USER</span>, <span class="pv">PASSWORD</span>),
+    max_connection_pool_size=<span class="pv">50</span>,   <span class="pc"># default: 100</span>
+    connection_timeout=<span class="pv">30</span>,          <span class="pc"># seconds</span>
+    max_transaction_retry_time=<span class="pv">30</span>,  <span class="pc"># retry window (s)</span>
+    keep_alive=<span class="pk">True</span>,
+)
+<span class="pc"># Free tier:  keep pool small (≤ 10)
+# Pro tier:   50–100 is fine
+# Check tier connection limit in Aura console</span></div>
+    </div>
+    <div class="card">
+      <div class="ct"><span class="dot dot-t"></span>Error Handling</div>
+      <div class="py"><span class="pk">from</span> neo4j.exceptions <span class="pk">import</span> (
+    ServiceUnavailable,
+    TransientError,
+    ClientError,
+)
+
+<span class="pk">try</span>:
+    <span class="pk">with</span> driver.<span class="pf">session</span>() <span class="pk">as</span> s:
+        s.<span class="pf">execute_write</span>(upsert_person, ...)
+
+<span class="pk">except</span> TransientError <span class="pk">as</span> e:
+    <span class="pc"># Deadlock / temp unavailable
+    # execute_write retries this automatically</span>
+    <span class="pk">print</span>(<span class="ps">f"Transient (auto-retried): {e}"</span>)
+
+<span class="pk">except</span> ClientError <span class="pk">as</span> e:
+    <span class="pc"># Constraint violation, syntax error
+    # e.code  → "Neo.ClientError.Schema..."
+    # e.message → human-readable detail</span>
+    <span class="pk">print</span>(<span class="ps">f"Client error {e.code}: {e.message}"</span>)
+
+<span class="pk">except</span> ServiceUnavailable:
+    <span class="pc"># AuraDB unreachable or Free tier paused</span>
+    <span class="pk">print</span>(<span class="ps">"DB unavailable — check Aura console"</span>)</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════ 08 IMPORT ═══════════ -->
+<div id="tab-import" class="panel">
+<div class="sec">
+  <div class="sec-t">Importing Data into AuraDB</div>
+  <div class="sec-d">Three main paths: LOAD CSV for moderate files from a URL, the Aura Data Importer UI for no-code loads, and Python UNWIND batches for production pipelines. Each has a clear role.</div>
+
+  <div class="card mb12">
+    <div class="ct"><span class="dot dot-b"></span>LOAD CSV</div>
+    <div class="g2">
+      <div class="cy"><span class="cm">-- WITH HEADERS uses first row as keys</span>
+<span class="kw">LOAD CSV WITH HEADERS FROM</span>
+  <span class="st">'https://your-bucket.s3.amazonaws.com/people.csv'</span>
+  <span class="kw">AS</span> <span class="pr">row</span>
+<span class="kw">MERGE</span> (<span class="lb">p</span>:<span class="lb">Person</span> {<span class="pr">email</span>: <span class="pr">row</span>.<span class="pr">email</span>})
+<span class="kw">SET</span>
+  <span class="lb">p</span>.<span class="pr">name</span> = <span class="pr">row</span>.<span class="pr">name</span>,
+  <span class="lb">p</span>.<span class="pr">age</span>  = <span class="fn">toInteger</span>(<span class="pr">row</span>.<span class="pr">age</span>)
+<span class="kw">RETURN</span> <span class="fn">count</span>(*) <span class="kw">AS</span> <span class="pr">loaded</span>
+
+<span class="cm">-- non-comma delimiter</span>
+<span class="kw">LOAD CSV FROM</span> <span class="st">'...'</span> <span class="kw">AS</span> <span class="pr">row</span>
+  <span class="kw">FIELDTERMINATOR</span> <span class="st">'|'</span></div>
+      <div class="kv">
+        <div class="kvr"><div class="kvk">File location</div><div class="kvv">AuraDB cannot read local files. CSV must be at a public HTTPS URL (S3, GCS, GitHub raw).</div></div>
+        <div class="kvr"><div class="kvk">Type casting</div><div class="kvv">All values are strings. Use <code>toInteger()</code>, <code>toFloat()</code>, <code>date()</code> to cast types explicitly.</div></div>
+        <div class="kvr"><div class="kvk">PERIODIC COMMIT</div><div class="kvv">Not available on AuraDB (self-hosted only). For large files, use Python UNWIND batches.</div></div>
+        <div class="kvr"><div class="kvk">Practical limit</div><div class="kvv">LOAD CSV works well up to ~100K rows per run. Beyond that, use the Python batch pattern.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="g2 mb12">
+    <div class="card">
+      <div class="ct"><span class="dot dot-t"></span>AuraDB Data Importer UI</div>
+      <div class="kv">
+        <div class="kvr"><div class="kvk">What it is</div><div class="kvv">Visual drag-and-drop tool in Neo4j Workspace for mapping CSV columns to node/relationship properties.</div></div>
+        <div class="kvr"><div class="kvk">Best for</div><div class="kvv">One-off data loads, prototyping, non-developer stakeholders. No Cypher required.</div></div>
+        <div class="kvr"><div class="kvk">Supports</div><div class="kvv">Multiple CSV files, node + relationship mapping, type conversion, MERGE key selection.</div></div>
+        <div class="kvr"><div class="kvk">Limitations</div><div class="kvv">Not scriptable or idempotent. Not suitable for production pipelines or repeated ingestion.</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ct"><span class="dot dot-b"></span>Python CSV → AuraDB (Production)</div>
+      <div class="py"><span class="pk">import</span> csv
+
+<span class="pk">def</span> <span class="pf">load_csv</span>(driver, filepath: str) -&gt; int:
+    <span class="pk">with</span> <span class="pf">open</span>(filepath) <span class="pk">as</span> f:
+        rows = <span class="pf">list</span>(csv.<span class="pf">DictReader</span>(f))
+
+    <span class="pc"># Cast types in Python before sending</span>
+    <span class="pk">for</span> r <span class="pk">in</span> rows:
+        r[<span class="ps">'age'</span>] = <span class="pf">int</span>(r[<span class="ps">'age'</span>])
+
+    <span class="pc"># load_all from Tab 07 handles batching</span>
+    <span class="pk">return</span> <span class="pf">load_all</span>(driver, rows)</div>
+      <div class="ca ca-t mt8" style="font-size:12px">Cast all types in Python before passing to the driver. Don't rely on Cypher coercion for bulk loads — it's inconsistent and harder to debug.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ct"><span class="dot dot-a"></span>APOC — Flagged, Verify Before Use</div>
+    <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:12px">APOC is a library of extended Cypher procedures. A <strong>subset</strong> is available on AuraDB — not all procedures present in self-hosted Neo4j. Always verify availability on your specific tier before building a dependency.</div>
+    <div class="g2">
+      <div class="kv">
+        <div class="kvr"><div class="kvk"><code>apoc.load.json</code></div><div class="kvv">Load and iterate over a remote JSON file — REST API ingestion</div></div>
+        <div class="kvr"><div class="kvk"><code>apoc.periodic.iterate</code></div><div class="kvv">Batch-process large MATCH results with configurable batch size</div></div>
+        <div class="kvr"><div class="kvk"><code>apoc.merge.node</code></div><div class="kvv">Dynamic MERGE where label and properties are computed at runtime</div></div>
+        <div class="kvr"><div class="kvk"><code>apoc.export.csv</code></div><div class="kvv">Export query results — limited on Aura (no local filesystem)</div></div>
+      </div>
+      <div>
+        <div class="ca ca-r" style="font-size:12.5px">
+          <div class="ca-ttl">⚠ Verify first</div>
+          Always run <code>CALL dbms.procedures() YIELD name WHERE name STARTS WITH 'apoc' RETURN name</code> in your actual Aura instance before building on a specific APOC procedure. The fallback for any unavailable APOC proc is always the Python driver.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════ 09 GDS ═══════════ -->
+<div id="tab-gds" class="panel">
+<div class="sec">
+  <div class="sec-t">GDS — Graph Data Science (Light Reference)</div>
+  <div class="sec-d">GDS is a library of graph algorithms that runs in-memory on a projection of your stored graph. Available on AuraDB Professional and Enterprise only. A dedicated GDS sheet covers this in depth.</div>
+
+  <div class="card mb12">
+    <div class="ct"><span class="dot dot-b"></span>GDS Workflow — Three Steps Every Time</div>
+    <div class="g3 mt8">
+      <div class="step"><div class="step-n">1</div><div class="step-t">Project</div><div class="step-d">Load a subgraph into in-memory GDS graph. Define which node labels and relationship types to include.</div></div>
+      <div class="step"><div class="step-n">2</div><div class="step-t">Run Algorithm</div><div class="step-d">Execute an algorithm against the projected graph in stream, stats, or write mode.</div></div>
+      <div class="step"><div class="step-n">3</div><div class="step-t">Write Back</div><div class="step-d">Persist scores, community IDs, or embeddings as node/rel properties in the stored graph.</div></div>
+    </div>
+  </div>
+
+  <div class="card mb12">
+    <div class="ct"><span class="dot dot-t"></span>Graph Projection</div>
+    <div class="g2">
+      <div>
+        <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Native projection (fast, recommended)</div>
+        <div class="cy"><span class="kw">CALL</span> <span class="fn">gds.graph.project</span>(
+  <span class="st">'myGraph'</span>,
+  <span class="st">'Person'</span>,    <span class="cm">// node label(s)</span>
+  <span class="st">'KNOWS'</span>      <span class="cm">// rel type(s)</span>
+)
+
+<span class="cm">// Drop when done / data changes:</span>
+<span class="kw">CALL</span> <span class="fn">gds.graph.drop</span>(<span class="st">'myGraph'</span>)</div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Cypher projection (flexible, filtered)</div>
+        <div class="cy"><span class="kw">CALL</span> <span class="fn">gds.graph.project.cypher</span>(
+  <span class="st">'myGraph'</span>,
+  <span class="st">'MATCH (n:Person)
+   RETURN id(n) AS id'</span>,
+  <span class="st">'MATCH (a)-[:KNOWS]->(b)
+   RETURN id(a) AS source,
+          id(b) AS target'</span>
+)</div>
+      </div>
+    </div>
+    <div class="ca ca-b mt8" style="font-size:12.5px">Projections are in-memory snapshots — they don't reflect graph changes after creation. Drop and re-project when data changes.</div>
+  </div>
+
+  <div class="card mb12">
+    <div class="ct"><span class="dot dot-b"></span>Key Algorithms — One Per Category</div>
+    <div class="g2">
+      <div class="ac">
+        <div class="an">PageRank</div><div class="acat">Centrality — who is most influential?</div>
+        <div class="au">Ranks nodes by importance of incoming connections. A node is important if important nodes point to it. Use for: influencer ranking, document importance, risk scoring.</div>
+        <div class="cy" style="margin-top:10px"><span class="kw">CALL</span> <span class="fn">gds.pageRank.stream</span>(<span class="st">'myGraph'</span>)
+<span class="kw">YIELD</span> nodeId, score
+<span class="kw">RETURN</span> <span class="fn">gds.util.asNode</span>(nodeId).<span class="pr">name</span>, score
+<span class="kw">ORDER BY</span> score <span class="kw">DESC LIMIT</span> 10</div>
+      </div>
+      <div class="ac">
+        <div class="an">Louvain</div><div class="acat">Community Detection — what clusters exist?</div>
+        <div class="au">Finds densely connected communities by maximizing modularity. Use for: customer segmentation, fraud ring detection, topic clustering, social communities.</div>
+        <div class="cy" style="margin-top:10px"><span class="kw">CALL</span> <span class="fn">gds.louvain.write</span>(<span class="st">'myGraph'</span>, {
+  <span class="pr">writeProperty</span>: <span class="st">'communityId'</span>
+})
+<span class="cm">// writes communityId to each node</span></div>
+      </div>
+      <div class="ac">
+        <div class="an">Dijkstra Source-Target</div><div class="acat">Path Finding — weighted shortest path</div>
+        <div class="au">Finds minimum-cost path using edge weights. Unlike <code>shortestPath()</code> in Cypher, this respects weights. Use for: routing, supply chain optimization, network costing.</div>
+        <div class="cy" style="margin-top:10px"><span class="kw">CALL</span> <span class="fn">gds.shortestPath.dijkstra.stream</span>(
+  <span class="st">'myGraph'</span>, {
+    <span class="pr">sourceNode</span>: <span class="pr">$sourceId</span>,
+    <span class="pr">targetNode</span>: <span class="pr">$targetId</span>,
+    <span class="pr">relationshipWeightProperty</span>: <span class="st">'cost'</span>
+  }
+)
+<span class="kw">YIELD</span> totalCost, nodeIds</div>
+      </div>
+      <div class="ac">
+        <div class="an">Node Similarity</div><div class="acat">Similarity — who is most alike?</div>
+        <div class="au">Computes Jaccard or overlap similarity based on shared neighbors. Use for: collaborative filtering, duplicate detection, "users like you" recommendations.</div>
+        <div class="cy" style="margin-top:10px"><span class="kw">CALL</span> <span class="fn">gds.nodeSimilarity.stream</span>(<span class="st">'myGraph'</span>)
+<span class="kw">YIELD</span> node1, node2, similarity
+<span class="kw">WHERE</span> similarity &gt; <span class="pr">0.7</span>
+<span class="kw">RETURN</span>
+  <span class="fn">gds.util.asNode</span>(node1).<span class="pr">name</span>,
+  <span class="fn">gds.util.asNode</span>(node2).<span class="pr">name</span>,
+  similarity</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ct"><span class="dot dot-t"></span>Stream vs. Write vs. Mutate Modes</div>
+    <div class="cy"><span class="cm">// stream: results returned to query, not stored</span>
+<span class="kw">CALL</span> <span class="fn">gds.pageRank.stream</span>(<span class="st">'myGraph'</span>)
+<span class="kw">YIELD</span> nodeId, score
+
+<span class="cm">// write: results saved as node property in the DB</span>
+<span class="kw">CALL</span> <span class="fn">gds.pageRank.write</span>(<span class="st">'myGraph'</span>, {
+  <span class="pr">writeProperty</span>: <span class="st">'pageRankScore'</span>
+})
+
+<span class="cm">// mutate: updates only the in-memory projection (not the DB)
+// useful when chaining multiple algorithms on the same projection</span>
+<span class="kw">CALL</span> <span class="fn">gds.pageRank.mutate</span>(<span class="st">'myGraph'</span>, {
+  <span class="pr">mutateProperty</span>: <span class="st">'pageRankScore'</span>
+})</div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════ 10 QUICK REF ═══════════ -->
+<div id="tab-qref" class="panel">
+<div class="sec">
+  <div class="sec-t">Quick Reference</div>
+  <div class="sec-d">Cypher one-liners, AuraDB tier limits, Python boilerplate, and common errors with fixes. Copy-paste ready.</div>
+
+  <div class="card mb12">
+    <div class="ct"><span class="dot dot-b"></span>Cypher One-Liners</div>
+    <div style="border:1px solid var(--border-light);border-radius:8px;overflow:hidden;margin-top:10px">
+      <div class="qr"><div class="qrl">Create node</div><div class="qrc"><div class="cy"><span class="kw">CREATE</span> (<span class="lb">n</span>:<span class="lb">Person</span> {<span class="pr">name</span>:<span class="pr">$name</span>, <span class="pr">email</span>:<span class="pr">$email</span>}) <span class="kw">RETURN</span> <span class="lb">n</span></div></div></div>
+      <div class="qr"><div class="qrl">Upsert node</div><div class="qrc"><div class="cy"><span class="kw">MERGE</span> (<span class="lb">n</span>:<span class="lb">Person</span> {<span class="pr">email</span>:<span class="pr">$email</span>}) <span class="kw">ON CREATE SET</span> <span class="lb">n</span>.<span class="pr">name</span>=<span class="pr">$name</span> <span class="kw">RETURN</span> <span class="lb">n</span></div></div></div>
+      <div class="qr"><div class="qrl">Create relationship</div><div class="qrc"><div class="cy"><span class="kw">MATCH</span> (<span class="lb">a</span>:<span class="lb">Person</span>{<span class="pr">email</span>:<span class="pr">$a</span>}),(<span class="lb">b</span>:<span class="lb">Person</span>{<span class="pr">email</span>:<span class="pr">$b</span>}) <span class="kw">CREATE</span> (<span class="lb">a</span>)-[:<span class="lb">KNOWS</span>]-&gt;(<span class="lb">b</span>)</div></div></div>
+      <div class="qr"><div class="qrl">Find by property</div><div class="qrc"><div class="cy"><span class="kw">MATCH</span> (<span class="lb">n</span>:<span class="lb">Person</span> {<span class="pr">email</span>:<span class="pr">$email</span>}) <span class="kw">RETURN</span> <span class="lb">n</span></div></div></div>
+      <div class="qr"><div class="qrl">Update property</div><div class="qrc"><div class="cy"><span class="kw">MATCH</span> (<span class="lb">n</span>:<span class="lb">Person</span>{<span class="pr">email</span>:<span class="pr">$email</span>}) <span class="kw">SET</span> <span class="lb">n</span>.<span class="pr">name</span>=<span class="pr">$name</span> <span class="kw">RETURN</span> <span class="lb">n</span></div></div></div>
+      <div class="qr"><div class="qrl">Delete node + rels</div><div class="qrc"><div class="cy"><span class="kw">MATCH</span> (<span class="lb">n</span>:<span class="lb">Person</span>{<span class="pr">email</span>:<span class="pr">$email</span>}) <span class="kw">DETACH DELETE</span> <span class="lb">n</span></div></div></div>
+      <div class="qr"><div class="qrl">Count nodes</div><div class="qrc"><div class="cy"><span class="kw">MATCH</span> (<span class="lb">n</span>:<span class="lb">Person</span>) <span class="kw">RETURN</span> <span class="fn">count</span>(<span class="lb">n</span>) <span class="kw">AS</span> <span class="pr">total</span></div></div></div>
+      <div class="qr"><div class="qrl">2-hop traversal</div><div class="qrc"><div class="cy"><span class="kw">MATCH</span> (<span class="lb">a</span>:<span class="lb">Person</span>{<span class="pr">name</span>:<span class="pr">$n</span>})-[:<span class="lb">KNOWS</span>*1..2]-&gt;(<span class="lb">b</span>) <span class="kw">RETURN DISTINCT</span> <span class="lb">b</span>.<span class="pr">name</span></div></div></div>
+      <div class="qr"><div class="qrl">Shortest path</div><div class="qrc"><div class="cy"><span class="kw">MATCH</span> (<span class="lb">a</span>{<span class="pr">name</span>:<span class="pr">$a</span>}),(<span class="lb">b</span>{<span class="pr">name</span>:<span class="pr">$b</span>}),<span class="pr">p</span>=<span class="fn">shortestPath</span>((<span class="lb">a</span>)-[*]-(<span class="lb">b</span>)) <span class="kw">RETURN</span> <span class="fn">length</span>(<span class="pr">p</span>)</div></div></div>
+      <div class="qr"><div class="qrl">Create index</div><div class="qrc"><div class="cy"><span class="kw">CREATE INDEX</span> person_email <span class="kw">FOR</span> (<span class="lb">n</span>:<span class="lb">Person</span>) <span class="kw">ON</span> (<span class="lb">n</span>.<span class="pr">email</span>)</div></div></div>
+      <div class="qr"><div class="qrl">Unique constraint</div><div class="qrc"><div class="cy"><span class="kw">CREATE CONSTRAINT</span> uc_person <span class="kw">FOR</span> (<span class="lb">n</span>:<span class="lb">Person</span>) <span class="kw">REQUIRE</span> <span class="lb">n</span>.<span class="pr">email</span> <span class="kw">IS UNIQUE</span></div></div></div>
+      <div class="qr"><div class="qrl">Show indexes</div><div class="qrc"><div class="cy"><span class="kw">SHOW INDEXES</span></div></div></div>
+      <div class="qr"><div class="qrl">Show constraints</div><div class="qrc"><div class="cy"><span class="kw">SHOW CONSTRAINTS</span></div></div></div>
+      <div class="qr"><div class="qrl">Profile a query</div><div class="qrc"><div class="cy"><span class="kw">PROFILE MATCH</span> (<span class="lb">n</span>:<span class="lb">Person</span>{<span class="pr">email</span>:<span class="pr">$email</span>}) <span class="kw">RETURN</span> <span class="lb">n</span></div></div></div>
+      <div class="qr"><div class="qrl">APOC available?</div><div class="qrc"><div class="cy"><span class="kw">CALL</span> <span class="fn">dbms.procedures</span>() <span class="kw">YIELD</span> name <span class="kw">WHERE</span> name <span class="kw">STARTS WITH</span> <span class="st">'apoc'</span> <span class="kw">RETURN</span> name</div></div></div>
+    </div>
+  </div>
+
+  <div class="card mb12">
+    <div class="ct"><span class="dot dot-t"></span>Python Boilerplate (Copy-Paste)</div>
+    <div class="py"><span class="pk">from</span> neo4j <span class="pk">import</span> GraphDatabase
+<span class="pk">import</span> os
+
+driver = GraphDatabase.<span class="pf">driver</span>(
+    os.environ[<span class="ps">"NEO4J_URI"</span>],
+    auth=(os.environ[<span class="ps">"NEO4J_USERNAME"</span>], os.environ[<span class="ps">"NEO4J_PASSWORD"</span>])
+)
+driver.<span class="pf">verify_connectivity</span>()
+
+<span class="pk">def</span> <span class="pf">read</span>(query: str, **params):
+    <span class="pk">with</span> driver.<span class="pf">session</span>() <span class="pk">as</span> s:
+        <span class="pk">return</span> s.<span class="pf">execute_read</span>(
+            <span class="pk">lambda</span> tx: [r.<span class="pf">data</span>() <span class="pk">for</span> r <span class="pk">in</span> tx.<span class="pf">run</span>(query, **params)]
+        )
+
+<span class="pk">def</span> <span class="pf">write</span>(query: str, **params):
+    <span class="pk">with</span> driver.<span class="pf">session</span>() <span class="pk">as</span> s:
+        <span class="pk">return</span> s.<span class="pf">execute_write</span>(
+            <span class="pk">lambda</span> tx: tx.<span class="pf">run</span>(query, **params).<span class="pf">consume</span>()
+        )</div>
+  </div>
+
+  <div class="card">
+    <div class="ct"><span class="dot dot-a"></span>Common Errors + Fixes</div>
+    <div class="er mt8">
+      <div class="err"><div class="erh">Error / symptom</div><div class="erh">Cause</div><div class="erh">Fix</div></div>
+      <div class="err">
+        <div><code style="font-size:11px">Cannot delete, still has relationships</code></div>
+        <div style="font-size:12.5px">Used <code>DELETE</code> on a node with connected edges</div>
+        <div style="font-size:12.5px">Use <code>DETACH DELETE</code> to remove node + all its rels</div>
+      </div>
+      <div class="err">
+        <div><code style="font-size:11px">CartesianProduct warning</code></div>
+        <div style="font-size:12.5px">Two unrelated MATCH patterns with no connecting WHERE — produces N×M rows</div>
+        <div style="font-size:12.5px">Add WHERE connecting the patterns, or restructure as a traversal</div>
+      </div>
+      <div class="err">
+        <div><code style="font-size:11px">NodeByLabelScan in PROFILE</code></div>
+        <div style="font-size:12.5px">Full scan on a label — no index being used for the filter property</div>
+        <div style="font-size:12.5px">Create a range or unique index on the property used in the filter</div>
+      </div>
+      <div class="err">
+        <div><code style="font-size:11px">Duplicate nodes after MERGE</code></div>
+        <div style="font-size:12.5px">MERGE key used a mutable property (name, status) that changed between runs</div>
+        <div style="font-size:12.5px">Always MERGE on a stable unique key — UUID, email, external ID</div>
+      </div>
+      <div class="err">
+        <div><code style="font-size:11px">ServiceUnavailable (Free tier)</code></div>
+        <div style="font-size:12.5px">Free instance auto-paused after ~3 days idle</div>
+        <div style="font-size:12.5px">Resume via Aura console. Upgrade to Pro for always-on. Handle in app startup retry.</div>
+      </div>
+      <div class="err">
+        <div><code style="font-size:11px">Slow queries / plan cache misses</code></div>
+        <div style="font-size:12.5px">Literal values in queries create a new plan per unique value</div>
+        <div style="font-size:12.5px">Replace all literals with <code>$params</code> — always use the driver parameter dict</div>
+      </div>
+      <div class="err">
+        <div><code style="font-size:11px">LOAD CSV: can't read local file</code></div>
+        <div style="font-size:12.5px">AuraDB has no local filesystem — <code>file:///</code> URLs don't work</div>
+        <div s
