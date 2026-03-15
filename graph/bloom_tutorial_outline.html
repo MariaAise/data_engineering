@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bloom Tutorial Outline — Healthcare Adverse Events</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #ffffff; --surface: #f5f6f8; --surface2: #eceef2; --border: #d8dbe3;
+  --text: #3a3f4b; --text-dim: #7a7f8e; --heading: #1a1d24;
+  --accent: #0077b6; --accent2: #2e7d32; --warn: #e65100; --code-bg: #f0f1f4;
+  --case: #c62828; --drug: #7b1fa2; --reaction: #e65100; --outcome: #0077b6;
+  --mfg: #2e7d32; --age: #546e7a; --src: #6d4c41; --therapy: #f9a825;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; line-height: 1.7; }
+.container { max-width: 880px; margin: 0 auto; padding: 3rem 2rem 6rem; }
+h1 { font-size: 2rem; color: var(--heading); font-weight: 700; margin-bottom: 0.3rem; }
+.subtitle { color: var(--text-dim); font-size: 0.95rem; margin-bottom: 3rem; padding-bottom: 2rem; border-bottom: 1px solid var(--border); }
+h2 { font-size: 1.3rem; color: var(--heading); font-weight: 700; margin: 2.5rem 0 0.8rem; display: flex; align-items: center; gap: 0.6rem; }
+h2 .num { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: var(--accent); color: var(--bg); border-radius: 6px; font-size: 0.8rem; font-weight: 700; flex-shrink: 0; }
+h3 { color: var(--warn); font-size: 0.95rem; font-weight: 600; margin: 1.2rem 0 0.4rem; }
+p { margin-bottom: 0.7rem; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.3rem 1.5rem; margin: 0.8rem 0; }
+.card.dataset { border-left: 3px solid var(--accent2); }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.72rem; font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+.badge.case { background: rgba(239,83,80,0.15); color: var(--case); }
+.badge.drug { background: rgba(206,147,216,0.15); color: var(--drug); }
+.badge.reaction { background: rgba(255,183,77,0.15); color: var(--reaction); }
+.badge.outcome { background: rgba(79,195,247,0.15); color: var(--outcome); }
+.badge.mfg { background: rgba(129,199,132,0.15); color: var(--mfg); }
+.badge.therapy { background: rgba(255,241,118,0.15); color: var(--therapy); }
+.badge.age { background: rgba(144,164,174,0.15); color: var(--age); }
+.badge.src { background: rgba(161,136,127,0.15); color: var(--src); }
+.step { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem 1.5rem; margin: 0.6rem 0; }
+.step-title { font-weight: 700; color: var(--heading); font-size: 0.92rem; margin-bottom: 0.4rem; }
+.action { color: var(--accent); font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; }
+.talk { color: var(--accent2); font-style: italic; font-size: 0.88rem; }
+pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; overflow-x: auto; margin: 0.6rem 0; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; line-height: 1.6; color: #3a3f4b; }
+.schema-diagram { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.5rem; margin: 1rem 0; display: flex; justify-content: center; }
+table { width: 100%; border-collapse: collapse; font-size: 0.83rem; margin: 0.5rem 0; }
+th { text-align: left; padding: 0.45rem 0.7rem; background: var(--surface2); color: var(--heading); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; }
+td { padding: 0.4rem 0.7rem; border-bottom: 1px solid var(--border); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin: 0.8rem 0; }
+@media (max-width: 640px) { .grid2 { grid-template-columns: 1fr; } .container { padding: 2rem 1rem 4rem; } }
+.time { color: var(--text-dim); font-size: 0.78rem; font-family: 'JetBrains Mono', monospace; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>Bloom Tutorial Outline</h1>
+<p class="subtitle">Healthcare Adverse Event Reporting — FDA FAERS dataset on Neo4j AuraDB</p>
+
+<!-- ===== DATASET OVERVIEW ===== -->
+<h2><span class="num">0</span> Dataset at a Glance</h2>
+
+<div class="card dataset">
+<p><strong>Domain:</strong> FDA Adverse Event Reporting System (FAERS) — real-world pharmacovigilance data tracking adverse drug reactions reported to the FDA.</p>
+</div>
+
+<div class="grid2">
+  <div class="card">
+    <p style="font-size:0.82rem; margin:0;"><strong>8 Node Labels</strong></p>
+    <p style="font-size:0.8rem; margin:0.3rem 0 0;">
+      <span class="badge case">Case</span> 4,307 &nbsp;
+      <span class="badge reaction">Reaction</span> 2,701 &nbsp;
+      <span class="badge drug">Drug</span> 2,500 &nbsp;
+      <span class="badge therapy">Therapy</span> 1,721 &nbsp;
+      <span class="badge mfg">Manufacturer</span> 136 &nbsp;
+      <span class="badge outcome">Outcome</span> 6 &nbsp;
+      <span class="badge age">AgeGroup</span> 5 &nbsp;
+      <span class="badge src">ReportSource</span> 5
+    </p>
+  </div>
+  <div class="card">
+    <p style="font-size:0.82rem; margin:0;"><strong>11 Relationship Types</strong></p>
+    <p style="font-size:0.8rem; margin:0.3rem 0 0;">HAS_REACTION, IS_PRIMARY_SUSPECT, IS_SECONDARY_SUSPECT, IS_CONCOMITANT, IS_INTERACTING, FALLS_UNDER, RESULTED_IN, REPORTED_BY, REGISTERED, RECEIVED, PRESCRIBED</p>
+  </div>
+</div>
+
+<div class="schema-diagram">
+<svg viewBox="0 0 680 360" xmlns="http://www.w3.org/2000/svg" font-family="DM Sans, sans-serif">
+  <!-- Case (center) -->
+  <circle cx="340" cy="180" r="42" fill="none" stroke="#c62828" stroke-width="2.5"/>
+  <text x="340" y="176" text-anchor="middle" fill="#c62828" font-size="11" font-weight="700">Case</text>
+  <text x="340" y="192" text-anchor="middle" fill="#7a7f8e" font-size="8">4,307</text>
+
+  <!-- Drug (right) -->
+  <circle cx="560" cy="120" r="36" fill="none" stroke="#7b1fa2" stroke-width="2"/>
+  <text x="560" y="117" text-anchor="middle" fill="#7b1fa2" font-size="10" font-weight="700">Drug</text>
+  <text x="560" y="130" text-anchor="middle" fill="#7a7f8e" font-size="8">2,500</text>
+
+  <!-- Reaction (top) -->
+  <circle cx="200" cy="60" r="36" fill="none" stroke="#e65100" stroke-width="2"/>
+  <text x="200" y="57" text-anchor="middle" fill="#e65100" font-size="10" font-weight="700">Reaction</text>
+  <text x="200" y="70" text-anchor="middle" fill="#7a7f8e" font-size="8">2,701</text>
+
+  <!-- Outcome (left) -->
+  <circle cx="120" cy="200" r="32" fill="none" stroke="#0077b6" stroke-width="2"/>
+  <text x="120" y="197" text-anchor="middle" fill="#0077b6" font-size="10" font-weight="700">Outcome</text>
+  <text x="120" y="210" text-anchor="middle" fill="#7a7f8e" font-size="8">6</text>
+
+  <!-- AgeGroup (bottom-left) -->
+  <circle cx="200" cy="310" r="30" fill="none" stroke="#546e7a" stroke-width="2"/>
+  <text x="200" y="307" text-anchor="middle" fill="#546e7a" font-size="10" font-weight="700">AgeGroup</text>
+  <text x="200" y="320" text-anchor="middle" fill="#7a7f8e" font-size="8">5</text>
+
+  <!-- ReportSource (bottom) -->
+  <circle cx="370" cy="320" r="30" fill="none" stroke="#6d4c41" stroke-width="2"/>
+  <text x="370" y="316" text-anchor="middle" fill="#6d4c41" font-size="9" font-weight="700">Report</text>
+  <text x="370" y="329" text-anchor="middle" fill="#6d4c41" font-size="9" font-weight="700">Source</text>
+
+  <!-- Manufacturer (bottom-right) -->
+  <circle cx="530" cy="280" r="32" fill="none" stroke="#2e7d32" stroke-width="2"/>
+  <text x="530" y="277" text-anchor="middle" fill="#2e7d32" font-size="9" font-weight="700">Manufacturer</text>
+  <text x="530" y="290" text-anchor="middle" fill="#7a7f8e" font-size="8">136</text>
+
+  <!-- Therapy (top-right) -->
+  <circle cx="480" cy="40" r="30" fill="none" stroke="#f9a825" stroke-width="2"/>
+  <text x="480" y="37" text-anchor="middle" fill="#f9a825" font-size="10" font-weight="700">Therapy</text>
+  <text x="480" y="50" text-anchor="middle" fill="#7a7f8e" font-size="8">1,721</text>
+
+  <!-- Arrows -->
+  <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#999"/></marker></defs>
+
+  <line x1="365" y1="148" x2="530" y2="125" stroke="#999" stroke-width="1.2" marker-end="url(#a)"/>
+  <text x="445" y="128" fill="#7a7f8e" font-size="7">IS_PRIMARY_SUSPECT</text>
+
+  <line x1="310" y1="150" x2="225" y2="88" stroke="#999" stroke-width="1.2" marker-end="url(#a)"/>
+  <text x="240" y="115" fill="#7a7f8e" font-size="7">HAS_REACTION</text>
+
+  <line x1="300" y1="185" x2="155" y2="195" stroke="#999" stroke-width="1.2" marker-end="url(#a)"/>
+  <text x="210" y="198" fill="#7a7f8e" font-size="7">RESULTED_IN</text>
+
+  <line x1="315" y1="218" x2="220" y2="285" stroke="#999" stroke-width="1.2" marker-end="url(#a)"/>
+  <text x="242" y="258" fill="#7a7f8e" font-size="7">FALLS_UNDER</text>
+
+  <line x1="355" y1="222" x2="365" y2="290" stroke="#999" stroke-width="1.2" marker-end="url(#a)"/>
+  <text x="378" y="262" fill="#7a7f8e" font-size="7">REPORTED_BY</text>
+
+  <line x1="500" y1="258" x2="378" y2="198" stroke="#999" stroke-width="1.2" marker-end="url(#a)"/>
+  <text x="455" y="220" fill="#7a7f8e" font-size="7">REGISTERED</text>
+
+  <line x1="370" y1="148" x2="458" y2="62" stroke="#999" stroke-width="1.2" marker-end="url(#a)"/>
+  <text x="395" y="95" fill="#7a7f8e" font-size="7">RECEIVED</text>
+
+  <line x1="500" y1="62" x2="540" y2="88" stroke="#999" stroke-width="1.2" marker-end="url(#a)"/>
+  <text x="535" y="72" fill="#7a7f8e" font-size="7">PRESCRIBED</text>
+</svg>
+</div>
+
+
+<!-- ===== SECTION 1 ===== -->
+<h2><span class="num">1</span> Setup Bloom Perspective <span class="time">~3 min</span></h2>
+
+<div class="step">
+  <div class="step-title">1.1 — Open Explore tab and add categories</div>
+  <p class="action">Explore → Add categories → select all 8 node labels</p>
+  <p class="talk">"Bloom needs to know which node types to visualize. Categories are Bloom's vocabulary — each one maps to a node label."</p>
+</div>
+
+<div class="step">
+  <div class="step-title">1.2 — Style the categories</div>
+  <p>Assign distinct colors to each label so the graph is readable at a glance:</p>
+  <table>
+    <tr><th>Label</th><th>Suggested Color</th><th>Caption Property</th></tr>
+    <tr><td>Case</td><td>Red</td><td>primaryid</td></tr>
+    <tr><td>Drug</td><td>Purple</td><td>name</td></tr>
+    <tr><td>Reaction</td><td>Orange</td><td>description</td></tr>
+    <tr><td>Outcome</td><td>Blue</td><td>outcome</td></tr>
+    <tr><td>Manufacturer</td><td>Green</td><td>manufacturerName</td></tr>
+    <tr><td>Therapy</td><td>Yellow</td><td>primaryid</td></tr>
+    <tr><td>AgeGroup</td><td>Grey</td><td>ageGroup</td></tr>
+    <tr><td>ReportSource</td><td>Brown</td><td>name</td></tr>
+  </table>
+  <p class="talk">"Color-coding lets you instantly distinguish drug nodes from reaction nodes when the graph gets dense."</p>
+</div>
+
+
+<!-- ===== SECTION 2 ===== -->
+<h2><span class="num">2</span> Basic Search &amp; Exploration <span class="time">~5 min</span></h2>
+
+<div class="step">
+  <div class="step-title">2.1 — Natural language search</div>
+  <p class="action">Search bar → type "Drug" → select a specific drug (e.g. "ASPIRIN")</p>
+  <p class="talk">"Bloom's search bar works like a near-natural-language interface. Type a category name to browse all nodes of that type, or type a specific name to jump straight to it."</p>
+</div>
+
+<div class="step">
+  <div class="step-title">2.2 — Expand a node</div>
+  <p class="action">Right-click a Drug node → Expand → select relationship types to follow</p>
+  <p class="talk">"Expanding is how you traverse the graph visually. Each expansion follows one hop of relationships. You can choose which relationship types to follow — for a drug, expanding IS_PRIMARY_SUSPECT shows which adverse event cases it was the primary suspect in."</p>
+</div>
+
+<div class="step">
+  <div class="step-title">2.3 — Expand a second hop</div>
+  <p class="action">Select a Case node → Expand → HAS_REACTION</p>
+  <p class="talk">"Now we've gone Drug → Case → Reaction in two hops. This is the core pharmacovigilance question: given a drug, what adverse reactions were reported?"</p>
+</div>
+
+
+<!-- ===== SECTION 3 ===== -->
+<h2><span class="num">3</span> Pattern Search <span class="time">~5 min</span></h2>
+
+<div class="step">
+  <div class="step-title">3.1 — Search a multi-node pattern</div>
+  <p class="action">Search bar → type: "Drug ASPIRIN Case Reaction"</p>
+  <p class="talk">"Bloom understands chained patterns. By typing category-value-category-category, you're asking: show me all Cases involving ASPIRIN and their Reactions — in one query."</p>
+</div>
+
+<div class="step">
+  <div class="step-title">3.2 — Filter by relationship type</div>
+  <p class="action">Search → "Drug IS_PRIMARY_SUSPECT Case"</p>
+  <p class="talk">"This narrows the search to only cases where the drug was the primary suspect, filtering out concomitant or secondary suspect roles. The distinction matters in pharmacovigilance — primary suspects have the strongest causal signal."</p>
+</div>
+
+
+<!-- ===== SECTION 4 ===== -->
+<h2><span class="num">4</span> Investigating a Drug Safety Signal <span class="time">~5 min</span></h2>
+
+<div class="step">
+  <div class="step-title">4.1 — Find a drug with many adverse cases</div>
+  <p class="action">Search → "Drug" → pick a well-known drug → Expand IS_PRIMARY_SUSPECT</p>
+  <p class="talk">"We're looking for drugs with a high fan-out of primary suspect cases. A drug node connected to dozens of Case nodes is a potential safety signal worth investigating."</p>
+</div>
+
+<div class="step">
+  <div class="step-title">4.2 — Follow through to outcomes</div>
+  <p class="action">Select multiple Case nodes → Expand → RESULTED_IN</p>
+  <p class="talk">"Now we can see the severity distribution — did these cases result in hospitalization, death, disability, or recovery? The Outcome nodes cluster and you can visually spot if one outcome dominates."</p>
+</div>
+
+<div class="step">
+  <div class="step-title">4.3 — Check the reactions</div>
+  <p class="action">Select the same Case nodes → Expand → HAS_REACTION</p>
+  <p class="talk">"The Reaction nodes that appear most frequently across cases form the drug's adverse reaction profile. Shared Reaction nodes between many Cases are the strongest signals."</p>
+</div>
+
+
+<!-- ===== SECTION 5 ===== -->
+<h2><span class="num">5</span> Cross-Drug Comparison <span class="time">~5 min</span></h2>
+
+<div class="step">
+  <div class="step-title">5.1 — Load two drugs side by side</div>
+  <p class="action">Search → "Drug ASPIRIN" → then search again → "Drug IBUPROFEN" (keep both on canvas)</p>
+  <p class="talk">"By loading two drugs onto the same canvas, we can visually compare their adverse event profiles. Shared Reaction nodes in the middle mean both drugs trigger the same side effect."</p>
+</div>
+
+<div class="step">
+  <div class="step-title">5.2 — Expand both and look for shared nodes</div>
+  <p class="action">Expand both → IS_PRIMARY_SUSPECT → then expand Cases → HAS_REACTION</p>
+  <p class="talk">"Bloom automatically deduplicates — if both drugs share a Reaction node, it appears once with edges from both sides. These shared nodes are the visual fingerprint of overlapping safety profiles."</p>
+</div>
+
+
+<!-- ===== SECTION 6 ===== -->
+<h2><span class="num">6</span> Filtering &amp; Layout <span class="time">~3 min</span></h2>
+
+<div class="step">
+  <div class="step-title">6.1 — Filter by property</div>
+  <p class="action">Filter icon (funnel) → filter Cases by gender = "Female" or age group</p>
+  <p class="talk">"Bloom filters let you slice the visible graph without requerying. This is how you'd answer: are the adverse reactions different for female patients vs male patients?"</p>
+</div>
+
+<div class="step">
+  <div class="step-title">6.2 — Change layout</div>
+  <p class="action">Bottom-right layout selector → try "Hierarchical" and "Force-based"</p>
+  <p class="talk">"Force-based layout clusters connected nodes together. Hierarchical shows the flow from Drug → Case → Reaction → Outcome. Choose based on what story you're telling."</p>
+</div>
+
+<div class="step">
+  <div class="step-title">6.3 — Rule-based styling</div>
+  <p class="action">Settings → Rule-based styling → size Drug nodes by degree</p>
+  <p class="talk">"Sizing nodes by their connection count makes high-risk drugs visually pop — the more cases a drug is linked to, the larger it appears."</p>
+</div>
+
+
+<!-- ===== SECTION 7 ===== -->
+<h2><span class="num">7</span> Demo Narrative — Tying It Together <span class="time">~3 min</span></h2>
+
+<div class="card">
+<p><strong>Story arc for a live walkthrough:</strong></p>
+<p>1. Start with a single drug (e.g. search "METFORMIN") — show the node in isolation</p>
+<p>2. Expand to IS_PRIMARY_SUSPECT cases — show the fan-out, explain what "primary suspect" means</p>
+<p>3. Expand cases to HAS_REACTION — see what side effects cluster</p>
+<p>4. Expand cases to RESULTED_IN — see outcome severity</p>
+<p>5. Filter to only "Death" outcomes — isolate the most severe signal</p>
+<p>6. Expand those fatal cases back to other drugs (IS_CONCOMITANT) — were other drugs involved?</p>
+<p>7. Conclude: "This is how pharmacovigilance analysts use graph databases to trace a safety signal from a single drug through patient cases to outcomes and co-prescribed drugs — in a way that would require multiple SQL joins across 6+ tables."</p>
+</div>
+
+</div>
+</body>
+</html>
