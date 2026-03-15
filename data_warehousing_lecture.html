@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Data Warehousing, OLAP &amp; the Modern Analytics Stack</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #fafaf8;
+  --surface: #ffffff;
+  --surface2: #f3f2ee;
+  --border: #e2e0d8;
+  --text: #2c2c2a;
+  --text-dim: #6e6d68;
+  --heading: #1a1a18;
+  --accent: #1a6b4e;
+  --accent-light: #e8f5ee;
+  --accent2: #b45309;
+  --accent2-light: #fef3e2;
+  --code-bg: #f5f4f0;
+  --code-border: #e8e6de;
+  --blue: #1d5fa0;
+  --blue-light: #edf4fc;
+  --red: #b91c1c;
+  --red-light: #fef2f2;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  line-height: 1.75;
+  font-size: 15.5px;
+}
+
+/* --- NAV --- */
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 260px;
+  height: 100vh;
+  overflow-y: auto;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  padding: 2rem 1.2rem;
+  z-index: 10;
+}
+
+.nav-title {
+  font-family: 'Source Serif 4', serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--heading);
+  margin-bottom: 1.5rem;
+  line-height: 1.3;
+}
+
+.nav a {
+  display: block;
+  padding: 0.35rem 0.6rem;
+  margin: 0.1rem 0;
+  color: var(--text-dim);
+  text-decoration: none;
+  font-size: 0.82rem;
+  border-radius: 5px;
+  transition: all 0.15s;
+  line-height: 1.4;
+}
+
+.nav a:hover { background: var(--surface2); color: var(--heading); }
+.nav a.active { background: var(--accent-light); color: var(--accent); font-weight: 500; }
+.nav .sep { height: 1px; background: var(--border); margin: 0.8rem 0; }
+
+/* --- MAIN --- */
+.main {
+  margin-left: 260px;
+  max-width: 780px;
+  padding: 3rem 3rem 8rem;
+}
+
+h1 {
+  font-family: 'Source Serif 4', serif;
+  font-size: 2.4rem;
+  color: var(--heading);
+  font-weight: 700;
+  margin-bottom: 0.4rem;
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+}
+
+.hero-sub {
+  color: var(--text-dim);
+  font-size: 1rem;
+  margin-bottom: 3rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid var(--border);
+}
+
+h2 {
+  font-family: 'Source Serif 4', serif;
+  font-size: 1.55rem;
+  color: var(--heading);
+  font-weight: 700;
+  margin: 3.5rem 0 1rem;
+  padding-top: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+h2 .blk {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  height: 30px;
+  padding: 0 8px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 6px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+h3 {
+  font-family: 'DM Sans', sans-serif;
+  color: var(--accent);
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 1.8rem 0 0.5rem;
+}
+
+p { margin-bottom: 0.85rem; }
+
+/* --- COMPONENTS --- */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.3rem 1.5rem;
+  margin: 1rem 0;
+}
+
+.card.green { border-left: 3px solid var(--accent); background: var(--accent-light); }
+.card.amber { border-left: 3px solid var(--accent2); background: var(--accent2-light); }
+.card.blue { border-left: 3px solid var(--blue); background: var(--blue-light); }
+.card.red { border-left: 3px solid var(--red); background: var(--red-light); }
+
+.card-title {
+  font-weight: 700;
+  color: var(--heading);
+  margin-bottom: 0.4rem;
+  font-size: 0.92rem;
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem;
+  margin: 1rem 0;
+}
+
+.grid3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.8rem;
+  margin: 1rem 0;
+}
+
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+}
+
+.badge.green { background: var(--accent-light); color: var(--accent); }
+.badge.amber { background: var(--accent2-light); color: var(--accent2); }
+.badge.blue { background: var(--blue-light); color: var(--blue); }
+
+pre {
+  background: var(--code-bg);
+  border: 1px solid var(--code-border);
+  border-radius: 8px;
+  padding: 1.1rem 1.3rem;
+  overflow-x: auto;
+  margin: 0.8rem 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  color: #4a4a45;
+}
+
+code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.84em;
+  background: var(--code-bg);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.kw { color: var(--accent); font-weight: 600; }
+.str { color: var(--accent2); }
+.cmt { color: var(--text-dim); font-style: italic; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  margin: 0.8rem 0;
+}
+
+th {
+  text-align: left;
+  padding: 0.55rem 0.8rem;
+  background: var(--surface2);
+  color: var(--heading);
+  font-weight: 600;
+  font-size: 0.78rem;
+  letter-spacing: 0.3px;
+  border-bottom: 2px solid var(--border);
+}
+
+td {
+  padding: 0.5rem 0.8rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.compare-arrow {
+  text-align: center;
+  color: var(--accent);
+  font-size: 1.5rem;
+  padding: 0.5rem 0;
+}
+
+.flow-row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin: 1.2rem 0;
+  flex-wrap: wrap;
+}
+
+.flow-box {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.flow-arrow {
+  color: var(--text-dim);
+  font-size: 1.2rem;
+  padding: 0 0.4rem;
+}
+
+strong { font-weight: 700; color: var(--heading); }
+
+@media (max-width: 900px) {
+  .nav { display: none; }
+  .main { margin-left: 0; padding: 2rem 1.2rem 6rem; }
+  .grid2, .grid3 { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<div class="nav">
+  <div class="nav-title">Data Warehousing, OLAP &amp; the Modern Analytics Stack</div>
+  <a href="#b1">1. Dimensional modeling</a>
+  <a href="#b2">2. OLAP operations</a>
+  <a href="#b3">3. Warehouse architecture</a>
+  <a href="#b4">4. The lakehouse convergence</a>
+  <a href="#b5">5. Platform landscape</a>
+  <a href="#b6">6. The semantic layer</a>
+  <a href="#b7">7. Real-time analytics</a>
+  <a href="#b8">8. Governance &amp; quality</a>
+  <a href="#b9">9. Professional landscape</a>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+<h1>Data Warehousing, OLAP &amp; the Modern Analytics Stack</h1>
+<p class="hero-sub">Lecture reference — from dimensional modeling fundamentals to the 2025 platform landscape</p>
+
+<!-- ============================================================ -->
+<!-- BLOCK 1 -->
+<!-- ============================================================ -->
+<h2 id="b1"><span class="blk">1</span> Dimensional modeling</h2>
+
+<p>Dimensional modeling is the foundational technique for organizing data in a warehouse so that it is optimized for query performance and human comprehension. The core idea: separate <strong>what happened</strong> (facts) from <strong>the context in which it happened</strong> (dimensions).</p>
+
+<h3>Star schema</h3>
+
+<p>The star schema is the most common dimensional model. A central <strong>fact table</strong> holds quantitative measures (revenue, quantity, cost) at a specific grain. Surrounding <strong>dimension tables</strong> describe the context — who, what, where, when.</p>
+
+<div class="card">
+<p><strong>Fact table characteristics:</strong> Composite primary key formed by foreign keys to dimension tables. Contains numeric, additive measures. Each row represents one business event at the defined grain (e.g., one sale, one transaction, one shipment).</p>
+<p><strong>Dimension table characteristics:</strong> Single-column surrogate primary key. Contains descriptive text attributes used for filtering, grouping, and labeling. Typically denormalized — wide tables with many columns.</p>
+</div>
+
+<div class="card green">
+<div class="card-title">Grain — the most important design decision</div>
+<p>The grain defines the level of detail in the fact table. "One row per transaction per product per store per day" is a grain statement. Every dimensional model starts here. Get the grain wrong and the entire model is unreliable.</p>
+</div>
+
+<h3>Snowflake schema</h3>
+
+<p>A snowflake schema normalizes dimension tables into sub-dimensions. A <code>product</code> dimension splits into <code>product → category → department</code>. This reduces storage redundancy but adds join complexity. Used when dimension tables are very large or when normalization is required for governance.</p>
+
+<h3>Fact constellations (galaxy schema)</h3>
+
+<p>Multiple fact tables sharing dimension tables. A retail business might have a <code>sales_fact</code> and an <code>inventory_fact</code> both referencing the same <code>product</code> and <code>store</code> dimensions. This is the standard pattern for any warehouse with more than one business process.</p>
+
+<h3>Slowly changing dimensions (SCDs)</h3>
+
+<div class="grid2">
+  <div class="card">
+    <div class="card-title">Type 1 — Overwrite</div>
+    <p>Replace the old value with the new one. No history preserved. A customer changes their address — the old address is gone. Simple, but you lose the ability to analyze historical context.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">Type 2 — Add new row</div>
+    <p>Insert a new row with the updated value, mark the old row as expired (using effective/expiry dates or a current flag). Full history preserved. The standard approach for any dimension where historical analysis matters.</p>
+  </div>
+</div>
+<div class="card">
+  <div class="card-title">Type 3 — Add new column</div>
+  <p>Add a "previous value" column alongside the current one. Only tracks the most recent change, not full history. Rarely used in practice — Type 2 is almost always preferred.</p>
+</div>
+
+<h3>Surrogate keys vs natural keys</h3>
+
+<p>Warehouses use <strong>surrogate keys</strong> (auto-incrementing integers) as primary keys rather than natural business keys (product codes, employee IDs). Surrogate keys are system-generated, meaning they insulate the warehouse from source system changes — if a product code format changes upstream, the warehouse doesn't break. They also enable SCD Type 2 tracking: the same natural key can have multiple surrogate keys representing different historical versions.</p>
+
+
+<!-- ============================================================ -->
+<!-- BLOCK 2 -->
+<!-- ============================================================ -->
+<h2 id="b2"><span class="blk">2</span> OLAP operations</h2>
+
+<p>OLAP (Online Analytical Processing) is a paradigm for interactive, multidimensional analysis of business data. The mental model is a <strong>data cube</strong> — a multi-dimensional array where each axis represents a dimension (time, product, geography) and each cell contains a measure (revenue, quantity).</p>
+
+<h3>The five core operations</h3>
+
+<table>
+  <tr><th>Operation</th><th>What it does</th><th>Example</th></tr>
+  <tr><td><strong>Roll-up</strong></td><td>Aggregate to a higher level in a hierarchy, or reduce a dimension entirely</td><td>City → State → Country. Monthly sales → Quarterly sales</td></tr>
+  <tr><td><strong>Drill-down</strong></td><td>Decompose to a finer grain — the reverse of roll-up</td><td>Country → State → City. Annual → Quarterly → Monthly</td></tr>
+  <tr><td><strong>Slice</strong></td><td>Fix one dimension to a single value, producing a sub-cube</td><td>All sales where <code>year = 2024</code></td></tr>
+  <tr><td><strong>Dice</strong></td><td>Filter on two or more dimensions simultaneously</td><td>Sales where <code>year IN (2023, 2024)</code> AND <code>region IN ('APAC', 'EMEA')</code></td></tr>
+  <tr><td><strong>Pivot</strong></td><td>Rotate the axes to get a different cross-tabulation</td><td>Swap rows and columns — product on rows vs time on rows</td></tr>
+</table>
+
+<h3>Hierarchies and concept levels</h3>
+
+<p>Dimensions have natural hierarchies that enable roll-up and drill-down. Time: <code>day → week → month → quarter → year</code>. Geography: <code>store → city → state → country → region</code>. Product: <code>SKU → subcategory → category → department</code>. The hierarchy defines what "up" and "down" mean in the context of that dimension.</p>
+
+<h3>Measure classification</h3>
+
+<div class="grid3">
+  <div class="card">
+    <div class="card-title">Distributive</div>
+    <p>Can be computed by partitioning data and combining partial results. <code>SUM</code>, <code>COUNT</code>, <code>MIN</code>, <code>MAX</code>.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">Algebraic</div>
+    <p>Derived from a bounded number of distributive aggregates. <code>AVG</code> = SUM/COUNT. <code>STDDEV</code>.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">Holistic</div>
+    <p>No constant bound on intermediate storage. <code>MEDIAN</code>, <code>MODE</code>, <code>RANK</code>. Expensive to compute on large cubes.</p>
+  </div>
+</div>
+
+<h3>SQL implementation of OLAP</h3>
+
+<p>Modern SQL engines implement OLAP operations natively, eliminating the need for dedicated cube servers in many cases:</p>
+
+<pre><span class="cmt">-- ROLLUP: hierarchical aggregation (country → state → city → grand total)</span>
+<span class="kw">SELECT</span> country, state, city, <span class="kw">SUM</span>(revenue)
+<span class="kw">FROM</span> sales_fact f <span class="kw">JOIN</span> store_dim s <span class="kw">ON</span> f.store_key = s.store_key
+<span class="kw">GROUP BY ROLLUP</span>(country, state, city);
+
+<span class="cmt">-- CUBE: all combinations of dimensions</span>
+<span class="kw">SELECT</span> category, quarter, <span class="kw">SUM</span>(revenue)
+<span class="kw">FROM</span> sales_fact f <span class="kw">JOIN</span> product_dim p <span class="kw">ON</span> f.product_key = p.product_key
+<span class="kw">GROUP BY CUBE</span>(category, quarter);
+
+<span class="cmt">-- GROUPING SETS: specific aggregation combinations</span>
+<span class="kw">SELECT</span> category, region, <span class="kw">SUM</span>(revenue)
+<span class="kw">FROM</span> sales_fact
+<span class="kw">GROUP BY GROUPING SETS</span>(
+  (category, region),
+  (category),
+  (region),
+  ()
+);</pre>
+
+
+<!-- ============================================================ -->
+<!-- BLOCK 3 -->
+<!-- ============================================================ -->
+<h2 id="b3"><span class="blk">3</span> Warehouse architecture</h2>
+
+<h3>Three-tier architecture</h3>
+
+<div class="flow-row">
+  <div class="flow-box" style="background: var(--red-light); color: var(--red);">Source systems</div>
+  <span class="flow-arrow">→</span>
+  <div class="flow-box" style="background: var(--accent2-light); color: var(--accent2);">Staging / ETL</div>
+  <span class="flow-arrow">→</span>
+  <div class="flow-box" style="background: var(--accent-light); color: var(--accent);">Data warehouse</div>
+  <span class="flow-arrow">→</span>
+  <div class="flow-box" style="background: var(--blue-light); color: var(--blue);">Data marts / BI</div>
+</div>
+
+<p><strong>Source systems</strong> — operational databases (OLTP), CRMs, ERPs, SaaS APIs, flat files, event streams. Optimized for transaction processing, not analysis.</p>
+
+<p><strong>Staging area</strong> — a landing zone where raw data is temporarily stored before transformation. No business logic applied here. Purpose: decouple extraction from transformation so failures don't cascade.</p>
+
+<p><strong>Data warehouse</strong> — the integrated, subject-oriented, time-variant, non-volatile repository. This is where dimensional models live and historical data accumulates.</p>
+
+<p><strong>Data marts</strong> — subject-specific subsets of the warehouse scoped to a department or business function (marketing mart, finance mart). Smaller, faster, easier for end users to navigate.</p>
+
+<h3>ETL vs ELT</h3>
+
+<div class="grid2">
+  <div class="card amber">
+    <div class="card-title">ETL — Extract, Transform, Load</div>
+    <p>Transform happens <em>before</em> loading into the warehouse. A separate ETL server (Informatica, SSIS, Talend) handles transformation logic. Traditional approach — necessary when warehouse compute was expensive and limited.</p>
+  </div>
+  <div class="card green">
+    <div class="card-title">ELT — Extract, Load, Transform</div>
+    <p>Load raw data first, transform <em>inside</em> the warehouse using its own compute power. Modern approach — made possible by cheap, scalable cloud warehouse compute (Snowflake, BigQuery). dbt is the dominant transformation tool in ELT workflows.</p>
+  </div>
+</div>
+
+<h3>Kimball vs Inmon</h3>
+
+<table>
+  <tr><th></th><th>Kimball (bottom-up)</th><th>Inmon (top-down)</th></tr>
+  <tr><td><strong>Approach</strong></td><td>Build dimensional data marts first, integrate later</td><td>Build enterprise-wide normalized model first, derive marts</td></tr>
+  <tr><td><strong>Core model</strong></td><td>Star schema (denormalized)</td><td>3NF enterprise data warehouse</td></tr>
+  <tr><td><strong>Speed to value</strong></td><td>Fast — individual marts deliver value quickly</td><td>Slow — requires full enterprise modeling upfront</td></tr>
+  <tr><td><strong>Integration risk</strong></td><td>Conformed dimensions required to avoid silos</td><td>Built-in from the start</td></tr>
+  <tr><td><strong>Modern usage</strong></td><td>Gold layer of a lakehouse — consumption-ready</td><td>Influences silver layer design and enterprise governance</td></tr>
+</table>
+
+
+<!-- ============================================================ -->
+<!-- BLOCK 4 -->
+<!-- ============================================================ -->
+<h2 id="b4"><span class="blk">4</span> The lakehouse convergence</h2>
+
+<h3>Three eras of analytical data architecture</h3>
+
+<div class="card">
+  <div class="card-title">Data warehouse (1990s–2010s)</div>
+  <p>Schema-on-write. Structured data only. Expensive proprietary storage (Teradata, Netezza, Oracle Exadata). Strong governance, ACID transactions, reliable. But rigid — adding new data sources or schema changes required significant rework, and unstructured data (logs, images, JSON) didn't fit.</p>
+</div>
+
+<div class="card">
+  <div class="card-title">Data lake (2010s)</div>
+  <p>Schema-on-read. Cheap object storage (HDFS, then S3/ADLS/GCS). Handles any data type — structured, semi-structured, unstructured. But lacked ACID transactions, schema enforcement, and data quality guarantees. The "data swamp" problem: data goes in, nobody trusts what comes out.</p>
+</div>
+
+<div class="card green">
+  <div class="card-title">Data lakehouse (2020s–present)</div>
+  <p>The convergence. Open table formats bring warehouse-grade reliability to lake storage: ACID transactions, schema enforcement, time travel (query historical snapshots), partition evolution — all on top of cheap cloud object storage. You get warehouse trust at lake economics. This is the dominant new-build architecture pattern in 2025.</p>
+</div>
+
+<h3>Open table formats — the enabling technology</h3>
+
+<table>
+  <tr><th>Format</th><th>Origin</th><th>Philosophy</th></tr>
+  <tr><td><strong>Delta Lake</strong></td><td>Databricks</td><td>Spark-native simplicity. Transaction log tracks file-level changes. Dominant in the Databricks ecosystem.</td></tr>
+  <tr><td><strong>Apache Iceberg</strong></td><td>Netflix → Apache</td><td>Vendor-neutral openness. Snapshot-based metadata. Adopted by Snowflake, AWS, Dremio, and increasingly the default open standard.</td></tr>
+  <tr><td><strong>Apache Hudi</strong></td><td>Uber → Apache</td><td>Optimized for streaming updates and upserts/deletes. Strong for CDC (change data capture) workloads.</td></tr>
+</table>
+
+<p>All three provide ACID transactions, time travel, schema evolution, and partition pruning on files stored in object storage. They achieve this by tracking <em>metadata about files</em> (manifests, snapshot logs) rather than relying on directory structures like legacy Hive tables.</p>
+
+<h3>Medallion architecture</h3>
+
+<p>The modern replacement for monolithic ETL pipelines. Data flows through three progressive refinement layers:</p>
+
+<div class="flow-row">
+  <div class="flow-box" style="background: #f5e6d3; color: #8b5e34;">Bronze</div>
+  <span class="flow-arrow">→</span>
+  <div class="flow-box" style="background: #e0e8e4; color: #3d6b55;">Silver</div>
+  <span class="flow-arrow">→</span>
+  <div class="flow-box" style="background: #fef3c7; color: #92400e;">Gold</div>
+</div>
+
+<div class="grid3">
+  <div class="card">
+    <div class="card-title"><span class="badge" style="background:#f5e6d3;color:#8b5e34;">Bronze</span> Raw ingestion</div>
+    <p>Exactly as received from source systems. Append-only, idempotent. The single source of truth — you can always replay from here. No business logic applied.</p>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="badge" style="background:#e0e8e4;color:#3d6b55;">Silver</span> Cleaned &amp; conformed</div>
+    <p>Deduplication, type casting, schema enforcement, null handling, cross-source joins. This is where data quality happens. Conformed dimensions emerge here.</p>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="badge" style="background:#fef3c7;color:#92400e;">Gold</span> Business-ready</div>
+    <p>Aggregated, modeled, consumption-ready. <strong>Star schemas live here</strong> — Kimball methodology didn't die, it moved to the gold layer. This is what analysts and BI tools query.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- BLOCK 5 -->
+<!-- ============================================================ -->
+<h2 id="b5"><span class="blk">5</span> The modern platform landscape</h2>
+
+<p>The data warehousing market is projected to grow from $34B (2024) to $70B (2029). These are the platforms that dominate:</p>
+
+<table>
+  <tr><th>Platform</th><th>Type</th><th>Key characteristics</th></tr>
+  <tr><td><strong>Snowflake</strong></td><td>Cloud warehouse</td><td>Separation of storage and compute. Near-zero admin. Multi-cloud. Strong structured/semi-structured support. Increasingly adding lakehouse features (Iceberg tables, Snowpark).</td></tr>
+  <tr><td><strong>Databricks</strong></td><td>Lakehouse</td><td>Built on Spark + Delta Lake. Strongest ML/AI integration. Unity Catalog for governance. The lakehouse pioneer.</td></tr>
+  <tr><td><strong>Google BigQuery</strong></td><td>Serverless warehouse</td><td>Fully managed, pay-per-query. Zero infrastructure to manage. Strong for ad-hoc analysis and organizations already in GCP.</td></tr>
+  <tr><td><strong>Microsoft Fabric</strong></td><td>Unified analytics</td><td>Integrates Power BI, OneLake, Synapse, Data Factory. Medallion architecture built-in. Strong for Microsoft-heavy organizations.</td></tr>
+  <tr><td><strong>Amazon Redshift</strong></td><td>Cloud warehouse</td><td>AWS-native. Redshift Spectrum queries S3 data directly. Tight integration with the AWS ecosystem (Glue, Athena, SageMaker).</td></tr>
+</table>
+
+<div class="card blue">
+<div class="card-title">The convergence trend</div>
+<p>Warehouses are adding lake features (Snowflake supports Iceberg, BigQuery can query Cloud Storage directly). Lakehouses are adding warehouse features (Databricks SQL Warehouse delivers BI-grade performance). The architectural distinction is blurring — the winner depends on your primary workload mix and existing ecosystem, not a fundamental technology difference.</p>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- BLOCK 6 -->
+<!-- ============================================================ -->
+<h2 id="b6"><span class="blk">6</span> The semantic layer</h2>
+
+<h3>The problem</h3>
+
+<p>Sales says revenue is $18M. Finance says $17.2M. Both are "correct" — they're just calculated differently (different filters, different date logic, different currency handling). This inconsistency across teams and tools is the single most common source of organizational distrust in data.</p>
+
+<h3>Legacy solution → modern solution</h3>
+
+<p>The legacy approach was to bake metric logic into <strong>OLAP cubes</strong> — pre-aggregated, pre-defined. This solved consistency but created rigidity (new dimensions required rebuilding the cube) and vendor lock-in.</p>
+
+<p>The modern approach: a <strong>semantic layer</strong> that defines metrics once, in code, and serves them to every consuming tool (BI dashboards, notebooks, AI agents, APIs).</p>
+
+<table>
+  <tr><th>Solution</th><th>Approach</th><th>Best for</th></tr>
+  <tr><td><strong>dbt Semantic Layer / MetricFlow</strong></td><td>Metrics-as-code in YAML, version-controlled in Git, warehouse-native SQL execution</td><td>Multi-cloud, vendor-neutral environments</td></tr>
+  <tr><td><strong>Cube.dev</strong></td><td>OLAP-style pre-aggregation as a service, REST/GraphQL API</td><td>Embedded analytics, sub-second latency requirements</td></tr>
+  <tr><td><strong>Snowflake Semantic Views</strong></td><td>Native database objects storing metric definitions</td><td>All-Snowflake environments</td></tr>
+  <tr><td><strong>Databricks Metric Views</strong></td><td>Unity Catalog-governed metric definitions</td><td>Lakehouse-centric organizations</td></tr>
+</table>
+
+<div class="card green">
+<div class="card-title">Why AI cares about the semantic layer</div>
+<p>LLMs querying a semantic layer are dramatically more accurate than LLMs querying raw tables. The semantic layer provides the business context (what "revenue" means, which filters to apply, how dimensions join) that models need to generate correct SQL. The semantic layer is becoming AI infrastructure, not just BI infrastructure.</p>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- BLOCK 7 -->
+<!-- ============================================================ -->
+<h2 id="b7"><span class="blk">7</span> Real-time analytics</h2>
+
+<h3>Batch vs streaming</h3>
+
+<p>Traditional warehouses operate on batch cycles — nightly or hourly ETL loads. The data is always at least hours behind reality. Increasingly, business decisions require data that is seconds or minutes old, not hours.</p>
+
+<div class="grid2">
+  <div class="card">
+    <div class="card-title">Streaming infrastructure</div>
+    <p><strong>Apache Kafka</strong> — distributed event streaming platform, the industry standard. <strong>Amazon Kinesis</strong> — AWS-native streaming. <strong>Google Pub/Sub</strong> — GCP-native. These systems ingest millions of events per second and deliver them to consumers in real time.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">Real-time OLAP engines</div>
+    <p><strong>ClickHouse</strong> — column-oriented, sub-second queries on billions of rows. <strong>Apache Druid</strong> — real-time ingestion + fast aggregation. <strong>Apache Pinot</strong> — LinkedIn-origin, optimized for user-facing analytics. Used when even modern warehouse latency isn't fast enough.</p>
+  </div>
+</div>
+
+<h3>Incremental transformation</h3>
+
+<p>Instead of reprocessing entire tables on each run, modern tools transform only what changed:</p>
+
+<div class="card">
+<p><strong>dbt incremental models</strong> — SQL-based, processes only new/modified rows since the last run. Configurable merge strategies.</p>
+<p><strong>Apache Hudi upserts</strong> — row-level inserts, updates, and deletes on lake storage. Designed for CDC (change data capture) from source systems.</p>
+<p><strong>Spark Structured Streaming</strong> — continuous micro-batch processing on Delta Lake tables.</p>
+</div>
+
+<h3>Use cases that demand real-time</h3>
+
+<p>Fraud detection (decisions in milliseconds), dynamic pricing (react to demand signals), operational dashboards (warehouse throughput, system health), IoT sensor analytics (manufacturing, logistics), real-time personalization (recommendations, ad targeting).</p>
+
+
+<!-- ============================================================ -->
+<!-- BLOCK 8 -->
+<!-- ============================================================ -->
+<h2 id="b8"><span class="blk">8</span> Governance &amp; quality</h2>
+
+<p>Governance is where data warehouse projects succeed or fail. The technology is secondary — the organizational discipline around data ownership, quality, and access control is what determines whether anyone trusts the numbers.</p>
+
+<h3>Data catalogs</h3>
+
+<p>A catalog answers: <em>what data exists, who owns it, where did it come from, and is it any good?</em></p>
+
+<table>
+  <tr><th>Catalog</th><th>Context</th></tr>
+  <tr><td><strong>Unity Catalog</strong></td><td>Databricks-native. Governs tables, models, notebooks, dashboards in one place.</td></tr>
+  <tr><td><strong>Snowflake Horizon</strong></td><td>Snowflake-native. Built-in discovery, lineage, access policies.</td></tr>
+  <tr><td><strong>Alation / Atlan</strong></td><td>Third-party, vendor-neutral catalogs. Work across multiple platforms.</td></tr>
+</table>
+
+<h3>Lineage</h3>
+
+<p>Column-level tracking from source system to final dashboard. When a number looks wrong, lineage lets you trace it backwards through every transformation to the originating record. Critical for debugging, auditing, and regulatory compliance.</p>
+
+<h3>Access control</h3>
+
+<p><strong>Row-level security</strong> — a sales rep sees only their region's data. <strong>Column masking</strong> — PII columns are masked for non-privileged users. <strong>Role-based access</strong> — permissions managed by role (analyst, engineer, admin), not individual user. These are now built into platforms (Snowflake, Databricks) rather than bolted on after the fact.</p>
+
+<h3>Data quality tooling</h3>
+
+<div class="grid3">
+  <div class="card">
+    <div class="card-title">dbt tests</div>
+    <p>Schema tests (not null, unique, accepted values, referential integrity) defined in YAML alongside your models. Run on every pipeline execution.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">Great Expectations</div>
+    <p>Python-based. Define "expectations" (column ranges, distribution shapes, row counts) as code. Generates data quality reports.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">Soda</div>
+    <p>SQL-based checks with a YAML config. Integrates with orchestrators (Airflow, Dagster). Monitors data quality in production.</p>
+  </div>
+</div>
+
+<h3>Data Vault 2.0</h3>
+
+<p>An alternative modeling methodology optimized for the silver layer. Three building blocks: <strong>Hubs</strong> (business entities with a unique key), <strong>Links</strong> (relationships between hubs), <strong>Satellites</strong> (descriptive attributes with full history). Designed for auditability, multi-source integration, and handling schema changes gracefully. Growing adoption in regulated industries (banking, healthcare) where full traceability is non-negotiable.</p>
+
+
+<!-- ============================================================ -->
+<!-- BLOCK 9 -->
+<!-- ============================================================ -->
+<h2 id="b9"><span class="blk">9</span> The professional landscape</h2>
+
+<table>
+  <tr><th>Role</th><th>Owns</th><th>Core tools</th></tr>
+  <tr><td><strong>Data engineer</strong></td><td>Pipelines, infrastructure, bronze → silver transformation, orchestration</td><td>Python, SQL, Spark, Airflow/Dagster, Kafka, dbt, cloud platform</td></tr>
+  <tr><td><strong>Analytics engineer</strong></td><td>Gold layer, semantic layer, metric definitions, data modeling</td><td>dbt, SQL, Git, BI tools, Jinja, YAML</td></tr>
+  <tr><td><strong>Data analyst</strong></td><td>Insights, dashboards, ad-hoc analysis, stakeholder communication</td><td>SQL, Tableau/Power BI/Looker, Excel, basic Python</td></tr>
+  <tr><td><strong>Data architect</strong></td><td>Platform selection, modeling standards, governance policies, cost optimization</td><td>Cloud platforms, catalog tools, modeling tools, Terraform/IaC</td></tr>
+</table>
+
+<div class="card green">
+<div class="card-title">Analytics engineer — the fastest-growing role</div>
+<p>Emerged in the late 2010s as the bridge between data engineering and data analysis. Owns the transformation layer (dbt models), dimensional models, and metric definitions. Doesn't build pipelines from scratch (that's the data engineer) and doesn't build dashboards (that's the analyst) — instead ensures that the data flowing between them is modeled correctly, tested, documented, and trustworthy.</p>
+</div>
+
+<div class="card">
+<div class="card-title">The universal toolkit</div>
+<p>Across all four roles, the common denominators are: <strong>SQL</strong> (still the lingua franca of data — every platform speaks it), <strong>dbt</strong> (the transformation standard), <strong>Python</strong> (for everything SQL can't do), <strong>one cloud platform</strong> (Snowflake, Databricks, or BigQuery — know at least one deeply), <strong>one BI tool</strong> (Tableau, Power BI, or Looker — the consumption layer). The dimensional modeling, OLAP operations, and warehouse architecture concepts from this lecture are the vocabulary that makes all of these tools intelligible.</p>
+</div>
+
+</div><!-- /main -->
+
+<script>
+// Simple scroll-spy for nav
+const sections = document.querySelectorAll('h2[id]');
+const links = document.querySelectorAll('.nav a');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(s => {
+    if (window.scrollY >= s.offsetTop - 120) current = s.id;
+  });
+  links.forEach(a => {
+    a.classList.remove('active');
+    if (a.getAttribute('href') === '#' + current) a.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>
