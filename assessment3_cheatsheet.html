@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assessment 3 — Cheatsheet</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #fafaf8; --surface: #fff; --surface2: #f3f2ee; --border: #e2e0d8;
+  --text: #2c2c2a; --text-dim: #6e6d68; --heading: #1a1a18;
+  --accent: #1a6b4e; --accent-light: #e8f5ee;
+  --amber: #b45309; --amber-light: #fef3e2;
+  --blue: #1d5fa0; --blue-light: #edf4fc;
+  --red: #b91c1c; --red-light: #fef2f2;
+  --purple: #6d28d9; --purple-light: #f3eefb;
+  --code-bg: #f5f4f0; --code-border: #e8e6de;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; line-height: 1.7; font-size: 15px; }
+
+.nav { position: fixed; top: 0; left: 0; width: 240px; height: 100vh; overflow-y: auto; background: var(--surface); border-right: 1px solid var(--border); padding: 1.5rem 1rem; z-index: 10; }
+.nav-title { font-family: 'Source Serif 4', serif; font-size: 0.95rem; font-weight: 700; color: var(--heading); margin-bottom: 1.2rem; line-height: 1.3; }
+.nav a { display: block; padding: 0.3rem 0.5rem; color: var(--text-dim); text-decoration: none; font-size: 0.78rem; border-radius: 4px; line-height: 1.35; margin: 0.1rem 0; }
+.nav a:hover { background: var(--surface2); color: var(--heading); }
+.nav a.active { background: var(--accent-light); color: var(--accent); font-weight: 500; }
+.nav .sep { height: 1px; background: var(--border); margin: 0.6rem 0; }
+
+.main { margin-left: 240px; max-width: 800px; padding: 2.5rem 3rem 6rem; }
+
+h1 { font-family: 'Source Serif 4', serif; font-size: 2rem; color: var(--heading); font-weight: 700; margin-bottom: 0.3rem; line-height: 1.2; }
+.hero-sub { color: var(--text-dim); font-size: 0.92rem; margin-bottom: 2.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
+
+h2 { font-family: 'Source Serif 4', serif; font-size: 1.35rem; color: var(--heading); font-weight: 700; margin: 2.5rem 0 0.8rem; padding-top: 1.2rem; display: flex; align-items: center; gap: 0.6rem; }
+h2 .q { display: inline-flex; align-items: center; justify-content: center; min-width: 26px; height: 26px; padding: 0 7px; background: var(--accent); color: #fff; border-radius: 5px; font-family: 'DM Sans', sans-serif; font-size: 0.72rem; font-weight: 700; flex-shrink: 0; }
+
+h3 { color: var(--accent); font-size: 0.92rem; font-weight: 700; margin: 1.4rem 0 0.4rem; }
+p { margin-bottom: 0.7rem; }
+strong { color: var(--heading); }
+
+.task { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin: 0.6rem 0; position: relative; padding-left: 2.4rem; }
+.task::before { content: '☐'; position: absolute; left: 0.9rem; top: 1rem; font-size: 1rem; color: var(--accent); }
+.task.critical { border-left: 3px solid var(--red); }
+.task.critical::before { content: '⚠'; color: var(--red); }
+
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.1rem 1.3rem; margin: 0.6rem 0; }
+.card.green { border-left: 3px solid var(--accent); background: var(--accent-light); }
+.card.amber { border-left: 3px solid var(--amber); background: var(--amber-light); }
+.card.blue { border-left: 3px solid var(--blue); background: var(--blue-light); }
+.card.red { border-left: 3px solid var(--red); background: var(--red-light); }
+.card.purple { border-left: 3px solid var(--purple); background: var(--purple-light); }
+
+.card-title { font-weight: 700; color: var(--heading); margin-bottom: 0.3rem; font-size: 0.88rem; }
+
+.weight { display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 0.7rem; font-family: 'JetBrains Mono', monospace; font-weight: 600; background: var(--amber-light); color: var(--amber); margin-left: 0.3rem; }
+
+code { font-family: 'JetBrains Mono', monospace; font-size: 0.82em; background: var(--code-bg); padding: 1px 5px; border-radius: 3px; }
+
+table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin: 0.6rem 0; }
+th { text-align: left; padding: 0.45rem 0.7rem; background: var(--surface2); color: var(--heading); font-weight: 600; font-size: 0.75rem; letter-spacing: 0.3px; border-bottom: 2px solid var(--border); }
+td { padding: 0.4rem 0.7rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin: 0.6rem 0; }
+
+@media (max-width: 900px) { .nav { display: none; } .main { margin-left: 0; padding: 2rem 1.2rem 4rem; } .grid2 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <div class="nav-title">BCO7004 Assessment 3 Cheatsheet</div>
+  <a href="#overview">Overview &amp; weights</a>
+  <div class="sep"></div>
+  <a href="#q1">Q1: Case study questions</a>
+  <a href="#q2">Q2: Warehouse management</a>
+  <a href="#q3">Q3: Product promotion</a>
+  <a href="#q4">Q4: Architecture choices</a>
+  <a href="#q5">Q5: Neo4j solution</a>
+  <a href="#q6">Q6: MongoDB solution</a>
+  <a href="#q7">Q7: Research topic</a>
+  <div class="sep"></div>
+  <a href="#pres">Presentation</a>
+  <a href="#pitfalls">Common pitfalls</a>
+</div>
+
+<div class="main">
+
+<h1>Assessment 3 — Cheatsheet</h1>
+<p class="hero-sub">BCO7004 Business Data Mining &amp; Data Warehousing — Group Report &amp; Presentation<br>Acme Inc Case Study (SAGE Business Cases, Krishnamoorthy 2014)</p>
+
+<!-- ============================================================ -->
+<h2 id="overview"><span class="q">0</span> Overview &amp; weights</h2>
+
+<div class="card amber">
+<div class="card-title">Report = 30% | Presentation = 10% | Total = 40% of overall</div>
+<p>7 questions in the report. Each student presents 3.5 minutes (15 min for a group of 4). Presentation in session 13.</p>
+</div>
+
+<div class="card green">
+<div class="card-title">The golden rule from the brief</div>
+<p>"Solutions should be <strong>data-oriented</strong>, and avoid general solutions." Every answer needs specific data models, schemas, queries, or architecture diagrams — not vague management-speak.</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="q1"><span class="q">Q1</span> Case study questions <span class="weight">Report</span></h2>
+
+<p>Five sub-questions drawn from the conclusion of the case. Address each one explicitly.</p>
+
+<h3>1a. Pitfalls integrating DW with existing IT systems</h3>
+<div class="task">Identify Acme's heterogeneity problem: multiple ERP vendors, different DB products/versions, inconsistent data definitions across 150+ stores</div>
+<div class="task">List specific integration pitfalls: data type mismatches, inconsistent naming conventions (e.g., <code>customer_id</code> vs <code>cust_no</code>), different date formats, duplicate records across systems, missing foreign keys</div>
+<div class="task">Propose ETL/ELT as the solution layer — explain how staging area resolves inconsistencies before loading into the warehouse</div>
+
+<h3>1b. Design considerations for analytic requirements</h3>
+<div class="task">Reference the Kimball four-step process from the case: (1) select business process, (2) declare grain, (3) choose dimensions, (4) identify facts</div>
+<div class="task">Walk through this for the <strong>Retail Product Sales</strong> process — grain = transaction line item, dimensions = Date/Product/Store/Customer/Promotion/Geography, facts = quantity/revenue/margin</div>
+<div class="task">Reference the Business Matrix (Exhibit 3) — show how each business process maps to dimensions</div>
+<div class="task">Discuss star vs snowflake schema trade-offs for Acme's use case</div>
+
+<h3>1c. Sizing and hardware estimation</h3>
+<div class="task">Calculate estimated data volume: 150 stores × ~100 transactions/day × 365 days × average row size</div>
+<div class="task">Factor in dimension table sizes (12,000 SKUs × attributes)</div>
+<div class="task">Discuss historical retention: grain trade-off from the case — 90 days at transaction level, monthly aggregation for older data</div>
+<div class="task">Mention modern alternative: cloud-native (Snowflake/BigQuery) eliminates hardware sizing — pay per usage</div>
+
+<h3>1d. Architectural choices</h3>
+<div class="task">Reference Exhibit 6 directly — compare the four architectures shown: Independent Data Mart, Data Mart with Linked Dimensions, Enterprise DW, Virtual DW</div>
+<div class="task">Recommend <strong>Enterprise DW + Data Mart</strong> (the combined option in Exhibit 6) with justification specific to Acme's multi-store, multi-region structure</div>
+
+<h3>1e. Change management &amp; communication</h3>
+<div class="task">Executive sponsorship (Steve Barley as champion)</div>
+<div class="task">Training plan for regional managers — they need to use the analytical tools</div>
+<div class="task">Phased rollout: pilot one data mart (sales) → prove value → expand to inventory, warehouse, promotions</div>
+<div class="task">Data stewardship — assign ownership of each dimension (who maintains the product master?)</div>
+
+
+<!-- ============================================================ -->
+<h2 id="q2"><span class="q">Q2</span> Warehouse management <span class="weight">Report</span></h2>
+
+<h3>2.1 Forecasting accuracy (30-40% deviation)</h3>
+<div class="task">Design a <strong>fact_inventory</strong> table — grain: one row per product per store per week. Measures: quantity_on_hand, quantity_ordered, quantity_received, stockout_flag</div>
+<div class="task">Design supporting dimensions: dim_product (with brand, category hierarchy), dim_store, dim_date (with week/month/quarter for time-series)</div>
+<div class="task">Show how OLAP operations on this fact table enable demand pattern analysis — roll-up by category/region to find systematic over/under-forecasting</div>
+<div class="task">Propose time-series analysis on historical sales data from <code>fact_sales</code> to generate data-driven forecasts (moving averages, seasonal decomposition)</div>
+<div class="task critical">Be specific: show the star schema ERD for the inventory data mart, not just describe it in words</div>
+
+<h3>2.2 Delayed shipments + warehouse estimation</h3>
+<div class="task">Design a <strong>fact_order_fulfillment</strong> table — grain: one row per order per fulfillment stage. Measures: picking_time, packaging_time, shipping_time, transport_time, delivery_time, total_lead_time</div>
+<div class="task">Dimensions: dim_product, dim_store, dim_warehouse, dim_transporter, dim_date</div>
+<div class="task">Show queries that answer the case's warehouse user questions: avg/min/max ship time by store, bottleneck identification by pipeline stage</div>
+<div class="task">Present a warehouse architecture diagram: source systems → ETL → staging → data mart → OLAP/reporting</div>
+
+
+<!-- ============================================================ -->
+<h2 id="q3"><span class="q">Q3</span> Product promotion <span class="weight">Report</span></h2>
+
+<div class="task">Design a <strong>fact_promotion_sales</strong> or extend <code>fact_sales</code> with a promotion dimension (which is what the Acme star schema already does)</div>
+<div class="task">dim_promotion: promo_key, promo_name, promo_type, discount_pct, start_date, end_date, media_channel</div>
+<div class="task">Show OLAP operations on promotional data:
+  <br>— <strong>Slice</strong>: sales during "Diwali Dhamaka" promotion only
+  <br>— <strong>Dice</strong>: Diwali + South region + TVs category
+  <br>— <strong>Roll-up</strong>: promotion effectiveness by promo_type → quarter → year
+  <br>— <strong>Drill-down</strong>: from promo_type down to individual promo_name down to specific SKU
+</div>
+<div class="task">Promotion effectiveness metrics: incremental revenue (promoted vs baseline), discount ROI, margin impact</div>
+<div class="task">Loyalty card program: show how <code>dim_customer</code> with loyalty_member flag enables segmented analysis — loyalty vs walk-in spend, frequency, margin</div>
+<div class="task">Customer targeting: explain how data mining models (RFM segmentation, market basket analysis) can be built on top of the star schema</div>
+<div class="task critical">The brief says "integrated view across multiple stores, slicing and dicing, multi-dimensional analysis" — your answer must demonstrate these specifically with SQL or visual examples</div>
+
+
+<!-- ============================================================ -->
+<h2 id="q4"><span class="q">Q4</span> Architecture choices <span class="weight">Report</span></h2>
+
+<div class="task">Describe each architecture from Exhibit 6 with pros/cons:</div>
+
+<table>
+  <tr><th>Architecture</th><th>Pros</th><th>Cons</th><th>Acme fit</th></tr>
+  <tr><td><strong>Independent Data Mart</strong></td><td>Fast to build, low cost, focused</td><td>Data silos, no cross-mart integration, inconsistent dimensions</td><td>Poor — Acme needs cross-store/region integration</td></tr>
+  <tr><td><strong>Linked Dimension Data Mart</strong></td><td>Shared (conformed) dimensions, some integration</td><td>Still decentralized, complex to manage linkages</td><td>Acceptable — good if phased rollout needed</td></tr>
+  <tr><td><strong>Enterprise DW</strong></td><td>Single source of truth, full integration, consistent</td><td>Expensive, slow to build, high upfront commitment</td><td>Ideal long-term but risky as first step</td></tr>
+  <tr><td><strong>Enterprise DW + Data Mart</strong></td><td>Best of both — centralized warehouse feeds department-specific marts</td><td>Most complex, highest cost</td><td>Best fit — recommended for Acme</td></tr>
+  <tr><td><strong>Virtual DW</strong></td><td>No data duplication, queries source systems directly</td><td>Slow, dependent on source system availability</td><td>Not suitable — Acme's sources are heterogeneous and inconsistent</td></tr>
+</table>
+
+<div class="task">Define selection criteria/benchmarks: data volume, number of source systems, analytical complexity, budget, team capability, time-to-value</div>
+
+<h3>Cloud-based architecture (pros &amp; cons)</h3>
+<div class="task">Pros: no hardware sizing needed, elastic compute, pay-per-use, managed infrastructure, faster time-to-value</div>
+<div class="task">Cons: ongoing operational cost (vs one-time capital), data sovereignty concerns (India regulations), vendor lock-in risk, network dependency, data transfer costs</div>
+<div class="task">Name specific platforms: Snowflake, Google BigQuery, AWS Redshift, Azure Synapse — explain which would suit Acme and why</div>
+
+
+<!-- ============================================================ -->
+<h2 id="q5"><span class="q">Q5</span> Neo4j solution <span class="weight">Report</span></h2>
+
+<div class="card blue">
+<div class="card-title">Key framing: Neo4j is not a replacement for the DW — it solves specific graph problems</div>
+<p>Identify which Acme problems are graph-shaped: supply chain traceability, product-customer-store relationships, recommendation engines, root cause analysis for damaged shipments.</p>
+</div>
+
+<div class="task">Define the graph model — nodes: Store, Product, Customer, Warehouse, Supplier, Transporter, Shipment</div>
+<div class="task">Define relationships: <code>(Customer)-[:PURCHASED]->(Product)</code>, <code>(Store)-[:RECEIVED_FROM]->(Warehouse)</code>, <code>(Shipment)-[:TRANSPORTED_BY]->(Transporter)</code>, <code>(Product)-[:SUPPLIED_BY]->(Supplier)</code></div>
+<div class="task">Architecture: source systems → ETL → Neo4j AuraDB + relational DW (hybrid approach)</div>
+<div class="task">Use cases:
+  <br>— Supply chain path analysis: trace a product from supplier → warehouse → store → customer
+  <br>— Recommendation engine: customers who bought X also bought Y (collaborative filtering via graph traversal)
+  <br>— Root cause for damaged items: traverse shipment → transporter → warehouse → handling stage to identify bottleneck
+</div>
+<div class="task">Show sample Cypher queries for at least 2 use cases</div>
+<div class="task">Steps: (1) identify graph-suitable problems, (2) design node/relationship model, (3) define ETL from operational systems, (4) build and load, (5) query and analyze</div>
+
+
+<!-- ============================================================ -->
+<h2 id="q6"><span class="q">Q6</span> MongoDB solution <span class="weight">Report</span></h2>
+
+<div class="card blue">
+<div class="card-title">Key framing: MongoDB for semi-structured/unstructured data that doesn't fit the star schema</div>
+<p>Acme has customer surveys, customer profiles (demographic + psychographic), product reviews, social media data — these are document-shaped, not tabular.</p>
+</div>
+
+<div class="task">Identify Acme data suited to document storage: customer survey responses (varying question formats), product reviews (free text + ratings), customer profiles (Exhibit 2 shows CUSTOMER_PROFILE with demographic/psychographic — semi-structured), promotional campaign metadata (mixed media types)</div>
+<div class="task">Design document collections:
+  <br>— <code>customers</code>: embedded profile, purchase history summary, loyalty data
+  <br>— <code>product_reviews</code>: nested ratings, text, images
+  <br>— <code>surveys</code>: flexible schema per survey version
+</div>
+<div class="task">Architecture: operational systems → MongoDB (flexible ingestion) → aggregation pipeline → feed into DW or serve directly to applications</div>
+<div class="task">Show sample MongoDB aggregation pipeline queries — e.g., average rating by product category, customer sentiment analysis</div>
+<div class="task">Steps: (1) identify document-suitable data, (2) design collections and document structure, (3) ingest from sources, (4) build aggregation pipelines, (5) integrate with DW for combined analytics</div>
+
+
+<!-- ============================================================ -->
+<h2 id="q7"><span class="q">Q7</span> Research topic (1 page) <span class="weight">Report</span></h2>
+
+<div class="card amber">
+<div class="card-title">Pick ONE topic from the list + ONE operational division (sales, promotion, or warehouse)</div>
+<p>The brief links to the Journal of Big Data LOD cloud — use this as a starting point for references. Focus on the latest methods/technology applied to your chosen Acme division.</p>
+</div>
+
+<h3>Recommended pairings (strongest topics for this case)</h3>
+
+<div class="grid2">
+  <div class="card">
+    <div class="card-title">Knowledge graphs + Sales</div>
+    <p>Product knowledge graph linking SKUs, brands, categories, customer preferences. Enables recommendation and cross-selling.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">ML predictive models + Warehouse</div>
+    <p>Demand forecasting models (LSTM, Prophet) trained on historical sales to fix the 30-40% forecast deviation.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">IoT + deep learning + Warehouse</div>
+    <p>Sensor data on shipment conditions (temperature, shock) to reduce damaged goods. Deep learning for anomaly detection.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">Process mining + Warehouse</div>
+    <p>Mine event logs from order fulfillment stages to find bottlenecks in picking → packaging → shipping → delivery pipeline.</p>
+  </div>
+</div>
+
+<div class="task">Structure: (1) define the problem in Acme context, (2) explain the technology/method, (3) describe the proposed architecture, (4) expected outcomes, (5) 3-5 recent references (2022+)</div>
+<div class="task critical">One page only. Be dense. No fluff. Diagram + text is stronger than text only.</div>
+
+
+<!-- ============================================================ -->
+<h2 id="pres"><span class="q">P</span> Presentation <span class="weight">10%</span></h2>
+
+<div class="task">3.5 minutes per student (15 min for group of 4)</div>
+<div class="task">Each student presents a different subset of the 7 questions — divide them up front</div>
+<div class="task">Lead with diagrams/ERDs/architecture visuals — they communicate faster than slides of text</div>
+<div class="task">Show MySQL Workbench screenshots of the star schema ERD and query results as evidence</div>
+<div class="task">Practice timing — 3.5 minutes is very short, you need to be precise</div>
+
+
+<!-- ============================================================ -->
+<h2 id="pitfalls"><span class="q">!</span> Common pitfalls to avoid</h2>
+
+<div class="card red">
+<div class="card-title">Generic answers</div>
+<p>Don't write "a data warehouse integrates data from multiple sources." Instead: "Acme's 150 stores use different ERP vendors and DB products. The ETL staging area resolves <code>customer_id</code> vs <code>cust_no</code> naming inconsistencies, standardizes date formats from DD/MM/YYYY to ISO 8601, and deduplicates customer records across store databases using fuzzy matching on name + phone number."</p>
+</div>
+
+<div class="card red">
+<div class="card-title">No data models</div>
+<p>Every question that mentions "solution" or "architecture" needs a diagram — star schema ERD, architecture diagram, or graph model. Text-only answers will score poorly against the "data-oriented" requirement.</p>
+</div>
+
+<div class="card red">
+<div class="card-title">Ignoring the case exhibits</div>
+<p>Reference Exhibit 2 (ER diagram), Exhibit 3 (Business Matrix), Exhibit 5 (OLAP operations), Exhibit 6 (architecture alternatives) explicitly. The markers expect to see engagement with the case materials.</p>
+</div>
+
+<div class="card red">
+<div class="card-title">Treating Q5/Q6 as replacements for the DW</div>
+<p>Neo4j and MongoDB are <strong>complementary</strong> to the data warehouse, not replacements. Frame them as solving specific problems (graph traversal, semi-structured data) that the star schema can't handle efficiently. A hybrid architecture is the correct answer.</p>
+</div>
+
+<div class="card red">
+<div class="card-title">Forgetting the Pilot Data Mart requirements (pages 8-9)</div>
+<p>The assessment brief specifically says "taking detailed attention to the information presented in Pilot Data Mart Solution - Key Analytic Requirements." Those bullet-point queries from retail and warehouse users are your requirements spec — your dimensional models should demonstrably answer them.</p>
+</div>
+
+</div>
+
+<script>
+const sections = document.querySelectorAll('h2[id]');
+const links = document.querySelectorAll('.nav a');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(s => { if (window.scrollY >= s.offsetTop - 100) current = s.id; });
+  links.forEach(a => { a.classList.remove('active'); if (a.getAttribute('href') === '#' + current) a.classList.add('active'); });
+});
+</script>
+</body>
+</html>
