@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Data Warehousing — From MySQL to Multidimensional Analysis</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fafaf8;--surface:#fff;--surface2:#f3f2ee;--border:#e2e0d8;--text:#2c2c2a;--text-dim:#6e6d68;--heading:#1a1a18;--accent:#1a6b4e;--accent-light:#e8f5ee;--amber:#b45309;--amber-light:#fef3e2;--blue:#1d5fa0;--blue-light:#edf4fc;--red:#b91c1c;--red-light:#fef2f2;--purple:#6d28d9;--purple-light:#f3eefb;--code-bg:#f5f4f0;--code-border:#e8e6de}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;line-height:1.75;font-size:15.5px}
+.nav{position:fixed;top:0;left:0;width:250px;height:100vh;overflow-y:auto;background:var(--surface);border-right:1px solid var(--border);padding:1.5rem 1rem;z-index:10}
+.nav-title{font-family:'Source Serif 4',serif;font-size:0.9rem;font-weight:700;color:var(--heading);margin-bottom:1.2rem;line-height:1.3}
+.nav a{display:block;padding:0.28rem 0.5rem;color:var(--text-dim);text-decoration:none;font-size:0.77rem;border-radius:4px;line-height:1.35;margin:0.08rem 0}
+.nav a:hover{background:var(--surface2);color:var(--heading)}
+.nav a.active{background:var(--accent-light);color:var(--accent);font-weight:500}
+.nav .sep{height:1px;background:var(--border);margin:0.5rem 0}
+.main{margin-left:250px;max-width:790px;padding:2.5rem 3rem 8rem}
+h1{font-family:'Source Serif 4',serif;font-size:2.2rem;color:var(--heading);font-weight:700;margin-bottom:0.3rem;line-height:1.2}
+.hero-sub{color:var(--text-dim);font-size:0.92rem;margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border)}
+h2{font-family:'Source Serif 4',serif;font-size:1.45rem;color:var(--heading);font-weight:700;margin:3rem 0 0.8rem;padding-top:1.2rem;display:flex;align-items:center;gap:0.6rem}
+h2 .n{display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:28px;padding:0 8px;background:var(--accent);color:#fff;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:0.75rem;font-weight:700;flex-shrink:0}
+h3{color:var(--accent);font-size:0.95rem;font-weight:700;margin:1.6rem 0 0.4rem;font-family:'DM Sans',sans-serif}
+h4{color:var(--heading);font-size:0.88rem;font-weight:700;margin:1.2rem 0 0.3rem}
+p{margin-bottom:0.8rem}
+strong{color:var(--heading)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:1.2rem 1.4rem;margin:0.7rem 0}
+.card.green{border-left:3px solid var(--accent);background:var(--accent-light)}
+.card.amber{border-left:3px solid var(--amber);background:var(--amber-light)}
+.card.blue{border-left:3px solid var(--blue);background:var(--blue-light)}
+.card.red{border-left:3px solid var(--red);background:var(--red-light)}
+.card.purple{border-left:3px solid var(--purple);background:var(--purple-light)}
+.card-title{font-weight:700;color:var(--heading);margin-bottom:0.35rem;font-size:0.9rem}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0.7rem;margin:0.7rem 0}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.7rem;margin:0.7rem 0}
+pre{background:var(--code-bg);border:1px solid var(--code-border);border-radius:8px;padding:1.1rem 1.3rem;overflow-x:auto;margin:0.7rem 0;font-family:'JetBrains Mono',monospace;font-size:0.8rem;line-height:1.6;color:#4a4a45}
+code{font-family:'JetBrains Mono',monospace;font-size:0.82em;background:var(--code-bg);padding:1px 5px;border-radius:3px}
+.kw{color:var(--accent);font-weight:600}
+.str{color:var(--amber)}
+.cmt{color:var(--text-dim);font-style:italic}
+table{width:100%;border-collapse:collapse;font-size:0.84rem;margin:0.7rem 0}
+th{text-align:left;padding:0.5rem 0.7rem;background:var(--surface2);color:var(--heading);font-weight:600;font-size:0.76rem;letter-spacing:0.3px;border-bottom:2px solid var(--border)}
+td{padding:0.45rem 0.7rem;border-bottom:1px solid var(--border);vertical-align:top}
+.flow-row{display:flex;align-items:center;gap:0;margin:1rem 0;flex-wrap:wrap}
+.flow-box{padding:0.45rem 0.9rem;border-radius:7px;font-size:0.84rem;font-weight:600;text-align:center}
+.flow-arrow{color:var(--text-dim);font-size:1.1rem;padding:0 0.3rem}
+.analogy{background:var(--purple-light);border-left:3px solid var(--purple);border-radius:9px;padding:1.2rem 1.4rem;margin:0.7rem 0}
+.analogy .card-title{color:var(--purple)}
+.vs{display:grid;grid-template-columns:1fr auto 1fr;gap:0.5rem;align-items:start;margin:0.7rem 0}
+.vs-mid{text-align:center;font-weight:700;color:var(--text-dim);padding-top:1.5rem;font-size:0.85rem}
+@media(max-width:900px){.nav{display:none}.main{margin-left:0;padding:2rem 1.2rem 4rem}.grid2,.grid3{grid-template-columns:1fr}.vs{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <div class="nav-title">Data Warehousing — From MySQL to Multidimensional Analysis</div>
+  <a href="#s1">1. Why your MySQL database isn't enough</a>
+  <a href="#s2">2. What is a data warehouse</a>
+  <a href="#s3">3. The star schema</a>
+  <a href="#s4">4. Building a star schema in MySQL</a>
+  <a href="#s5">5. The data cube</a>
+  <a href="#s6">6. OLAP operations</a>
+  <a href="#s7">7. OLAP in SQL</a>
+  <a href="#s8">8. ETL — getting data in</a>
+  <a href="#s9">9. Schema variations</a>
+  <a href="#s10">10. Architecture choices</a>
+  <a href="#s11">11. Modern platforms</a>
+  <a href="#s12">12. Putting it all together</a>
+</div>
+
+<div class="main">
+
+<h1>Data Warehousing</h1>
+<p class="hero-sub">From MySQL to Multidimensional Analysis — a ground-up guide for students who know basic SQL and nothing else</p>
+
+
+<!-- ============================================================ -->
+<h2 id="s1"><span class="n">1</span> Why your MySQL database isn't enough</h2>
+
+<p>You already know how to build a MySQL database. You create tables, define primary keys, set up foreign keys, normalize to avoid redundancy, and write <code>SELECT</code> queries with <code>JOIN</code>s. That type of database is called an <strong>OLTP</strong> system — Online Transaction Processing. It's designed to record things: a sale, a signup, a payment.</p>
+
+<p>But here's the problem. When someone asks a business question like:</p>
+
+<div class="card amber">
+<p><em>"What was our total revenue by product category, by city, by quarter, for the last two years — and how does each quarter compare to the same quarter last year?"</em></p>
+</div>
+
+<p>...your normalized OLTP database makes this painful. You need to join 4-6 tables, write complex aggregations, and the query runs slowly because the database is optimized for recording one transaction at a time, not scanning millions of rows.</p>
+
+<div class="analogy">
+<div class="card-title">Think of it this way</div>
+<p>Your OLTP database is like a cash register. It's great at recording each sale as it happens. But when the CEO asks "which stores are profitable and which should we close?" — nobody pulls out a cash register to answer that. You need a different tool designed for analysis. That tool is a <strong>data warehouse</strong>.</p>
+</div>
+
+<div class="vs">
+  <div class="card">
+    <div class="card-title">OLTP (your MySQL database)</div>
+    <p>Records transactions as they happen</p>
+    <p>Normalized (3NF) to avoid redundancy</p>
+    <p>Optimized for INSERT and UPDATE</p>
+    <p>Current data (today's state)</p>
+    <p>Thousands of short queries/sec</p>
+    <p>Users: clerks, apps, systems</p>
+  </div>
+  <div class="vs-mid">vs</div>
+  <div class="card">
+    <div class="card-title">OLAP (data warehouse)</div>
+    <p>Analyzes historical data for decisions</p>
+    <p>Denormalized for fast reads</p>
+    <p>Optimized for SELECT and aggregation</p>
+    <p>Historical data (years of trends)</p>
+    <p>Fewer but complex, heavy queries</p>
+    <p>Users: managers, analysts, executives</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<h2 id="s2"><span class="n">2</span> What is a data warehouse</h2>
+
+<p>Bill Inmon, considered the father of data warehousing, defined it as:</p>
+
+<div class="card green">
+<p><em>"A data warehouse is a <strong>subject-oriented</strong>, <strong>integrated</strong>, <strong>time-variant</strong>, and <strong>non-volatile</strong> collection of data in support of management's decision-making process."</em></p>
+</div>
+
+<p>Let's unpack each word — because they matter:</p>
+
+<table>
+  <tr><th>Property</th><th>What it means</th><th>MySQL analogy</th></tr>
+  <tr><td><strong>Subject-oriented</strong></td><td>Data organized around business subjects (Sales, Inventory, Customers) not application functions</td><td>Instead of tables per application (POS system, ERP, CRM), you have tables per business topic</td></tr>
+  <tr><td><strong>Integrated</strong></td><td>Data from multiple source systems is cleaned, standardized, and combined into one consistent view</td><td>If Store A calls it <code>cust_id</code> and Store B calls it <code>customer_no</code>, the warehouse resolves this into one <code>customer_key</code></td></tr>
+  <tr><td><strong>Time-variant</strong></td><td>Keeps historical data — you can see what things looked like last month, last year, 3 years ago</td><td>Your OLTP overwrites a customer's address when they move. The warehouse keeps both addresses with effective dates.</td></tr>
+  <tr><td><strong>Non-volatile</strong></td><td>Write-once, read-many. Data is loaded and then only read — never updated or deleted by users</td><td>No <code>UPDATE</code> or <code>DELETE</code> on warehouse tables. This means no transaction locking, no recovery logs — much faster reads.</td></tr>
+</table>
+
+
+<!-- ============================================================ -->
+<h2 id="s3"><span class="n">3</span> The star schema</h2>
+
+<p>The star schema is the fundamental data model in a warehouse. If you learn one thing from this entire lecture, learn this.</p>
+
+<div class="analogy">
+<div class="card-title">The core idea in one sentence</div>
+<p>Separate <strong>what happened</strong> (facts) from <strong>the context in which it happened</strong> (dimensions).</p>
+</div>
+
+<h3>Fact tables — what happened</h3>
+
+<p>A fact table records <strong>business events</strong> — typically transactions. Each row is one measurable event. The table contains two types of columns:</p>
+
+<div class="grid2">
+  <div class="card">
+    <div class="card-title">Foreign keys</div>
+    <p>Pointers to dimension tables. Together, these form the <strong>composite primary key</strong>. They define which product, which store, which customer, which date.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">Measures (facts)</div>
+    <p>Numeric values you want to aggregate: <code>quantity</code>, <code>revenue</code>, <code>cost</code>, <code>gross_margin</code>. These are what you <code>SUM()</code>, <code>AVG()</code>, <code>COUNT()</code> in queries.</p>
+  </div>
+</div>
+
+<h3>Dimension tables — the context</h3>
+
+<p>Dimension tables describe the <strong>who, what, where, when</strong> of each fact. They're typically wide (many columns), denormalized, and contain text attributes used for filtering and grouping.</p>
+
+<pre><span class="cmt">-- This is a dimension table. Notice: lots of descriptive text columns,
+-- single-column primary key, no foreign keys to other dimensions.</span>
+
+<span class="kw">CREATE TABLE</span> dim_product (
+  product_key   <span class="kw">INT PRIMARY KEY</span>,     <span class="cmt">-- surrogate key (warehouse-generated)</span>
+  sku_id        VARCHAR(10),            <span class="cmt">-- natural key (from source system)</span>
+  product_name  VARCHAR(60),
+  brand         VARCHAR(30),
+  category      VARCHAR(30),            <span class="cmt">-- used in GROUP BY, WHERE filters</span>
+  subcategory   VARCHAR(30),
+  unit_price    DECIMAL(10,2)
+);</pre>
+
+<h3>Why "star" schema?</h3>
+
+<p>When you draw the ERD, the fact table sits in the center with dimension tables radiating outward — it looks like a star. There are no joins between dimensions; every dimension connects only to the fact table.</p>
+
+<div class="card green">
+<div class="card-title">The Kimball four-step design process</div>
+<p>Ralph Kimball developed the standard methodology for designing star schemas:</p>
+<p><strong>Step 1.</strong> Select the business process (what are you analyzing? Sales? Inventory? Shipments?)</p>
+<p><strong>Step 2.</strong> Declare the grain (what does one row in the fact table represent? One transaction? One line item? One daily snapshot?)</p>
+<p><strong>Step 3.</strong> Choose the dimensions (the "by" words in business questions — revenue <em>by product</em>, <em>by store</em>, <em>by month</em>)</p>
+<p><strong>Step 4.</strong> Identify the facts (the numeric measures — quantity, revenue, cost, margin)</p>
+</div>
+
+<h3>Grain — the single most important decision</h3>
+
+<p>The grain defines the level of detail in your fact table. Getting this wrong breaks everything downstream.</p>
+
+<div class="grid2">
+  <div class="card">
+    <div class="card-title">Fine grain (transaction line item)</div>
+    <p>One row per product per transaction. Maximum flexibility — you can always aggregate up. But more rows = more storage and slower queries.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">Coarse grain (daily summary)</div>
+    <p>One row per product per store per day. Smaller, faster. But you lose the ability to analyze individual transactions or time-of-day patterns.</p>
+  </div>
+</div>
+
+<div class="card amber">
+<div class="card-title">Rule of thumb</div>
+<p>Start with the finest grain you can. You can always roll up from transaction-level to daily/weekly/monthly. You can never drill down from monthly to daily if the detail wasn't captured.</p>
+</div>
+
+<h3>Surrogate keys vs natural keys</h3>
+
+<p>In your OLTP database, you probably use natural business keys as primary keys — <code>product_id = 'SKU1001'</code>, <code>customer_id = 'C10042'</code>. In a warehouse, we add a <strong>surrogate key</strong> — a system-generated integer that has no business meaning.</p>
+
+<p>Why? Three reasons:</p>
+<p><strong>1. Source system independence</strong> — if Store A uses <code>P-001</code> and Store B uses <code>PROD001</code> for the same product, the warehouse assigns one <code>product_key = 7</code> to both.</p>
+<p><strong>2. History tracking</strong> — if a product changes category, you can have two rows in the dimension: <code>product_key = 7</code> (old category) and <code>product_key = 108</code> (new category), both with the same natural key.</p>
+<p><strong>3. Performance</strong> — integer joins are faster than varchar joins.</p>
+
+
+<!-- ============================================================ -->
+<h2 id="s4"><span class="n">4</span> Building a star schema in MySQL</h2>
+
+<p>Let's build a complete star schema for a retail electronics company. This is real, runnable MySQL code.</p>
+
+<h3>Step 1: The business process is Sales</h3>
+<h3>Step 2: The grain is one row per line item per transaction</h3>
+<h3>Step 3: Dimensions — Date, Store, Product, Customer, Promotion</h3>
+<h3>Step 4: Facts — quantity, unit_price, gross_amount, discount, net_amount, cost, margin</h3>
+
+<h4>The date dimension (every warehouse has one)</h4>
+
+<pre><span class="kw">CREATE TABLE</span> dim_date (
+  date_key      INT <span class="kw">NOT NULL PRIMARY KEY</span>,  <span class="cmt">-- e.g. 20240315 for March 15, 2024</span>
+  full_date     DATE <span class="kw">NOT NULL</span>,
+  day_name      VARCHAR(10),               <span class="cmt">-- Monday, Tuesday, ...</span>
+  day_of_week   TINYINT,                   <span class="cmt">-- 1=Mon, 7=Sun</span>
+  month         TINYINT,
+  month_name    VARCHAR(10),               <span class="cmt">-- January, February, ...</span>
+  quarter       CHAR(2),                   <span class="cmt">-- Q1, Q2, Q3, Q4</span>
+  year          SMALLINT,
+  is_weekend    TINYINT <span class="kw">DEFAULT</span> 0,
+  is_holiday    TINYINT <span class="kw">DEFAULT</span> 0
+);
+
+<span class="cmt">-- Why a separate date table? Because you want to GROUP BY month_name,
+-- filter WHERE is_holiday = 1, or compare quarters — without parsing
+-- dates in every query. The date dimension pre-computes all of this.</span></pre>
+
+<h4>The store dimension</h4>
+
+<pre><span class="kw">CREATE TABLE</span> dim_store (
+  store_key       INT <span class="kw">NOT NULL PRIMARY KEY</span>,
+  store_id        VARCHAR(10),     <span class="cmt">-- natural key from source system</span>
+  store_name      VARCHAR(50),
+  city            VARCHAR(30),
+  state           VARCHAR(30),
+  region          VARCHAR(10),     <span class="cmt">-- North, South, East, West</span>
+  floor_area_sqft INT
+);
+
+<span class="cmt">-- Notice: city, state, region are all in ONE table (denormalized).
+-- In your normalized OLTP, these might be separate tables.
+-- In the warehouse, we denormalize for query simplicity.</span></pre>
+
+<h4>The product dimension</h4>
+
+<pre><span class="kw">CREATE TABLE</span> dim_product (
+  product_key   INT <span class="kw">NOT NULL PRIMARY KEY</span>,
+  sku_id        VARCHAR(10),
+  product_name  VARCHAR(60),
+  brand         VARCHAR(30),
+  category      VARCHAR(30),      <span class="cmt">-- Computers, TVs, Mobile Phones, ...</span>
+  subcategory   VARCHAR(30),      <span class="cmt">-- Laptop, Desktop, LED TV, OLED TV, ...</span>
+  unit_cost     DECIMAL(10,2),
+  unit_price    DECIMAL(10,2)
+);</pre>
+
+<h4>The fact table — everything connects here</h4>
+
+<pre><span class="kw">CREATE TABLE</span> fact_sales (
+  sale_id          INT <span class="kw">NOT NULL PRIMARY KEY</span>,
+  <span class="cmt">-- Foreign keys to every dimension:</span>
+  date_key         INT <span class="kw">NOT NULL</span>,
+  store_key        INT <span class="kw">NOT NULL</span>,
+  product_key      INT <span class="kw">NOT NULL</span>,
+  customer_key     INT <span class="kw">NOT NULL</span>,
+  promo_key        INT <span class="kw">NOT NULL</span>,
+  <span class="cmt">-- Measures (the numbers you aggregate):</span>
+  quantity         INT,
+  unit_price       DECIMAL(10,2),
+  gross_amount     DECIMAL(12,2),
+  discount_amount  DECIMAL(10,2),
+  net_amount       DECIMAL(12,2),
+  cost_amount      DECIMAL(12,2),
+  gross_margin     DECIMAL(12,2),
+  <span class="cmt">-- Foreign key constraints:</span>
+  <span class="kw">FOREIGN KEY</span> (date_key)     <span class="kw">REFERENCES</span> dim_date(date_key),
+  <span class="kw">FOREIGN KEY</span> (store_key)    <span class="kw">REFERENCES</span> dim_store(store_key),
+  <span class="kw">FOREIGN KEY</span> (product_key)  <span class="kw">REFERENCES</span> dim_product(product_key),
+  <span class="kw">FOREIGN KEY</span> (customer_key) <span class="kw">REFERENCES</span> dim_customer(customer_key),
+  <span class="kw">FOREIGN KEY</span> (promo_key)    <span class="kw">REFERENCES</span> dim_promotion(promo_key)
+);</pre>
+
+<h4>Your first star schema query</h4>
+
+<pre><span class="cmt">-- Total revenue by product category by city</span>
+<span class="kw">SELECT</span>
+    p.category,
+    s.city,
+    <span class="kw">SUM</span>(f.net_amount) <span class="kw">AS</span> revenue
+<span class="kw">FROM</span> fact_sales f
+<span class="kw">JOIN</span> dim_product p <span class="kw">ON</span> f.product_key = p.product_key
+<span class="kw">JOIN</span> dim_store s   <span class="kw">ON</span> f.store_key = s.store_key
+<span class="kw">GROUP BY</span> p.category, s.city
+<span class="kw">ORDER BY</span> revenue <span class="kw">DESC</span>;
+
+<span class="cmt">-- Notice how clean this is compared to an OLTP query:
+-- - Only 2 JOINs (fact → product, fact → store)
+-- - No subqueries needed
+-- - The GROUP BY matches the business question exactly
+-- - Adding more dimensions is just another JOIN</span></pre>
+
+
+<!-- ============================================================ -->
+<h2 id="s5"><span class="n">5</span> The data cube</h2>
+
+<p>A data cube is the <strong>mental model</strong> for multidimensional analysis. Imagine your data as a physical cube:</p>
+
+<div class="card">
+<p>Each <strong>axis</strong> is a dimension: Product on one axis, Geography on another, Time on the third.</p>
+<p>Each <strong>cell</strong> contains a measure: the revenue for that product + geography + time combination.</p>
+<p>With more than 3 dimensions, it's called a <strong>hypercube</strong> — impossible to visualize, but the same concept.</p>
+</div>
+
+<p>The data cube isn't a physical structure you build in MySQL. It's a way of thinking about your data. When someone says "slice the cube on Q4 2024" they mean "filter the time dimension to Q4 2024." The star schema is how you implement the cube in a relational database.</p>
+
+
+<!-- ============================================================ -->
+<h2 id="s6"><span class="n">6</span> OLAP operations</h2>
+
+<p>There are five core operations you perform on a data cube. Every analytical question you'll ever ask can be decomposed into some combination of these.</p>
+
+<h3>Roll-up (drill-up)</h3>
+
+<p><strong>Aggregate to a higher level in a hierarchy.</strong> You're zooming out.</p>
+
+<div class="card">
+<p>Hierarchy: <code>Store → City → State → Region → Country</code></p>
+<p>Roll-up example: You're looking at revenue per store. You roll up to see revenue per city. Then per state. Then per region. Each step reduces detail and increases aggregation.</p>
+<p>Also means removing a dimension entirely: if you had revenue by product × city × month, rolling up on city gives you revenue by product × month.</p>
+</div>
+
+<h3>Drill-down</h3>
+
+<p><strong>Decompose to a finer grain.</strong> The exact reverse of roll-up. You're zooming in.</p>
+
+<div class="card">
+<p>You see national revenue is down 5%. You drill down to region — South is down 12% while others are flat. Drill down to state — Tamil Nadu specifically. Drill down to city — Chennai store dropped 25%. Drill down to product — TVs in Chennai collapsed. Now you have something actionable.</p>
+</div>
+
+<h3>Slice</h3>
+
+<p><strong>Fix one dimension to a single value.</strong> You're cutting a single sheet out of the cube.</p>
+
+<div class="card">
+<p>You have a cube of Product × Geography × Time. You slice on <code>Time = 'Q4 2024'</code>. Now you have a 2D sheet showing Product × Geography for Q4 2024 only.</p>
+<p>In SQL: <code>WHERE d.quarter = 'Q4' AND d.year = 2024</code></p>
+</div>
+
+<h3>Dice</h3>
+
+<p><strong>Filter on two or more dimensions.</strong> You're cutting a smaller sub-cube from the original.</p>
+
+<div class="card">
+<p>Show me sales where category = 'Mobile Phones' AND region IN ('South', 'West') AND year = 2024. This creates a smaller cube restricted on three dimensions simultaneously.</p>
+<p>In SQL: <code>WHERE p.category = 'Mobile Phones' AND s.region IN ('South','West') AND d.year = 2024</code></p>
+</div>
+
+<h3>Pivot (rotate)</h3>
+
+<p><strong>Swap the axes.</strong> Same data, different cross-tabulation. If your rows are months and columns are categories, pivoting puts categories on rows and months on columns.</p>
+
+<div class="card">
+<p>In SQL, you implement this with <code>CASE</code> expressions — turning row values into column headers. Excel pivot tables do this visually.</p>
+</div>
+
+
+<!-- ============================================================ -->
+<h2 id="s7"><span class="n">7</span> OLAP in SQL</h2>
+
+<p>Modern SQL (including MySQL 8.0) has built-in syntax for OLAP operations. You don't need a separate OLAP server.</p>
+
+<h3>GROUP BY with ROLLUP — automatic subtotals</h3>
+
+<pre><span class="cmt">-- Revenue by region and city, with subtotals per region and a grand total</span>
+<span class="kw">SELECT</span>
+    <span class="kw">COALESCE</span>(s.region, <span class="str">'*** GRAND TOTAL ***'</span>) <span class="kw">AS</span> region,
+    <span class="kw">COALESCE</span>(s.city, <span class="str">'*** Region Total ***'</span>) <span class="kw">AS</span> city,
+    <span class="kw">SUM</span>(f.net_amount) <span class="kw">AS</span> revenue
+<span class="kw">FROM</span> fact_sales f
+<span class="kw">JOIN</span> dim_store s <span class="kw">ON</span> f.store_key = s.store_key
+<span class="kw">GROUP BY</span> s.region, s.city <span class="kw">WITH ROLLUP</span>;
+
+<span class="cmt">-- Output includes:
+-- Each city's revenue
+-- Each region's subtotal (city = NULL → we use COALESCE to label it)
+-- Grand total (both region and city = NULL)
+-- This is the ROLL-UP operation in pure SQL.</span></pre>
+
+<h3>Slice in SQL</h3>
+
+<pre><span class="cmt">-- Slice: fix the time dimension to Diwali 2024</span>
+<span class="kw">SELECT</span>
+    p.category,
+    s.city,
+    <span class="kw">SUM</span>(f.net_amount) <span class="kw">AS</span> revenue
+<span class="kw">FROM</span> fact_sales f
+<span class="kw">JOIN</span> dim_date d    <span class="kw">ON</span> f.date_key = d.date_key
+<span class="kw">JOIN</span> dim_product p <span class="kw">ON</span> f.product_key = p.product_key
+<span class="kw">JOIN</span> dim_store s   <span class="kw">ON</span> f.store_key = s.store_key
+<span class="kw">WHERE</span> d.year = 2024 <span class="kw">AND</span> d.month = 10 <span class="kw">AND</span> d.is_holiday = 1
+<span class="kw">GROUP BY</span> p.category, s.city
+<span class="kw">ORDER BY</span> revenue <span class="kw">DESC</span>;</pre>
+
+<h3>Dice in SQL</h3>
+
+<pre><span class="cmt">-- Dice: Mobile Phones + South region + Q4 2024</span>
+<span class="kw">SELECT</span>
+    s.city,
+    p.product_name,
+    <span class="kw">SUM</span>(f.quantity) <span class="kw">AS</span> units,
+    <span class="kw">SUM</span>(f.net_amount) <span class="kw">AS</span> revenue
+<span class="kw">FROM</span> fact_sales f
+<span class="kw">JOIN</span> dim_date d    <span class="kw">ON</span> f.date_key = d.date_key
+<span class="kw">JOIN</span> dim_product p <span class="kw">ON</span> f.product_key = p.product_key
+<span class="kw">JOIN</span> dim_store s   <span class="kw">ON</span> f.store_key = s.store_key
+<span class="kw">WHERE</span> p.category = <span class="str">'Mobile Phones'</span>
+  <span class="kw">AND</span> s.region = <span class="str">'South'</span>
+  <span class="kw">AND</span> d.year = 2024 <span class="kw">AND</span> d.quarter = <span class="str">'Q4'</span>
+<span class="kw">GROUP BY</span> s.city, p.product_name
+<span class="kw">ORDER BY</span> revenue <span class="kw">DESC</span>;</pre>
+
+<h3>Pivot in SQL</h3>
+
+<pre><span class="cmt">-- Pivot: categories as columns, quarters as rows</span>
+<span class="kw">SELECT</span>
+    d.year,
+    d.quarter,
+    <span class="kw">SUM</span>(<span class="kw">CASE WHEN</span> p.category = <span class="str">'Mobile Phones'</span> <span class="kw">THEN</span> f.net_amount <span class="kw">ELSE</span> 0 <span class="kw">END</span>) <span class="kw">AS</span> mobile,
+    <span class="kw">SUM</span>(<span class="kw">CASE WHEN</span> p.category = <span class="str">'Computers'</span>     <span class="kw">THEN</span> f.net_amount <span class="kw">ELSE</span> 0 <span class="kw">END</span>) <span class="kw">AS</span> computers,
+    <span class="kw">SUM</span>(<span class="kw">CASE WHEN</span> p.category = <span class="str">'TVs'</span>           <span class="kw">THEN</span> f.net_amount <span class="kw">ELSE</span> 0 <span class="kw">END</span>) <span class="kw">AS</span> tvs,
+    <span class="kw">SUM</span>(f.net_amount) <span class="kw">AS</span> total
+<span class="kw">FROM</span> fact_sales f
+<span class="kw">JOIN</span> dim_date d    <span class="kw">ON</span> f.date_key = d.date_key
+<span class="kw">JOIN</span> dim_product p <span class="kw">ON</span> f.product_key = p.product_key
+<span class="kw">GROUP BY</span> d.year, d.quarter
+<span class="kw">ORDER BY</span> d.year, d.quarter;</pre>
+
+<h3>Window functions — trend analysis</h3>
+
+<pre><span class="cmt">-- Monthly revenue with running YTD total and month-over-month growth %</span>
+<span class="kw">SELECT</span>
+    year, month, month_name,
+    monthly_revenue,
+    <span class="kw">SUM</span>(monthly_revenue) <span class="kw">OVER</span> (
+        <span class="kw">PARTITION BY</span> year <span class="kw">ORDER BY</span> month
+    ) <span class="kw">AS</span> ytd_revenue,
+    <span class="kw">ROUND</span>(
+        (monthly_revenue - <span class="kw">LAG</span>(monthly_revenue) <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> year, month))
+        / <span class="kw">LAG</span>(monthly_revenue) <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> year, month) * 100, 1
+    ) <span class="kw">AS</span> mom_growth_pct
+<span class="kw">FROM</span> (
+    <span class="kw">SELECT</span> d.year, d.month, d.month_name,
+           <span class="kw">SUM</span>(f.net_amount) <span class="kw">AS</span> monthly_revenue
+    <span class="kw">FROM</span> fact_sales f
+    <span class="kw">JOIN</span> dim_date d <span class="kw">ON</span> f.date_key = d.date_key
+    <span class="kw">GROUP BY</span> d.year, d.month, d.month_name
+) monthly
+<span class="kw">ORDER BY</span> year, month;
+
+<span class="cmt">-- LAG() looks at the previous row's value
+-- SUM() OVER (PARTITION BY year ORDER BY month) = running total within each year
+-- These are MySQL 8.0 window functions — they work in MySQL Workbench</span></pre>
+
+
+<!-- ============================================================ -->
+<h2 id="s8"><span class="n">8</span> ETL — getting data in</h2>
+
+<p>Your data warehouse doesn't generate data — it receives data from source systems (your OLTP databases, ERP systems, CRM, spreadsheets, APIs). The process of moving data from source to warehouse is called <strong>ETL</strong>.</p>
+
+<div class="flow-row">
+  <div class="flow-box" style="background:var(--red-light);color:var(--red);">Extract</div>
+  <span class="flow-arrow">→</span>
+  <div class="flow-box" style="background:var(--amber-light);color:var(--amber);">Transform</div>
+  <span class="flow-arrow">→</span>
+  <div class="flow-box" style="background:var(--accent-light);color:var(--accent);">Load</div>
+</div>
+
+<table>
+  <tr><th>Step</th><th>What happens</th><th>Example</th></tr>
+  <tr><td><strong>Extract</strong></td><td>Pull raw data from source systems</td><td>Read yesterday's transactions from each store's POS database</td></tr>
+  <tr><td><strong>Transform</strong></td><td>Clean, standardize, resolve conflicts, apply business logic</td><td>Standardize date formats, deduplicate customers, calculate gross_margin = net_amount - cost_amount</td></tr>
+  <tr><td><strong>Load</strong></td><td>Insert the clean data into the warehouse tables</td><td>INSERT INTO fact_sales, update dimension tables with new products/customers</td></tr>
+</table>
+
+<h3>ETL vs ELT</h3>
+
+<p>A modern alternative is <strong>ELT</strong> — load the raw data first, then transform it inside the warehouse using the warehouse's own compute power. This is the dominant approach in cloud platforms where compute is cheap and elastic.</p>
+
+<div class="grid2">
+  <div class="card amber">
+    <div class="card-title">ETL (traditional)</div>
+    <p>Transform happens on a <em>separate server</em> before loading. Tools: Informatica, SSIS, Talend. Required when warehouse compute was expensive.</p>
+  </div>
+  <div class="card green">
+    <div class="card-title">ELT (modern)</div>
+    <p>Load raw data first, transform <em>inside the warehouse</em>. Tools: dbt, SQL-based transformations. Works because cloud warehouse compute is cheap.</p>
+  </div>
+</div>
+
+<h3>The staging area</h3>
+
+<p>Before data reaches dimension/fact tables, it lands in a <strong>staging area</strong> — a temporary holding zone. This decouples extraction from transformation, so if something fails during transformation you don't need to re-extract from source systems.</p>
+
+
+<!-- ============================================================ -->
+<h2 id="s9"><span class="n">9</span> Schema variations</h2>
+
+<h3>Snowflake schema</h3>
+
+<p>A variation of the star schema where <strong>dimension tables are normalized into sub-dimensions</strong>. Instead of one <code>dim_product</code> table with a <code>category</code> column, you'd have <code>dim_product</code> → <code>dim_subcategory</code> → <code>dim_category</code>.</p>
+
+<div class="grid2">
+  <div class="card">
+    <div class="card-title">When to snowflake</div>
+    <p>Very large dimensions where normalization saves significant storage. When you need strict governance over dimension hierarchies. When dimensions have many shared attributes.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">When to stay with star</div>
+    <p>Almost always. The extra joins in snowflake make queries more complex and slower. The storage saved is rarely worth the query complexity. Star schema is the default recommendation.</p>
+  </div>
+</div>
+
+<h3>Fact constellations (galaxy schema)</h3>
+
+<p>Multiple fact tables sharing dimension tables. A retail business might have <code>fact_sales</code> and <code>fact_inventory</code> both referencing the same <code>dim_product</code> and <code>dim_store</code>. This is normal — any warehouse with more than one business process will have multiple fact tables sharing conformed dimensions.</p>
+
+<h3>Slowly changing dimensions (SCDs)</h3>
+
+<p>What happens when a dimension attribute changes? A customer moves to a new city. A product gets reclassified into a different category.</p>
+
+<table>
+  <tr><th>Type</th><th>What it does</th><th>How</th><th>Use when</th></tr>
+  <tr><td><strong>Type 1</strong></td><td>Overwrite the old value</td><td><code>UPDATE dim_customer SET city = 'Mumbai' WHERE ...</code></td><td>You don't care about history (e.g., fixing a typo)</td></tr>
+  <tr><td><strong>Type 2</strong></td><td>Add a new row, expire the old one</td><td>Old row gets <code>end_date = today</code>, new row gets <code>start_date = today</code>, new surrogate key</td><td>You need historical analysis (most common)</td></tr>
+  <tr><td><strong>Type 3</strong></td><td>Add a "previous" column</td><td>Add <code>previous_city</code> column alongside <code>current_city</code></td><td>You only need to compare current vs immediately previous (rare)</td></tr>
+</table>
+
+
+<!-- ============================================================ -->
+<h2 id="s10"><span class="n">10</span> Architecture choices</h2>
+
+<p>How do you structure the overall data warehouse infrastructure? There are four common architectures:</p>
+
+<table>
+  <tr><th>Architecture</th><th>How it works</th><th>Pros</th><th>Cons</th></tr>
+  <tr><td><strong>Independent data marts</strong></td><td>Each department builds its own mini-warehouse in isolation</td><td>Fast, cheap, each team is self-sufficient</td><td>Data silos — Finance and Sales define "revenue" differently. No integration.</td></tr>
+  <tr><td><strong>Linked dimension data marts</strong></td><td>Separate marts but sharing conformed dimensions (same dim_date, dim_customer across all marts)</td><td>Some integration via shared dimensions. Phased rollout possible.</td><td>Still decentralized. More complex to manage shared dimensions.</td></tr>
+  <tr><td><strong>Enterprise data warehouse</strong></td><td>One centralized warehouse. All source data flows in. All departments query it.</td><td>Single source of truth. Full integration and consistency.</td><td>Expensive. Slow to build. Requires massive upfront commitment.</td></tr>
+  <tr><td><strong>Enterprise DW + data marts</strong></td><td>Central warehouse feeds department-specific marts (best of both)</td><td>Integration + departmental flexibility. Marts are fast; warehouse is the single source of truth.</td><td>Most complex. Highest cost.</td></tr>
+</table>
+
+<div class="card green">
+<div class="card-title">The Kimball approach (bottom-up)</div>
+<p>Build dimensional data marts one at a time, ensuring they share conformed dimensions. Over time, the collection of linked marts becomes the enterprise warehouse. This is the pragmatic approach — delivers value quickly while building toward integration.</p>
+</div>
+
+<div class="card blue">
+<div class="card-title">The Inmon approach (top-down)</div>
+<p>Build the normalized enterprise data warehouse first (3NF model). Then derive dimensional data marts from it for each department. Architecturally pure but takes much longer to deliver the first usable output.</p>
+</div>
+
+
+<!-- ============================================================ -->
+<h2 id="s11"><span class="n">11</span> Modern platforms</h2>
+
+<p>You can build a warehouse in MySQL Workbench for learning. In the real world, organizations use cloud platforms designed for analytical workloads:</p>
+
+<table>
+  <tr><th>Platform</th><th>What it is</th><th>Key thing to know</th></tr>
+  <tr><td><strong>Google BigQuery</strong></td><td>Serverless cloud warehouse</td><td>No infrastructure to manage. Upload your CSVs, write SQL, pay per query. The easiest on-ramp from MySQL.</td></tr>
+  <tr><td><strong>Snowflake</strong></td><td>Cloud-native warehouse</td><td>Separates storage from compute — you can scale query power without touching data storage. Industry darling.</td></tr>
+  <tr><td><strong>Databricks</strong></td><td>Lakehouse platform</td><td>Combines warehouse + data lake. Strongest for ML/AI workloads alongside analytical queries.</td></tr>
+  <tr><td><strong>Amazon Redshift</strong></td><td>AWS cloud warehouse</td><td>Tight integration with the AWS ecosystem (S3, Glue, SageMaker).</td></tr>
+  <tr><td><strong>Microsoft Fabric</strong></td><td>Unified analytics</td><td>Built into the Microsoft ecosystem — integrates with Power BI, OneLake, Excel.</td></tr>
+</table>
+
+<div class="card amber">
+<div class="card-title">The key difference from MySQL</div>
+<p>These platforms use <strong>columnar storage</strong> — data is stored by column, not by row. When your query only needs 3 columns out of 50, a columnar engine reads only those 3 columns. MySQL reads entire rows. This is why a warehouse can scan billions of rows in seconds on queries that would take hours in MySQL.</p>
+</div>
+
+
+<!-- ============================================================ -->
+<h2 id="s12"><span class="n">12</span> Putting it all together</h2>
+
+<p>Here's the complete picture — how everything connects:</p>
+
+<div class="flow-row">
+  <div class="flow-box" style="background:var(--red-light);color:var(--red);">Source systems<br><span style="font-weight:400;font-size:0.75rem;">POS, ERP, CRM, files</span></div>
+  <span class="flow-arrow">→</span>
+  <div class="flow-box" style="background:var(--amber-light);color:var(--amber);">ETL / ELT<br><span style="font-weight:400;font-size:0.75rem;">Extract, clean, standardize</span></div>
+  <span class="flow-arrow">→</span>
+  <div class="flow-box" style="background:var(--accent-light);color:var(--accent);">Data warehouse<br><span style="font-weight:400;font-size:0.75rem;">Star schema, fact + dim tables</span></div>
+  <span class="flow-arrow">→</span>
+  <div class="flow-box" style="background:var(--blue-light);color:var(--blue);">OLAP / BI tools<br><span style="font-weight:400;font-size:0.75rem;">Dashboards, reports, ad-hoc</span></div>
+</div>
+
+<div class="card green">
+<div class="card-title">What you now know</div>
+<p><strong>Star schema</strong> — fact tables (what happened) + dimension tables (the context). Designed using the Kimball 4-step process.</p>
+<p><strong>OLAP operations</strong> — roll-up, drill-down, slice, dice, pivot. All implementable in MySQL SQL using GROUP BY, WHERE, CASE, and WITH ROLLUP.</p>
+<p><strong>ETL</strong> — Extract from sources, Transform (clean/standardize), Load into the warehouse.</p>
+<p><strong>Architecture choices</strong> — independent marts vs linked marts vs enterprise DW. The right answer depends on your organization's size, budget, and integration needs.</p>
+<p><strong>Surrogate keys, grain, SCDs</strong> — the design decisions that make or break a warehouse.</p>
+</div>
+
+<div class="card">
+<div class="card-title">What to do next</div>
+<p>Open MySQL Workbench. Run <code>acme_star_schema.sql</code>. Then run <code>acme_queries.sql</code> one query at a time. Read each query's comment, predict what the output will be, then run it. That hands-on loop — predict, run, compare — is how you internalize dimensional modeling.</p>
+</div>
+
+</div>
+
+<script>
+const sections = document.querySelectorAll('h2[id]');
+const links = document.querySelectorAll('.nav a');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(s => { if (window.scrollY >= s.offsetTop - 100) current = s.id; });
+  links.forEach(a => { a.classList.remove('active'); if (a.getAttribute('href') === '#' + current) a.classList.add('active'); });
+});
+</script>
+</body>
+</html>
