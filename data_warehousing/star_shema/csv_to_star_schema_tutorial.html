@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>From CSV to Star Schema — Step-by-Step Tutorial</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fafaf8;--surface:#fff;--surface2:#f3f2ee;--border:#e2e0d8;--text:#2c2c2a;--dim:#6e6d68;--heading:#1a1a18;--green:#1a6b4e;--green-l:#e8f5ee;--amber:#b45309;--amber-l:#fef3e2;--blue:#1d5fa0;--blue-l:#edf4fc;--red:#b91c1c;--red-l:#fef2f2;--purple:#6d28d9;--purple-l:#f3f0ff;--code-bg:#f5f4f0;--code-b:#e8e6de;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;line-height:1.75;font-size:15.5px;}
+.nav{position:fixed;top:0;left:0;width:250px;height:100vh;overflow-y:auto;background:var(--surface);border-right:1px solid var(--border);padding:1.8rem 1rem;z-index:10;}
+.nav-title{font-family:'Source Serif 4',serif;font-size:0.95rem;font-weight:700;color:var(--heading);margin-bottom:1.2rem;line-height:1.3;}
+.nav a{display:block;padding:0.3rem 0.5rem;color:var(--dim);text-decoration:none;font-size:0.8rem;border-radius:4px;line-height:1.4;margin:0.05rem 0;}
+.nav a:hover{background:var(--surface2);color:var(--heading);}
+.nav a.active{background:var(--green-l);color:var(--green);font-weight:500;}
+.nav .sep{height:1px;background:var(--border);margin:0.6rem 0;}
+.main{margin-left:250px;max-width:760px;padding:2.5rem 2.5rem 6rem;}
+h1{font-family:'Source Serif 4',serif;font-size:2.2rem;color:var(--heading);font-weight:700;margin-bottom:0.3rem;line-height:1.2;}
+.hero-sub{color:var(--dim);font-size:0.95rem;margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+h2{font-family:'Source Serif 4',serif;font-size:1.45rem;color:var(--heading);font-weight:700;margin:3rem 0 0.8rem;padding-top:1.5rem;display:flex;align-items:center;gap:0.6rem;}
+h2 .s{display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:28px;padding:0 7px;background:var(--green);color:#fff;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:0.75rem;font-weight:700;flex-shrink:0;}
+h3{color:var(--green);font-size:0.95rem;font-weight:700;margin:1.5rem 0 0.4rem;font-family:'DM Sans',sans-serif;}
+p{margin-bottom:0.8rem;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.2rem 1.4rem;margin:0.8rem 0;}
+.card.green{border-left:3px solid var(--green);background:var(--green-l);}
+.card.amber{border-left:3px solid var(--amber);background:var(--amber-l);}
+.card.blue{border-left:3px solid var(--blue);background:var(--blue-l);}
+.card.red{border-left:3px solid var(--red);background:var(--red-l);}
+.card.purple{border-left:3px solid var(--purple);background:var(--purple-l);}
+.ct{font-weight:700;color:var(--heading);margin-bottom:0.35rem;font-size:0.9rem;}
+pre{background:var(--code-bg);border:1px solid var(--code-b);border-radius:8px;padding:1rem 1.2rem;overflow-x:auto;margin:0.7rem 0;font-family:'JetBrains Mono',monospace;font-size:0.78rem;line-height:1.6;color:#4a4a45;}
+code{font-family:'JetBrains Mono',monospace;font-size:0.83em;background:var(--code-bg);padding:1px 4px;border-radius:3px;}
+.kw{color:var(--green);font-weight:600;} .str{color:var(--amber);} .cmt{color:var(--dim);font-style:italic;}
+table{width:100%;border-collapse:collapse;font-size:0.83rem;margin:0.7rem 0;}
+th{text-align:left;padding:0.5rem 0.7rem;background:var(--surface2);color:var(--heading);font-weight:600;font-size:0.76rem;letter-spacing:0.3px;border-bottom:2px solid var(--border);}
+td{padding:0.45rem 0.7rem;border-bottom:1px solid var(--border);}
+.measure{background:#fef3e2;color:#92400e;font-weight:600;font-size:0.75rem;padding:1px 6px;border-radius:3px;display:inline-block;}
+.context{background:#edf4fc;color:#1d5fa0;font-weight:600;font-size:0.75rem;padding:1px 6px;border-radius:3px;display:inline-block;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0.7rem;margin:0.8rem 0;}
+.flow{display:flex;align-items:center;gap:0;margin:1rem 0;flex-wrap:wrap;}
+.fb{padding:0.45rem 0.9rem;border-radius:7px;font-size:0.82rem;font-weight:600;text-align:center;}
+.fa{color:var(--dim);font-size:1.1rem;padding:0 0.3rem;}
+strong{font-weight:700;color:var(--heading);}
+.tag{display:inline-block;padding:2px 7px;border-radius:4px;font-size:0.7rem;font-family:'JetBrains Mono',monospace;font-weight:600;}
+@media(max-width:900px){.nav{display:none;}.main{margin-left:0;padding:2rem 1rem 4rem;}.grid2{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="nav">
+  <div class="nav-title">From CSV to Star Schema</div>
+  <a href="#s0">0. Start with the flat CSV</a>
+  <a href="#s1">1. What does each row mean?</a>
+  <a href="#s2">2. Declare the grain</a>
+  <a href="#s3">3. Measures vs context</a>
+  <a href="#s4">4. Group context into dimensions</a>
+  <a href="#s5">5. Build dim_date (designed, not discovered)</a>
+  <a href="#s6">6. Assign surrogate keys</a>
+  <a href="#s7">7. Build the fact table</a>
+  <a href="#s8">8. The full SQL — create in MySQL</a>
+  <a href="#s9">9. Load data from CSV</a>
+  <a href="#s10">10. Verify with queries</a>
+</div>
+
+<div class="main">
+
+<h1>From CSV to Star Schema</h1>
+<p class="hero-sub">A hands-on tutorial — starting from a raw POS export, ending with a working star schema in MySQL Workbench</p>
+
+<!-- ========================================== -->
+<h2 id="s0"><span class="s">0</span> Start with the flat CSV</h2>
+
+<p>You are the data analyst for a coffee chain with 12 stores across Melbourne, Sydney, Brisbane, and Adelaide. The POS system exports a CSV file called <code>coffee_pos_export.csv</code>. Here are the first few rows:</p>
+
+<pre>transaction_id, transaction_date, transaction_time, store_code, store_name,
+city, state, country, item_name, category, subcategory, size,
+quantity, unit_price, line_total, customer_name, loyalty_tier</pre>
+
+<pre>10001, 2024-01-01, 08:15, ST006, Bondi, Sydney, NSW, Australia, Veggie Wrap, Sandwich, Cold, regular, 2, 8.00, 16.00, Noah Brown, Gold
+10002, 2024-01-01, 07:00, ST004, George St, Sydney, NSW, Australia, Long Black, Coffee, Black Coffee, regular, 1, 4.20, 4.20, Emma Smith, Gold
+10002, 2024-01-01, 07:00, ST004, George St, Sydney, NSW, Australia, Croissant, Pastry, Baked, regular, 2, 4.50, 9.00, Emma Smith, Gold</pre>
+
+<p>This is a <strong>denormalized flat file</strong> — every row repeats the store name, city, state, customer name, etc. This is typical of what POS systems export. It's fine for a spreadsheet. It's terrible for analysis at scale.</p>
+
+<p><strong>17 columns. 1,745 rows. One year of sales data.</strong> Your job: turn this into a star schema.</p>
+
+
+<!-- ========================================== -->
+<h2 id="s1"><span class="s">1</span> What does each row mean?</h2>
+
+<div class="card green">
+<div class="ct">The first question to ask — always</div>
+<p>Look at the CSV. What does <strong>one row</strong> represent? Not the columns — the row itself.</p>
+</div>
+
+<p>Look at transaction 10002: it appears <strong>twice</strong> — once for Long Black, once for Croissant. Same transaction_id, same customer, same time. Two different items.</p>
+
+<p>So one row = <strong>one item purchased within one transaction</strong>. This is a line item, not a transaction. If this CSV had one row per transaction, the item details would be crammed into a single row somehow (or missing entirely).</p>
+
+<p>This observation is critical. It determines everything that follows.</p>
+
+
+<!-- ========================================== -->
+<h2 id="s2"><span class="s">2</span> Declare the grain</h2>
+
+<div class="card amber">
+<div class="ct">Write it as a sentence</div>
+<p>"One row in my fact table will represent <strong>one line item in one transaction at one store on one date</strong>."</p>
+</div>
+
+<p>This is the <strong>grain statement</strong> — the most important design decision in dimensional modeling. Get this wrong and the entire model is unreliable.</p>
+
+<p>The grain constrains everything downstream: what dimensions are possible, what measures are additive, and what questions the schema can answer.</p>
+
+<p>Could we choose a coarser grain — say, daily totals per store? Yes, but we'd lose the ability to analyze individual transactions, customer behavior, time-of-day patterns, and item-level profitability. Start at the finest grain you have; you can always roll up, but you can never drill down below your grain.</p>
+
+
+<!-- ========================================== -->
+<h2 id="s3"><span class="s">3</span> Measures vs context — the column sort</h2>
+
+<p>Go through every column in the CSV. Each one is either a <strong>measure</strong> or <strong>context</strong>:</p>
+
+<table>
+<tr><th>Column</th><th>Type</th><th>Why</th></tr>
+<tr><td><code>transaction_id</code></td><td><span class="context">context</span></td><td>Identifies the transaction — not a number you'd sum</td></tr>
+<tr><td><code>transaction_date</code></td><td><span class="context">context</span></td><td>When it happened — a dimension attribute</td></tr>
+<tr><td><code>transaction_time</code></td><td><span class="context">context</span></td><td>Time of day — another dimension attribute</td></tr>
+<tr><td><code>store_code</code></td><td><span class="context">context</span></td><td>Which store — identifier</td></tr>
+<tr><td><code>store_name</code></td><td><span class="context">context</span></td><td>Describes the store</td></tr>
+<tr><td><code>city</code></td><td><span class="context">context</span></td><td>Where the store is — geographic hierarchy</td></tr>
+<tr><td><code>state</code></td><td><span class="context">context</span></td><td>Higher level of geography</td></tr>
+<tr><td><code>country</code></td><td><span class="context">context</span></td><td>Highest level of geography</td></tr>
+<tr><td><code>item_name</code></td><td><span class="context">context</span></td><td>What was sold — product attribute</td></tr>
+<tr><td><code>category</code></td><td><span class="context">context</span></td><td>Product hierarchy level</td></tr>
+<tr><td><code>subcategory</code></td><td><span class="context">context</span></td><td>Product hierarchy level</td></tr>
+<tr><td><code>size</code></td><td><span class="context">context</span></td><td>Product attribute</td></tr>
+<tr><td><code>quantity</code></td><td><span class="measure">measure</span></td><td>How many — numeric, additive, you'd SUM this</td></tr>
+<tr><td><code>unit_price</code></td><td><span class="measure">measure</span></td><td>Price per unit — numeric</td></tr>
+<tr><td><code>line_total</code></td><td><span class="measure">measure</span></td><td>qty × price — the key revenue measure, you'd SUM this</td></tr>
+<tr><td><code>customer_name</code></td><td><span class="context">context</span></td><td>Who bought it — describes the customer</td></tr>
+<tr><td><code>loyalty_tier</code></td><td><span class="context">context</span></td><td>Customer attribute</td></tr>
+</table>
+
+<p><strong>Result: 3 measures, 14 context columns.</strong> The measures go into the fact table. The context columns get organized into dimensions.</p>
+
+<div class="card blue">
+<div class="ct">The test for a measure</div>
+<p>Ask: "Would I ever <code>SUM</code>, <code>AVG</code>, or <code>COUNT</code> this column across many rows?" If yes → measure. If no → context. You'd SUM quantity and line_total. You'd never SUM a store name.</p>
+</div>
+
+
+<!-- ========================================== -->
+<h2 id="s4"><span class="s">4</span> Group context columns into dimensions</h2>
+
+<p>Context columns cluster naturally around real-world entities. Columns that describe the <strong>same thing</strong> belong in the same dimension table:</p>
+
+<div class="grid2">
+<div class="card">
+  <div class="ct">dim_store</div>
+  <p><code>store_code</code>, <code>store_name</code>, <code>city</code>, <code>state</code>, <code>country</code></p>
+  <p>All describe <em>where</em> the sale happened. Contains the geographic hierarchy: store → city → state → country.</p>
+</div>
+<div class="card">
+  <div class="ct">dim_product</div>
+  <p><code>item_name</code>, <code>category</code>, <code>subcategory</code>, <code>size</code>, <code>unit_price</code></p>
+  <p>All describe <em>what</em> was sold. Contains the product hierarchy: item → subcategory → category.</p>
+</div>
+<div class="card">
+  <div class="ct">dim_customer</div>
+  <p><code>customer_name</code>, <code>loyalty_tier</code></p>
+  <p>Describes <em>who</em> bought it. Includes a "Walk-in" row for anonymous transactions (empty customer_name in the CSV).</p>
+</div>
+<div class="card">
+  <div class="ct">dim_date</div>
+  <p>Derived from <code>transaction_date</code></p>
+  <p>Describes <em>when</em> it happened. This dimension doesn't exist in the CSV — we <strong>generate</strong> it. See next step.</p>
+</div>
+</div>
+
+<div class="card purple">
+<div class="ct">The grouping rule</div>
+<p>If you're unsure whether a column belongs in dimension A or dimension B, ask: "Does this attribute <em>always</em> travel with entity A, regardless of any transaction?" City always belongs to a store. Category always belongs to a product. Loyalty tier always belongs to a customer. The answer tells you which dimension it lives in.</p>
+</div>
+
+
+<!-- ========================================== -->
+<h2 id="s5"><span class="s">5</span> Build dim_date — designed, not discovered</h2>
+
+<p>The source CSV has a <code>transaction_date</code> column with values like <code>2024-01-01</code>. That's just a date string. A proper date dimension enriches this with every attribute you'd ever want to filter or group by:</p>
+
+<pre><span class="kw">CREATE TABLE</span> dim_date (
+  date_key      <span class="kw">INT</span> <span class="kw">NOT NULL PRIMARY KEY</span>,   <span class="cmt">-- 20240101 format</span>
+  full_date     <span class="kw">DATE NOT NULL</span>,
+  day_name      <span class="kw">VARCHAR</span>(10),                  <span class="cmt">-- Monday, Tuesday...</span>
+  day_of_week   <span class="kw">TINYINT</span>,                      <span class="cmt">-- 1=Mon, 7=Sun</span>
+  month         <span class="kw">TINYINT</span>,                      <span class="cmt">-- 1-12</span>
+  month_name    <span class="kw">VARCHAR</span>(10),                  <span class="cmt">-- January, February...</span>
+  quarter       <span class="kw">CHAR</span>(2),                      <span class="cmt">-- Q1, Q2, Q3, Q4</span>
+  year          <span class="kw">SMALLINT</span>,                     <span class="cmt">-- 2024</span>
+  is_weekend    <span class="kw">TINYINT</span>                       <span class="cmt">-- 0 or 1</span>
+);</pre>
+
+<div class="card green">
+<div class="ct">Why generate this?</div>
+<p>The date dimension is <strong>always designed, never extracted</strong> from source data. You generate a row for every day in your date range — including days with zero sales. This enables time-series analysis with no gaps, fiscal calendar alignment, holiday flagging, and rolling period calculations. Every warehouse has a date dimension, and they all look roughly like this.</p>
+</div>
+
+<p>The <code>date_key</code> is an integer in YYYYMMDD format (e.g., 20240115 for January 15, 2024). This is the standard convention — it's human-readable, sortable, and efficient as a join key.</p>
+
+
+<!-- ========================================== -->
+<h2 id="s6"><span class="s">6</span> Assign surrogate keys</h2>
+
+<p>Every dimension table needs a <strong>surrogate key</strong> — a new auto-incrementing integer that becomes the primary key. The original business identifiers become regular attributes.</p>
+
+<table>
+<tr><th>Dimension</th><th>Surrogate key</th><th>Business key (becomes attribute)</th></tr>
+<tr><td>dim_date</td><td><code>date_key</code> (YYYYMMDD integer)</td><td><code>full_date</code></td></tr>
+<tr><td>dim_store</td><td><code>store_key</code> (1, 2, 3...)</td><td><code>store_code</code> (ST001, ST002...)</td></tr>
+<tr><td>dim_product</td><td><code>product_key</code> (1, 2, 3...)</td><td><code>item_name</code></td></tr>
+<tr><td>dim_customer</td><td><code>customer_key</code> (0, 1, 2...)</td><td><code>customer_name</code></td></tr>
+</table>
+
+<div class="card amber">
+<div class="ct">Why not just use store_code as the PK?</div>
+<p>Three reasons. (1) <strong>Insulation</strong> — if the business changes their store coding scheme, the warehouse doesn't break. (2) <strong>History tracking</strong> — surrogate keys enable Slowly Changing Dimensions (Type 2): the same store_code can have multiple surrogate keys representing different historical versions (e.g., before and after a name change). (3) <strong>Performance</strong> — integer joins are faster than string joins.</p>
+</div>
+
+<p>Special case: <code>customer_key = 0</code> is reserved for "Walk-in" — the unknown customer. When the CSV has an empty <code>customer_name</code>, the fact table points to key 0. Every dimension should have a row for the unknown/not-applicable case.</p>
+
+
+<!-- ========================================== -->
+<h2 id="s7"><span class="s">7</span> Build the fact table</h2>
+
+<p>The fact table contains <strong>only two types of columns</strong>: foreign keys to dimensions + measures. Nothing else. No descriptive text, no store names, no product categories. If you see a product name in the fact table, something is wrong.</p>
+
+<pre><span class="kw">CREATE TABLE</span> fact_sales (
+  sale_id        <span class="kw">INT AUTO_INCREMENT PRIMARY KEY</span>,
+
+  <span class="cmt">-- Foreign keys (one per dimension)</span>
+  date_key       <span class="kw">INT NOT NULL</span>,       <span class="cmt">-- → dim_date</span>
+  store_key      <span class="kw">INT NOT NULL</span>,       <span class="cmt">-- → dim_store</span>
+  product_key    <span class="kw">INT NOT NULL</span>,       <span class="cmt">-- → dim_product</span>
+  customer_key   <span class="kw">INT NOT NULL</span>,       <span class="cmt">-- → dim_customer</span>
+
+  <span class="cmt">-- Measures</span>
+  quantity       <span class="kw">INT NOT NULL</span>,
+  unit_price     <span class="kw">DECIMAL</span>(5,2),
+  line_total     <span class="kw">DECIMAL</span>(7,2),
+
+  <span class="cmt">-- Constraints</span>
+  <span class="kw">FOREIGN KEY</span> (date_key)     <span class="kw">REFERENCES</span> dim_date(date_key),
+  <span class="kw">FOREIGN KEY</span> (store_key)    <span class="kw">REFERENCES</span> dim_store(store_key),
+  <span class="kw">FOREIGN KEY</span> (product_key)  <span class="kw">REFERENCES</span> dim_product(product_key),
+  <span class="kw">FOREIGN KEY</span> (customer_key) <span class="kw">REFERENCES</span> dim_customer(customer_key)
+);</pre>
+
+<p>This is the star: <code>fact_sales</code> in the center, four dimension tables around it, connected by foreign keys. Every analytical query joins the fact table to one or more dimensions to get context for the measures.</p>
+
+<div class="flow">
+  <div class="fb" style="background:var(--blue-l);color:var(--blue);">dim_date</div>
+  <span class="fa">↘</span>
+  <div class="fb" style="background:var(--green-l);color:var(--green);">dim_store</div>
+  <span class="fa">→</span>
+  <div class="fb" style="background:var(--amber-l);color:var(--amber);font-size:0.95rem;">fact_sales</div>
+  <span class="fa">←</span>
+  <div class="fb" style="background:var(--green-l);color:var(--green);">dim_product</div>
+  <span class="fa">↙</span>
+  <div class="fb" style="background:var(--blue-l);color:var(--blue);">dim_customer</div>
+</div>
+
+
+<!-- ========================================== -->
+<h2 id="s8"><span class="s">8</span> The full SQL — create in MySQL Workbench</h2>
+
+<p>Open MySQL Workbench and run this script. It creates the database, all four dimension tables, and the fact table with foreign key constraints.</p>
+
+<pre><span class="cmt">-- ============================================================
+-- COFFEE CHAIN STAR SCHEMA
+-- From CSV to Star Schema Tutorial
+-- ============================================================</span>
+
+<span class="kw">DROP DATABASE IF EXISTS</span> coffee_star;
+<span class="kw">CREATE DATABASE</span> coffee_star;
+<span class="kw">USE</span> coffee_star;
+
+<span class="cmt">-- DIMENSION: Date (generated for full year 2024)</span>
+<span class="kw">CREATE TABLE</span> dim_date (
+  date_key      <span class="kw">INT NOT NULL</span>,
+  full_date     <span class="kw">DATE NOT NULL</span>,
+  day_name      <span class="kw">VARCHAR</span>(10) <span class="kw">NOT NULL</span>,
+  day_of_week   <span class="kw">TINYINT NOT NULL</span>,
+  month         <span class="kw">TINYINT NOT NULL</span>,
+  month_name    <span class="kw">VARCHAR</span>(10) <span class="kw">NOT NULL</span>,
+  quarter       <span class="kw">CHAR</span>(2) <span class="kw">NOT NULL</span>,
+  year          <span class="kw">SMALLINT NOT NULL</span>,
+  is_weekend    <span class="kw">TINYINT NOT NULL DEFAULT</span> 0,
+  <span class="kw">PRIMARY KEY</span> (date_key)
+) ENGINE=InnoDB;
+
+<span class="cmt">-- DIMENSION: Store</span>
+<span class="kw">CREATE TABLE</span> dim_store (
+  store_key     <span class="kw">INT NOT NULL</span>,
+  store_code    <span class="kw">VARCHAR</span>(10) <span class="kw">NOT NULL</span>,
+  store_name    <span class="kw">VARCHAR</span>(50) <span class="kw">NOT NULL</span>,
+  city          <span class="kw">VARCHAR</span>(30) <span class="kw">NOT NULL</span>,
+  state         <span class="kw">VARCHAR</span>(5) <span class="kw">NOT NULL</span>,
+  country       <span class="kw">VARCHAR</span>(20) <span class="kw">NOT NULL</span>,
+  <span class="kw">PRIMARY KEY</span> (store_key)
+) ENGINE=InnoDB;
+
+<span class="cmt">-- DIMENSION: Product</span>
+<span class="kw">CREATE TABLE</span> dim_product (
+  product_key   <span class="kw">INT NOT NULL</span>,
+  product_name  <span class="kw">VARCHAR</span>(50) <span class="kw">NOT NULL</span>,
+  category      <span class="kw">VARCHAR</span>(20) <span class="kw">NOT NULL</span>,
+  subcategory   <span class="kw">VARCHAR</span>(20) <span class="kw">NOT NULL</span>,
+  size          <span class="kw">VARCHAR</span>(10) <span class="kw">NOT NULL</span>,
+  unit_price    <span class="kw">DECIMAL</span>(5,2) <span class="kw">NOT NULL</span>,
+  <span class="kw">PRIMARY KEY</span> (product_key)
+) ENGINE=InnoDB;
+
+<span class="cmt">-- DIMENSION: Customer (key=0 is walk-in/unknown)</span>
+<span class="kw">CREATE TABLE</span> dim_customer (
+  customer_key   <span class="kw">INT NOT NULL</span>,
+  customer_name  <span class="kw">VARCHAR</span>(50) <span class="kw">NOT NULL</span>,
+  loyalty_tier   <span class="kw">VARCHAR</span>(10) <span class="kw">NOT NULL</span>,
+  <span class="kw">PRIMARY KEY</span> (customer_key)
+) ENGINE=InnoDB;
+
+<span class="cmt">-- FACT TABLE</span>
+<span class="kw">CREATE TABLE</span> fact_sales (
+  sale_id        <span class="kw">INT NOT NULL AUTO_INCREMENT</span>,
+  date_key       <span class="kw">INT NOT NULL</span>,
+  store_key      <span class="kw">INT NOT NULL</span>,
+  product_key    <span class="kw">INT NOT NULL</span>,
+  customer_key   <span class="kw">INT NOT NULL</span>,
+  quantity       <span class="kw">INT NOT NULL</span>,
+  unit_price     <span class="kw">DECIMAL</span>(5,2) <span class="kw">NOT NULL</span>,
+  line_total     <span class="kw">DECIMAL</span>(7,2) <span class="kw">NOT NULL</span>,
+  <span class="kw">PRIMARY KEY</span> (sale_id),
+  <span class="kw">FOREIGN KEY</span> (date_key)     <span class="kw">REFERENCES</span> dim_date(date_key),
+  <span class="kw">FOREIGN KEY</span> (store_key)    <span class="kw">REFERENCES</span> dim_store(store_key),
+  <span class="kw">FOREIGN KEY</span> (product_key)  <span class="kw">REFERENCES</span> dim_product(product_key),
+  <span class="kw">FOREIGN KEY</span> (customer_key) <span class="kw">REFERENCES</span> dim_customer(customer_key)
+) ENGINE=InnoDB;</pre>
+
+
+<!-- ========================================== -->
+<h2 id="s9"><span class="s">9</span> Load data from CSV</h2>
+
+<p>Now we need to populate the dimension tables by extracting distinct values from the flat CSV, then load the fact table by mapping each row to dimension keys.</p>
+
+<h3>Step 9a — Populate dim_date</h3>
+<p>Generate every day in 2024 with derived attributes. Run this in MySQL:</p>
+
+<pre><span class="cmt">-- Generate 366 rows for 2024 (leap year)</span>
+<span class="kw">INSERT INTO</span> dim_date
+<span class="kw">WITH RECURSIVE</span> dates <span class="kw">AS</span> (
+  <span class="kw">SELECT</span> <span class="str">'2024-01-01'</span> <span class="kw">AS</span> dt
+  <span class="kw">UNION ALL</span>
+  <span class="kw">SELECT</span> dt + <span class="kw">INTERVAL</span> 1 <span class="kw">DAY FROM</span> dates <span class="kw">WHERE</span> dt < <span class="str">'2024-12-31'</span>
+)
+<span class="kw">SELECT</span>
+  <span class="kw">CAST</span>(<span class="kw">DATE_FORMAT</span>(dt, <span class="str">'%Y%m%d'</span>) <span class="kw">AS UNSIGNED</span>) <span class="kw">AS</span> date_key,
+  dt <span class="kw">AS</span> full_date,
+  <span class="kw">DAYNAME</span>(dt) <span class="kw">AS</span> day_name,
+  <span class="kw">DAYOFWEEK</span>(dt) <span class="kw">AS</span> day_of_week,
+  <span class="kw">MONTH</span>(dt) <span class="kw">AS</span> month,
+  <span class="kw">MONTHNAME</span>(dt) <span class="kw">AS</span> month_name,
+  <span class="kw">CONCAT</span>(<span class="str">'Q'</span>, <span class="kw">QUARTER</span>(dt)) <span class="kw">AS</span> quarter,
+  <span class="kw">YEAR</span>(dt) <span class="kw">AS</span> year,
+  <span class="kw">CASE WHEN DAYOFWEEK</span>(dt) <span class="kw">IN</span> (1, 7) <span class="kw">THEN</span> 1 <span class="kw">ELSE</span> 0 <span class="kw">END AS</span> is_weekend
+<span class="kw">FROM</span> dates;</pre>
+
+<h3>Step 9b — Load the flat CSV into a staging table</h3>
+<p>First, create a temporary staging table that mirrors the CSV structure exactly. This is where the raw data lands before being split into dimensions and facts.</p>
+
+<pre><span class="kw">CREATE TABLE</span> stg_pos_export (
+  transaction_id   <span class="kw">INT</span>,
+  transaction_date <span class="kw">DATE</span>,
+  transaction_time <span class="kw">VARCHAR</span>(5),
+  store_code       <span class="kw">VARCHAR</span>(10),
+  store_name       <span class="kw">VARCHAR</span>(50),
+  city             <span class="kw">VARCHAR</span>(30),
+  state            <span class="kw">VARCHAR</span>(5),
+  country          <span class="kw">VARCHAR</span>(20),
+  item_name        <span class="kw">VARCHAR</span>(50),
+  category         <span class="kw">VARCHAR</span>(20),
+  subcategory      <span class="kw">VARCHAR</span>(20),
+  size             <span class="kw">VARCHAR</span>(10),
+  quantity         <span class="kw">INT</span>,
+  unit_price       <span class="kw">DECIMAL</span>(5,2),
+  line_total       <span class="kw">DECIMAL</span>(7,2),
+  customer_name    <span class="kw">VARCHAR</span>(50),
+  loyalty_tier     <span class="kw">VARCHAR</span>(10)
+);
+
+<span class="cmt">-- Load CSV using MySQL import wizard or LOAD DATA:</span>
+<span class="kw">LOAD DATA INFILE</span> <span class="str">'/path/to/coffee_pos_export.csv'</span>
+<span class="kw">INTO TABLE</span> stg_pos_export
+<span class="kw">FIELDS TERMINATED BY</span> <span class="str">','</span>
+<span class="kw">ENCLOSED BY</span> <span class="str">'"'</span>
+<span class="kw">LINES TERMINATED BY</span> <span class="str">'\n'</span>
+<span class="kw">IGNORE</span> 1 <span class="kw">ROWS</span>;</pre>
+
+<h3>Step 9c — Populate dimensions from staging</h3>
+
+<pre><span class="cmt">-- dim_store: extract distinct stores</span>
+<span class="kw">INSERT INTO</span> dim_store (store_key, store_code, store_name, city, state, country)
+<span class="kw">SELECT</span>
+  <span class="kw">ROW_NUMBER</span>() <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> store_code) <span class="kw">AS</span> store_key,
+  store_code, store_name, city, state, country
+<span class="kw">FROM</span> (
+  <span class="kw">SELECT DISTINCT</span> store_code, store_name, city, state, country
+  <span class="kw">FROM</span> stg_pos_export
+) t;
+
+<span class="cmt">-- dim_product: extract distinct products</span>
+<span class="kw">INSERT INTO</span> dim_product (product_key, product_name, category, subcategory, size, unit_price)
+<span class="kw">SELECT</span>
+  <span class="kw">ROW_NUMBER</span>() <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> category, item_name) <span class="kw">AS</span> product_key,
+  item_name, category, subcategory, size, unit_price
+<span class="kw">FROM</span> (
+  <span class="kw">SELECT DISTINCT</span> item_name, category, subcategory, size, unit_price
+  <span class="kw">FROM</span> stg_pos_export
+) t;
+
+<span class="cmt">-- dim_customer: walk-in (key=0) + distinct loyalty customers</span>
+<span class="kw">INSERT INTO</span> dim_customer <span class="kw">VALUES</span> (0, <span class="str">'Walk-in'</span>, <span class="str">'None'</span>);
+
+<span class="kw">INSERT INTO</span> dim_customer (customer_key, customer_name, loyalty_tier)
+<span class="kw">SELECT</span>
+  <span class="kw">ROW_NUMBER</span>() <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> customer_name) <span class="kw">AS</span> customer_key,
+  customer_name, loyalty_tier
+<span class="kw">FROM</span> (
+  <span class="kw">SELECT DISTINCT</span> customer_name, loyalty_tier
+  <span class="kw">FROM</span> stg_pos_export
+  <span class="kw">WHERE</span> customer_name <span class="kw">IS NOT NULL AND</span> customer_name != <span class="str">''</span>
+) t;</pre>
+
+<h3>Step 9d — Populate fact_sales by joining staging to dimensions</h3>
+
+<pre><span class="kw">INSERT INTO</span> fact_sales (date_key, store_key, product_key, customer_key,
+                        quantity, unit_price, line_total)
+<span class="kw">SELECT</span>
+  <span class="kw">CAST</span>(<span class="kw">DATE_FORMAT</span>(s.transaction_date, <span class="str">'%Y%m%d'</span>) <span class="kw">AS UNSIGNED</span>) <span class="kw">AS</span> date_key,
+  st.store_key,
+  p.product_key,
+  <span class="kw">COALESCE</span>(c.customer_key, 0) <span class="kw">AS</span> customer_key,
+  s.quantity,
+  s.unit_price,
+  s.line_total
+<span class="kw">FROM</span> stg_pos_export s
+<span class="kw">JOIN</span> dim_store st   <span class="kw">ON</span> s.store_code = st.store_code
+<span class="kw">JOIN</span> dim_product p  <span class="kw">ON</span> s.item_name = p.product_name
+<span class="kw">LEFT JOIN</span> dim_customer c <span class="kw">ON</span> s.customer_name = c.customer_name
+                        <span class="kw">AND</span> s.customer_name != <span class="str">''</span>;</pre>
+
+<div class="card green">
+<div class="ct">Why LEFT JOIN for customer?</div>
+<p>Walk-in customers have empty <code>customer_name</code> in the CSV. The LEFT JOIN returns NULL for these, and <code>COALESCE(..., 0)</code> maps them to <code>customer_key = 0</code> (our Walk-in row). Every fact row must have a valid dimension key — no NULLs in foreign key columns.</p>
+</div>
+
+<h3>Step 9e — Drop the staging table</h3>
+<pre><span class="kw">DROP TABLE</span> stg_pos_export;</pre>
+
+
+<!-- ========================================== -->
+<h2 id="s10"><span class="s">10</span> Verify with queries</h2>
+
+<p>Run these to confirm the star schema works and produces the same totals as the source CSV:</p>
+
+<pre><span class="cmt">-- Check row counts</span>
+<span class="kw">SELECT</span> <span class="str">'dim_date'</span> <span class="kw">AS</span> tbl, <span class="kw">COUNT</span>(*) <span class="kw">AS</span> rows_ct <span class="kw">FROM</span> dim_date
+<span class="kw">UNION ALL SELECT</span> <span class="str">'dim_store'</span>, <span class="kw">COUNT</span>(*) <span class="kw">FROM</span> dim_store
+<span class="kw">UNION ALL SELECT</span> <span class="str">'dim_product'</span>, <span class="kw">COUNT</span>(*) <span class="kw">FROM</span> dim_product
+<span class="kw">UNION ALL SELECT</span> <span class="str">'dim_customer'</span>, <span class="kw">COUNT</span>(*) <span class="kw">FROM</span> dim_customer
+<span class="kw">UNION ALL SELECT</span> <span class="str">'fact_sales'</span>, <span class="kw">COUNT</span>(*) <span class="kw">FROM</span> fact_sales;</pre>
+
+<pre><span class="cmt">-- Total revenue should match CSV total</span>
+<span class="kw">SELECT SUM</span>(line_total) <span class="kw">AS</span> total_revenue <span class="kw">FROM</span> fact_sales;</pre>
+
+<pre><span class="cmt">-- The payoff: revenue by category by city by quarter</span>
+<span class="cmt">-- This is the query that justifies the whole exercise</span>
+<span class="kw">SELECT</span>
+  d.quarter,
+  s.city,
+  p.category,
+  <span class="kw">SUM</span>(f.line_total) <span class="kw">AS</span> revenue,
+  <span class="kw">SUM</span>(f.quantity) <span class="kw">AS</span> units
+<span class="kw">FROM</span> fact_sales f
+<span class="kw">JOIN</span> dim_date d     <span class="kw">ON</span> f.date_key = d.date_key
+<span class="kw">JOIN</span> dim_store s    <span class="kw">ON</span> f.store_key = s.store_key
+<span class="kw">JOIN</span> dim_product p  <span class="kw">ON</span> f.product_key = p.product_key
+<span class="kw">GROUP BY</span> d.quarter, s.city, p.category
+<span class="kw">ORDER BY</span> d.quarter, s.city, revenue <span class="kw">DESC</span>;</pre>
+
+<div class="card green">
+<div class="ct">The payoff</div>
+<p>That last query — revenue by category by city by quarter — is clean, readable, and fast. Every dimension join is a single integer key lookup. The business question maps directly to the SQL structure. Compare this to writing the same query against the flat CSV: you'd be doing string-based GROUP BYs on repeated denormalized columns with no foreign key integrity. The star schema makes the hard queries simple.</p>
+</div>
+
+</div>
+
+<script>
+const sections = document.querySelectorAll('h2[id]');
+const links = document.querySelectorAll('.nav a');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(s => { if (window.scrollY >= s.offsetTop - 120) current = s.id; });
+  links.forEach(a => {
+    a.classList.remove('active');
+    if (a.getAttribute('href') === '#' + current) a.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>
