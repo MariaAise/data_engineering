@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OLTP vs OLAP — One-Page Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fafaf8;--surface:#fff;--surface2:#f3f2ee;--border:#e2e0d8;--text:#2c2c2a;--text-dim:#6e6d68;--heading:#1a1a18;--oltp:#b91c1c;--oltp-light:#fef2f2;--oltp-mid:#fecaca;--olap:#1a6b4e;--olap-light:#e8f5ee;--olap-mid:#bbf7d0;--blue:#1d5fa0;--blue-light:#edf4fc;--amber:#b45309;--amber-light:#fef3e2;--code-bg:#f5f4f0;--code-border:#e8e6de}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;line-height:1.7;font-size:15px}
+.container{max-width:1060px;margin:0 auto;padding:2.5rem 2rem 6rem}
+h1{font-family:'Source Serif 4',serif;font-size:2.2rem;color:var(--heading);font-weight:700;text-align:center;margin-bottom:0.3rem}
+.hero-sub{color:var(--text-dim);font-size:0.9rem;text-align:center;margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border)}
+h2{font-family:'Source Serif 4',serif;font-size:1.3rem;color:var(--heading);font-weight:700;margin:2.5rem 0 0.8rem}
+h3{font-size:0.9rem;font-weight:700;margin:1.2rem 0 0.4rem}
+p{margin-bottom:0.7rem}
+strong{color:var(--heading)}
+
+.side{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin:1rem 0}
+.side .col{border-radius:10px;padding:1.2rem 1.4rem;border:1px solid var(--border)}
+.side .col.oltp{background:var(--oltp-light);border-color:var(--oltp-mid)}
+.side .col.olap{background:var(--olap-light);border-color:var(--olap-mid)}
+.side .col-title{font-weight:700;font-size:0.95rem;margin-bottom:0.5rem;display:flex;align-items:center;gap:0.4rem}
+.side .col.oltp .col-title{color:var(--oltp)}
+.side .col.olap .col-title{color:var(--olap)}
+
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:0.7rem;font-family:'JetBrains Mono',monospace;font-weight:600}
+.tag.oltp{background:var(--oltp-mid);color:var(--oltp)}
+.tag.olap{background:var(--olap-mid);color:var(--olap)}
+.tag.vs{background:var(--surface2);color:var(--text-dim)}
+
+pre{background:var(--code-bg);border:1px solid var(--code-border);border-radius:7px;padding:0.9rem 1rem;overflow-x:auto;margin:0.5rem 0;font-family:'JetBrains Mono',monospace;font-size:0.76rem;line-height:1.55;color:#4a4a45}
+code{font-family:'JetBrains Mono',monospace;font-size:0.82em;background:var(--code-bg);padding:1px 5px;border-radius:3px}
+.kw{color:var(--olap);font-weight:600}
+.cmt{color:var(--text-dim);font-style:italic}
+.str{color:var(--amber)}
+
+table{width:100%;border-collapse:collapse;font-size:0.82rem;margin:0.6rem 0}
+th{text-align:left;padding:0.45rem 0.6rem;background:var(--surface2);color:var(--heading);font-weight:600;font-size:0.74rem;letter-spacing:0.3px;border-bottom:2px solid var(--border)}
+td{padding:0.4rem 0.6rem;border-bottom:1px solid var(--border);vertical-align:top}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:1.1rem 1.3rem;margin:0.6rem 0}
+.card.blue{border-left:3px solid var(--blue);background:var(--blue-light)}
+.card.amber{border-left:3px solid var(--amber);background:var(--amber-light)}
+.card-title{font-weight:700;color:var(--heading);margin-bottom:0.3rem;font-size:0.88rem}
+
+.erd-row{display:flex;gap:1.2rem;margin:1rem 0;align-items:flex-start}
+.erd-box{flex:1}
+
+.arrow-down{text-align:center;color:var(--text-dim);font-size:1.3rem;margin:0.3rem 0}
+
+.highlight-row{display:grid;grid-template-columns:auto 1fr auto 1fr;gap:0.8rem;align-items:center;margin:1rem 0}
+.highlight-num{font-family:'JetBrains Mono',monospace;font-size:1.8rem;font-weight:700;text-align:center}
+.highlight-label{font-size:0.85rem}
+
+@media(max-width:800px){.side{grid-template-columns:1fr}.erd-row{flex-direction:column}.highlight-row{grid-template-columns:auto 1fr}}
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>OLTP vs OLAP</h1>
+<p class="hero-sub">Same data, two different database designs — side by side in MySQL Workbench</p>
+
+<!-- ============================================================ -->
+<!-- THE QUESTION -->
+<!-- ============================================================ -->
+
+<div class="card amber">
+<div class="card-title">The business question we're answering</div>
+<p><em>"What is total revenue by product category, by city, by quarter for 2024?"</em></p>
+<p>We'll answer this using both an OLTP (normalized) schema and an OLAP (star) schema — same data, same MySQL database — and see why the warehouse design exists.</p>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCHEMA COMPARISON -->
+<!-- ============================================================ -->
+
+<h2>The two schemas</h2>
+
+<div class="side">
+  <div class="col oltp">
+    <div class="col-title"><span class="tag oltp">OLTP</span> Normalized (3NF)</div>
+    <p style="font-size:0.84rem;"><strong>8 tables</strong> with foreign keys enforcing relationships. No redundancy — every piece of data stored once. This is what you'd build for a POS or e-commerce app.</p>
+    <pre>oltp_regions
+  └── oltp_cities
+        └── oltp_stores
+              └── oltp_orders
+                    └── oltp_order_items
+                          └── oltp_products
+                                └── oltp_categories
+oltp_customers ──┘</pre>
+    <p style="font-size:0.82rem;color:var(--text-dim);">To get from order_items to city, you traverse: order_items → orders → stores → cities. Three hops.</p>
+  </div>
+  <div class="col olap">
+    <div class="col-title"><span class="tag olap">OLAP</span> Star schema (denormalized)</div>
+    <p style="font-size:0.84rem;"><strong>5 tables</strong> — one fact table in the center, four dimensions radiating out. City and region are baked into <code>dim_store</code>. Category is baked into <code>dim_product</code>. Redundant? Yes. Fast? Extremely.</p>
+    <pre>         dim_date
+            │
+dim_store ──┤
+            │
+        fact_sales
+            │
+dim_product─┤
+            │
+      dim_customer</pre>
+    <p style="font-size:0.82rem;color:var(--text-dim);">To get from fact_sales to city: one JOIN to dim_store. One hop. Done.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- HEAD-TO-HEAD COMPARISON TABLE -->
+<!-- ============================================================ -->
+
+<h2>Head-to-head</h2>
+
+<table>
+  <tr><th></th><th><span class="tag oltp">OLTP</span> Normalized</th><th><span class="tag olap">OLAP</span> Star schema</th></tr>
+  <tr><td><strong>Purpose</strong></td><td>Record transactions as they happen</td><td>Analyze historical data for decisions</td></tr>
+  <tr><td><strong>Optimized for</strong></td><td><code>INSERT</code>, <code>UPDATE</code>, <code>DELETE</code></td><td><code>SELECT</code> with <code>GROUP BY</code>, <code>SUM</code>, <code>AVG</code></td></tr>
+  <tr><td><strong>Normalization</strong></td><td>3NF — no redundancy</td><td>Denormalized — redundancy is intentional</td></tr>
+  <tr><td><strong>Tables for this demo</strong></td><td>8 tables</td><td>5 tables</td></tr>
+  <tr><td><strong>JOINs needed for the question</strong></td><td>5 JOINs (6 tables)</td><td>2 JOINs (3 tables)</td></tr>
+  <tr><td><strong>Date handling</strong></td><td>Parse dates with <code>QUARTER()</code>, <code>YEAR()</code> functions</td><td>Pre-computed in <code>dim_date</code> — just <code>WHERE d.quarter = 'Q4'</code></td></tr>
+  <tr><td><strong>Subtotals (ROLLUP)</strong></td><td>Possible but needs long join chain first</td><td>One JOIN + <code>WITH ROLLUP</code></td></tr>
+  <tr><td><strong>Historical tracking</strong></td><td>Overwrites current state</td><td>Preserves history (SCD Type 2)</td></tr>
+  <tr><td><strong>Typical users</strong></td><td>Applications, POS terminals, APIs</td><td>Analysts, managers, BI dashboards</td></tr>
+  <tr><td><strong>Data freshness</strong></td><td>Real-time (current state)</td><td>Batch loaded (hours/days behind)</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<!-- THE QUERY COMPARISON -->
+<!-- ============================================================ -->
+
+<h2>The same question, two SQL queries</h2>
+
+<p style="margin-bottom:0.3rem;"><em>"Total revenue by product category, by city, by quarter for 2024"</em></p>
+
+<div class="side">
+  <div class="col oltp">
+    <div class="col-title"><span class="tag oltp">OLTP</span> 6 tables, 5 JOINs</div>
+    <pre><span class="kw">SELECT</span> 
+    cat.category_name <span class="kw">AS</span> category,
+    ci.city_name      <span class="kw">AS</span> city,
+    <span class="kw">CONCAT</span>(<span class="str">'Q'</span>, <span class="kw">QUARTER</span>(o.order_date)) <span class="kw">AS</span> qtr,
+    <span class="kw">SUM</span>(oi.line_total) <span class="kw">AS</span> revenue
+<span class="kw">FROM</span> oltp_order_items oi
+<span class="kw">JOIN</span> oltp_orders o       <span class="kw">ON</span> oi.order_id = o.order_id
+<span class="kw">JOIN</span> oltp_products p     <span class="kw">ON</span> oi.product_id = p.product_id
+<span class="kw">JOIN</span> oltp_categories cat <span class="kw">ON</span> p.category_id = cat.category_id
+<span class="kw">JOIN</span> oltp_stores st      <span class="kw">ON</span> o.store_id = st.store_id
+<span class="kw">JOIN</span> oltp_cities ci      <span class="kw">ON</span> st.city_id = ci.city_id
+<span class="kw">WHERE YEAR</span>(o.order_date) = 2024
+<span class="kw">GROUP BY</span> cat.category_name, 
+         ci.city_name, 
+         <span class="kw">QUARTER</span>(o.order_date)
+<span class="kw">ORDER BY</span> category, city, qtr;</pre>
+    <p style="font-size:0.8rem;">You need to know the full schema to write this. The analyst must understand that cities are in a separate table from stores, that categories are separate from products, and chain the JOINs correctly. Date parsing happens in the query.</p>
+  </div>
+  <div class="col olap">
+    <div class="col-title"><span class="tag olap">OLAP</span> 3 tables, 2 JOINs</div>
+    <pre><span class="kw">SELECT</span> 
+    p.category,
+    s.city,
+    d.quarter,
+    <span class="kw">SUM</span>(f.net_amount) <span class="kw">AS</span> revenue
+<span class="kw">FROM</span> fact_sales f
+<span class="kw">JOIN</span> dim_product p <span class="kw">ON</span> f.product_key = p.product_key
+<span class="kw">JOIN</span> dim_store s   <span class="kw">ON</span> f.store_key = s.store_key
+<span class="kw">JOIN</span> dim_date d    <span class="kw">ON</span> f.date_key = d.date_key
+<span class="kw">WHERE</span> d.year = 2024
+<span class="kw">GROUP BY</span> p.category, s.city, d.quarter
+<span class="kw">ORDER BY</span> p.category, s.city, d.quarter;</pre>
+    <p style="font-size:0.8rem;">The query reads like the business question: revenue <em>by category</em> (dim_product), <em>by city</em> (dim_store), <em>by quarter</em> (dim_date). Adding another dimension is just one more JOIN. No date parsing — quarter is pre-computed.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- ROLLUP COMPARISON -->
+<!-- ============================================================ -->
+
+<h2>Subtotals with ROLLUP</h2>
+
+<p><em>"Revenue by region and city, with subtotals per region and a grand total"</em></p>
+
+<div class="side">
+  <div class="col oltp">
+    <div class="col-title"><span class="tag oltp">OLTP</span> 5 tables to reach region</div>
+    <pre><span class="kw">SELECT</span> 
+    <span class="kw">COALESCE</span>(r.region_name, <span class="str">'*** TOTAL ***'</span>) <span class="kw">AS</span> region,
+    <span class="kw">COALESCE</span>(ci.city_name, <span class="str">'*** Subtotal ***'</span>) <span class="kw">AS</span> city,
+    <span class="kw">SUM</span>(oi.line_total) <span class="kw">AS</span> revenue
+<span class="kw">FROM</span> oltp_order_items oi
+<span class="kw">JOIN</span> oltp_orders o  <span class="kw">ON</span> oi.order_id = o.order_id
+<span class="kw">JOIN</span> oltp_stores st <span class="kw">ON</span> o.store_id = st.store_id
+<span class="kw">JOIN</span> oltp_cities ci <span class="kw">ON</span> st.city_id = ci.city_id
+<span class="kw">JOIN</span> oltp_regions r <span class="kw">ON</span> ci.region_id = r.region_id
+<span class="kw">GROUP BY</span> r.region_name, ci.city_name
+    <span class="kw">WITH ROLLUP</span>;</pre>
+  </div>
+  <div class="col olap">
+    <div class="col-title"><span class="tag olap">OLAP</span> 1 JOIN — region is in dim_store</div>
+    <pre><span class="kw">SELECT</span> 
+    <span class="kw">COALESCE</span>(s.region, <span class="str">'*** TOTAL ***'</span>) <span class="kw">AS</span> region,
+    <span class="kw">COALESCE</span>(s.city, <span class="str">'*** Subtotal ***'</span>) <span class="kw">AS</span> city,
+    <span class="kw">SUM</span>(f.net_amount) <span class="kw">AS</span> revenue
+<span class="kw">FROM</span> fact_sales f
+<span class="kw">JOIN</span> dim_store s <span class="kw">ON</span> f.store_key = s.store_key
+<span class="kw">GROUP BY</span> s.region, s.city
+    <span class="kw">WITH ROLLUP</span>;</pre>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- TREND ANALYSIS -->
+<!-- ============================================================ -->
+
+<h2>Monthly trend with growth % — only practical in OLAP</h2>
+
+<pre><span class="cmt">-- This query uses window functions that rely on dim_date.
+-- In the OLTP schema, you'd need to parse dates, self-join for the
+-- previous month, and calculate growth manually. In OLAP, it's clean:</span>
+
+<span class="kw">SELECT</span> 
+    d.quarter, d.month_name,
+    <span class="kw">SUM</span>(f.net_amount) <span class="kw">AS</span> revenue,
+    <span class="kw">ROUND</span>(
+        (<span class="kw">SUM</span>(f.net_amount) - <span class="kw">LAG</span>(<span class="kw">SUM</span>(f.net_amount)) <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> d.month))
+        / <span class="kw">LAG</span>(<span class="kw">SUM</span>(f.net_amount)) <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> d.month) * 100, 1
+    ) <span class="kw">AS</span> mom_growth_pct
+<span class="kw">FROM</span> fact_sales f
+<span class="kw">JOIN</span> dim_date d <span class="kw">ON</span> f.date_key = d.date_key
+<span class="kw">GROUP BY</span> d.quarter, d.month, d.month_name
+<span class="kw">ORDER BY</span> d.month;</pre>
+
+<!-- ============================================================ -->
+<!-- KEY TAKEAWAY -->
+<!-- ============================================================ -->
+
+<h2>The takeaway</h2>
+
+<div class="card blue">
+<div class="card-title">They're not competing — they're complementary</div>
+<p>OLTP records the data. OLAP analyzes it. In a real organization, the OLTP system feeds the OLAP warehouse via ETL (Extract, Transform, Load). You don't replace one with the other — you need both.</p>
+</div>
+
+<div class="side">
+  <div class="col oltp" style="text-align:center;">
+    <div class="col-title" style="justify-content:center;"><span class="tag oltp">OLTP</span></div>
+    <p style="font-size:0.85rem;">Use when you need to <strong>record</strong> a sale, update a customer address, process a return — one row at a time, fast, correct, concurrent.</p>
+  </div>
+  <div class="col olap" style="text-align:center;">
+    <div class="col-title" style="justify-content:center;"><span class="tag olap">OLAP</span></div>
+    <p style="font-size:0.85rem;">Use when you need to <strong>analyze</strong> revenue trends, compare regions, find top products — aggregate millions of rows, slice by dimensions, generate reports.</p>
+  </div>
+</div>
+
+<div class="card">
+<div class="card-title">Try it yourself</div>
+<p>Run <code>oltp_vs_olap_demo.sql</code> in MySQL Workbench. It creates both schemas in one database with identical data. Then run the comparison queries at the bottom and see the same results from both — but notice how much simpler the OLAP queries are to write and read.</p>
+</div>
+
+</div>
+</body>
+</html>
