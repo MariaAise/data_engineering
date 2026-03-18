@@ -1,0 +1,29 @@
+product_key,product_name,category,subcategory,size,unit_price
+1,Espresso,Coffee,Espresso,single,3.5
+2,Double Espresso,Coffee,Espresso,double,4.5
+3,Flat White,Coffee,Milk Coffee,regular,4.8
+4,Flat White Large,Coffee,Milk Coffee,large,5.5
+5,Latte,Coffee,Milk Coffee,regular,4.8
+6,Latte Large,Coffee,Milk Coffee,large,5.5
+7,Cappuccino,Coffee,Milk Coffee,regular,4.8
+8,Long Black,Coffee,Black Coffee,regular,4.2
+9,Cold Brew,Coffee,Cold Coffee,large,5.8
+10,Iced Latte,Coffee,Cold Coffee,large,6.0
+11,English Breakfast,Tea,Black Tea,regular,4.0
+12,Earl Grey,Tea,Black Tea,regular,4.0
+13,Green Tea,Tea,Green Tea,regular,4.0
+14,Chai Latte,Tea,Specialty,regular,5.2
+15,Matcha Latte,Tea,Specialty,regular,5.8
+16,Croissant,Pastry,Baked,regular,4.5
+17,Almond Croissant,Pastry,Baked,regular,5.5
+18,Blueberry Muffin,Pastry,Muffin,regular,4.8
+19,Banana Bread,Pastry,Bread,slice,5.0
+20,Chocolate Cookie,Pastry,Cookie,regular,3.5
+21,Ham & Cheese Toastie,Sandwich,Hot,regular,8.5
+22,Chicken Pesto Panini,Sandwich,Hot,regular,9.5
+23,Smoked Salmon Bagel,Sandwich,Cold,regular,10.0
+24,Veggie Wrap,Sandwich,Cold,regular,8.0
+25,Egg & Bacon Roll,Sandwich,Hot,regular,7.5
+26,Orange Juice,Beverage,Juice,regular,5.5
+27,Sparkling Water,Beverage,Water,bottle,3.5
+28,Hot Chocolate,Beverage,Chocolate,regular,5.0

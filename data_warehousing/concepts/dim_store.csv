@@ -1,0 +1,13 @@
+store_key,store_name,city,state,country,store_size
+1,CBD Flagship,Melbourne,VIC,Australia,large
+2,Southbank,Melbourne,VIC,Australia,medium
+3,Fitzroy,Melbourne,VIC,Australia,small
+4,George St,Sydney,NSW,Australia,large
+5,Surry Hills,Sydney,NSW,Australia,medium
+6,Bondi,Sydney,NSW,Australia,small
+7,Queen St Mall,Brisbane,QLD,Australia,large
+8,West End,Brisbane,QLD,Australia,medium
+9,Fortitude Valley,Brisbane,QLD,Australia,small
+10,Adelaide Central,Adelaide,SA,Australia,medium
+11,Glenelg,Adelaide,SA,Australia,small
+12,Norwood,Adelaide,SA,Australia,small
