@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Q5 — Neo4j Graph Database Solution for Acme Inc</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fafaf8;--surface:#fff;--surface2:#f3f2ee;--border:#e2e0d8;--text:#2c2c2a;--text-dim:#6e6d68;--heading:#1a1a18;--accent:#1a6b4e;--accent-light:#e8f5ee;--amber:#b45309;--amber-light:#fef3e2;--blue:#1d5fa0;--blue-light:#edf4fc;--red:#b91c1c;--red-light:#fef2f2;--purple:#6d28d9;--purple-light:#f3eefb;--code-bg:#f5f4f0;--code-border:#e8e6de}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;line-height:1.75;font-size:15px}
+.nav{position:fixed;top:0;left:0;width:250px;height:100vh;overflow-y:auto;background:var(--surface);border-right:1px solid var(--border);padding:1.5rem 1rem;z-index:10}
+.nav-title{font-family:'Source Serif 4',serif;font-size:.88rem;font-weight:700;color:var(--heading);margin-bottom:1rem;line-height:1.3}
+.nav a{display:block;padding:.3rem .5rem;color:var(--text-dim);text-decoration:none;font-size:.76rem;border-radius:4px;line-height:1.35;margin:.08rem 0}
+.nav a:hover{background:var(--surface2);color:var(--heading)}
+.nav a.active{background:var(--accent-light);color:var(--accent);font-weight:500}
+.nav .sep{height:1px;background:var(--border);margin:.5rem 0}
+.nav .ns{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;padding:.4rem .5rem .2rem}
+.main{margin-left:250px;max-width:820px;padding:2.5rem 3rem 6rem}
+h1{font-family:'Source Serif 4',serif;font-size:2rem;color:var(--heading);font-weight:700;margin-bottom:.3rem;line-height:1.15}
+.hero-sub{color:var(--text-dim);font-size:.9rem;margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border)}
+h2{font-family:'Source Serif 4',serif;font-size:1.35rem;color:var(--heading);font-weight:700;margin:2.5rem 0 .8rem;padding-top:1rem}
+h3{color:var(--accent);font-size:.95rem;font-weight:700;margin:1.5rem 0 .4rem}
+h4{font-size:.88rem;font-weight:700;color:var(--heading);margin:1rem 0 .3rem}
+p{margin-bottom:.7rem}
+strong{color:var(--heading)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.1rem 1.3rem;margin:.6rem 0}
+.card.green{border-left:3px solid var(--accent);background:var(--accent-light)}
+.card.amber{border-left:3px solid var(--amber);background:var(--amber-light)}
+.card.blue{border-left:3px solid var(--blue);background:var(--blue-light)}
+.card.red{border-left:3px solid var(--red);background:var(--red-light)}
+.card.purple{border-left:3px solid var(--purple);background:var(--purple-light)}
+.card-title{font-weight:700;color:var(--heading);margin-bottom:.3rem;font-size:.88rem}
+code{font-family:'JetBrains Mono',monospace;font-size:.82em;background:var(--code-bg);padding:1px 5px;border-radius:3px}
+pre{background:var(--code-bg);border:1px solid var(--code-border);border-radius:8px;padding:1rem 1.2rem;overflow-x:auto;margin:.6rem 0;font-family:'JetBrains Mono',monospace;font-size:.78rem;line-height:1.6;color:#4a4a45}
+.kw{color:var(--accent);font-weight:600}
+.cmt{color:var(--text-dim);font-style:italic}
+.str{color:var(--amber)}
+.fn{color:var(--blue)}
+table{width:100%;border-collapse:collapse;font-size:.83rem;margin:.6rem 0}
+th{text-align:left;padding:.5rem .7rem;background:var(--surface2);color:var(--heading);font-weight:600;font-size:.73rem;border-bottom:2px solid var(--border)}
+td{padding:.45rem .7rem;border-bottom:1px solid var(--border);vertical-align:top}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin:.6rem 0}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.7rem;margin:.6rem 0}
+.ref{font-size:.78rem;color:var(--blue);text-decoration:none}
+.ref:hover{text-decoration:underline}
+.decision{background:var(--surface);border:2px solid var(--border);border-radius:10px;padding:1.2rem 1.5rem;margin:.8rem 0}
+.decision-q{font-weight:700;color:var(--heading);font-size:.92rem;margin-bottom:.6rem;padding-left:1.2rem;position:relative}
+.decision-q::before{content:'?';position:absolute;left:0;color:var(--blue);font-family:'JetBrains Mono',monospace}
+.decision-yes{color:var(--accent);font-family:'JetBrains Mono',monospace;font-size:.75rem;font-weight:600;margin:.3rem 0 .2rem 1.5rem}
+.decision-no{color:var(--red);font-family:'JetBrains Mono',monospace;font-size:.75rem;font-weight:600;margin:.3rem 0 .2rem 1.5rem}
+.decision-result{font-size:.85rem;margin-left:1.5rem;margin-bottom:.4rem}
+@media(max-width:900px){.nav{display:none}.main{margin-left:0;padding:2rem 1.2rem 4rem}.grid2,.grid3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <div class="nav-title">Q5 — Neo4j Solution for Acme Inc</div>
+  <div class="ns">Refresher</div>
+  <a href="#refresher">Graph DB concepts</a>
+  <a href="#when">When graph vs relational</a>
+  <div class="sep"></div>
+  <div class="ns">Industry</div>
+  <a href="#landscape">Current landscape</a>
+  <a href="#usecases">Use cases</a>
+  <a href="#products">Products &amp; platforms</a>
+  <div class="sep"></div>
+  <div class="ns">Decision framework</div>
+  <a href="#decision">Is it a graph problem?</a>
+  <div class="sep"></div>
+  <div class="ns">Acme solution</div>
+  <a href="#acme-problems">Graph-suitable problems</a>
+  <a href="#model">Graph data model</a>
+  <a href="#arch">Hybrid architecture</a>
+  <a href="#cypher">Cypher queries</a>
+  <a href="#steps">Investigation steps</a>
+  <div class="sep"></div>
+  <div class="ns">Future</div>
+  <a href="#future-general">General developments</a>
+  <a href="#future-acme">Acme next steps</a>
+</div>
+
+<div class="main">
+
+<h1>Q5 — Neo4j Graph Database Solution</h1>
+<p class="hero-sub">When to use a graph database, how it complements the data warehouse, and what it solves for a multi-store electronics retailer.</p>
+
+
+<h2 id="refresher">Graph database — concept refresher</h2>
+
+<p>A graph database stores data as <strong>nodes</strong> (entities) connected by <strong>relationships</strong> (edges). Both nodes and relationships can have <strong>properties</strong> (key-value pairs). Nodes have <strong>labels</strong> (types). This is the <strong>property graph model</strong>.</p>
+
+<div class="grid3">
+  <div class="card">
+    <div class="card-title">Node</div>
+    <p>An entity: a store, a product, a customer, a supplier. Has a label (<code>:Store</code>, <code>:Product</code>) and properties (<code>{name: "MG Road", city: "Bangalore"}</code>).</p>
+  </div>
+  <div class="card">
+    <div class="card-title">Relationship</div>
+    <p>A connection between two nodes. Has a type (<code>:PURCHASED</code>, <code>:SHIPPED_TO</code>), a direction (always directed), and properties (<code>{quantity: 2, date: "2024-10-15"}</code>).</p>
+  </div>
+  <div class="card">
+    <div class="card-title">Traversal</div>
+    <p>Following relationships from node to node. The core operation. "Start at Samsung Galaxy S23, follow all PURCHASED relationships, find all Customers, then follow their other PURCHASED relationships to find co-purchased Products." This is a 3-hop traversal — trivial in a graph, expensive in SQL.</p>
+  </div>
+</div>
+
+<h3>Cypher — the query language</h3>
+<pre><span class="cmt">// Pattern matching — the core of Cypher</span>
+<span class="kw">MATCH</span> (c:<span class="fn">Customer</span>)-[:<span class="fn">PURCHASED</span>]->(p:<span class="fn">Product</span>)
+<span class="kw">WHERE</span> p.category = <span class="str">'TVs'</span>
+<span class="kw">RETURN</span> c.name, p.name, p.brand
+
+<span class="cmt">// Multi-hop traversal — find products co-purchased with a specific item</span>
+<span class="kw">MATCH</span> (target:<span class="fn">Product</span> {name: <span class="str">'Samsung 55 Crystal 4K'</span>})
+      <-[:<span class="fn">PURCHASED</span>]-(c:<span class="fn">Customer</span>)-[:<span class="fn">PURCHASED</span>]->(other:<span class="fn">Product</span>)
+<span class="kw">WHERE</span> other <> target
+<span class="kw">RETURN</span> other.name, other.category, <span class="kw">count</span>(c) <span class="kw">AS</span> co_purchases
+<span class="kw">ORDER BY</span> co_purchases <span class="kw">DESC LIMIT</span> 10
+
+<span class="cmt">// Variable-length path — supply chain trace</span>
+<span class="kw">MATCH</span> path = (s:<span class="fn">Supplier</span>)-[*1..5]->(store:<span class="fn">Store</span> {name: <span class="str">'MG Road'</span>})
+<span class="kw">RETURN</span> path</pre>
+
+<h3 id="when">When graph vs relational — the fundamental distinction</h3>
+
+<div class="grid2">
+  <div class="card green">
+    <div class="card-title">Use a graph when</div>
+    <p>The <strong>relationships between entities</strong> are the primary subject of analysis. You're asking: "how are things connected?", "what's the path between A and B?", "what patterns emerge from the network structure?"</p>
+    <p>Query depth is variable — you don't know how many joins in advance. In SQL you must specify exact join count; in Cypher, <code>[*1..5]</code> traverses 1-5 hops dynamically.</p>
+    <p>The schema is flexible — new relationship types and node labels can be added without altering existing data. Good for evolving models.</p>
+  </div>
+  <div class="card amber">
+    <div class="card-title">Use a relational/star schema when</div>
+    <p>The <strong>aggregation of measures</strong> is the primary analysis. You're asking: "what is total revenue by category by quarter?", "what's the average order value?" — these are SUM/COUNT/AVG operations across millions of rows.</p>
+    <p>OLAP operations (roll-up, drill-down, slice, dice) are the workload. Star schemas with columnar storage are optimized for exactly this.</p>
+    <p>The schema is stable — dimensions and facts don't change structure frequently.</p>
+  </div>
+</div>
+
+<div class="card blue">
+<div class="card-title">They are complementary, not competing</div>
+<p>A graph database does not replace the data warehouse. The warehouse handles aggregation; the graph handles traversal. The same enterprise data can live in both — star schema for OLAP, property graph for relationship analysis. The question is: which Acme problems are aggregation problems (→ warehouse) and which are traversal problems (→ graph)?</p>
+</div>
+
+
+<h2 id="landscape">Industry landscape (2025)</h2>
+
+<div class="card">
+<div class="card-title">Market trajectory</div>
+<p>Gartner predicted that by 2025, graph technologies would be used in <strong>80% of data and analytics innovations</strong> — up from 10% in 2021. The graph database market is growing at ~25% CAGR. Neo4j serves 80+ Fortune 100 companies with 300,000+ developers in its ecosystem.</p>
+</div>
+
+<h3>Key 2024-2025 developments</h3>
+
+<table>
+  <tr><th>Development</th><th>What it means</th></tr>
+  <tr><td><strong>GQL — ISO standard query language</strong></td><td>Graph Query Language became an ISO standard (April 2024). Like SQL for relational, GQL standardizes graph querying across vendors. Neo4j's Cypher is GQL-compliant. Cross-vendor portability for graph queries.</td></tr>
+  <tr><td><strong>Neo4j Aura Graph Analytics</strong></td><td>Serverless graph analytics (GA May 2025). Works with <em>any</em> data source — Snowflake, Databricks, BigQuery, Oracle, SQL Server — with zero ETL. Run graph algorithms on warehouse data without moving it into Neo4j. Removes the biggest adoption barrier.</td></tr>
+  <tr><td><strong>GraphRAG</strong></td><td>Knowledge graphs powering Retrieval-Augmented Generation for LLMs. Graph structure provides context that vector search alone misses. Gartner Hype Cycle feature. Neo4j provides native vector search alongside graph traversal.</td></tr>
+  <tr><td><strong>15x scale improvement</strong></td><td>Neo4j can process 15x more real-time data per cluster (2024). Enables larger production workloads — real-time recommendation engines, fraud detection at scale.</td></tr>
+  <tr><td><strong>GenAI co-pilot in Aura</strong></td><td>Natural language → Cypher generation. Users describe what they want in English; the system generates the graph query. Eliminates the Cypher learning curve for business users.</td></tr>
+</table>
+
+<p><a class="ref" href="https://neo4j.com/product/auradb/">neo4j.com/auradb</a> · <a class="ref" href="https://neo4j.com/product/graph-data-science/">neo4j.com/graph-data-science</a></p>
+
+
+<h2 id="usecases">Industry use cases — where graphs deliver value</h2>
+
+<table>
+  <tr><th>Use case</th><th>What the graph models</th><th>Industries</th><th>Why SQL fails</th></tr>
+  <tr><td><strong>Recommendation engines</strong></td><td>Customer-Product co-purchase network. "People who bought X also bought Y."</td><td>Retail, e-commerce, media streaming</td><td>Requires self-joins on transaction table for every hop depth. Graph traversal is O(1) per hop.</td></tr>
+  <tr><td><strong>Supply chain visibility</strong></td><td>Supplier → Manufacturer → Warehouse → Transporter → Store chain. Multi-tier traceability.</td><td>Retail, manufacturing, pharma, food</td><td>Variable-depth chains (3-6 tiers). SQL requires separate queries for each depth. Graph handles <code>[*1..6]</code> in one query.</td></tr>
+  <tr><td><strong>Fraud detection</strong></td><td>Transaction networks — shared addresses, devices, payment methods across accounts.</td><td>Banking, insurance, e-commerce</td><td>Fraud patterns are network patterns — rings of connected entities. SQL can't efficiently detect rings.</td></tr>
+  <tr><td><strong>Knowledge graphs</strong></td><td>Entity-relationship networks: products, features, categories, regulations, compliance rules.</td><td>All — especially enterprise AI (GraphRAG)</td><td>Hierarchical and many-to-many relationships that don't fit neatly into tables.</td></tr>
+  <tr><td><strong>Network &amp; IT infrastructure</strong></td><td>Servers, VMs, containers, dependencies, network topology.</td><td>Telecom, cloud infrastructure, IT ops</td><td>Impact analysis: "if this server goes down, what's affected?" requires unbounded traversal.</td></tr>
+  <tr><td><strong>Master data management</strong></td><td>Customer 360 — merging customer records across systems, resolving duplicates, linking identities.</td><td>Retail, banking, healthcare</td><td>Entity resolution across heterogeneous systems is a graph matching problem.</td></tr>
+</table>
+
+<div class="card green">
+<div class="card-title">Retail-specific graph use cases (Neo4j customers)</div>
+<p><strong>eBay:</strong> Moved delivery logistics to Neo4j — 1000x faster than relational, 10-100x less code. Powers same-day delivery routing.</p>
+<p><strong>Transparency-One:</strong> Built on Neo4j to provide food supply chain traceability for large retailers — trace any ingredient back to its farm of origin through multi-tier supplier networks.</p>
+<p><strong>Major US retailer (unnamed):</strong> Neo4j-based real-time promotions engine. Set all-time online sales records. Synchronized in-store and online promotions via graph model of product-promotion-customer relationships.</p>
+<p><a class="ref" href="https://neo4j.com/use-cases/retail/">neo4j.com/use-cases/retail</a></p>
+</div>
+
+
+<h2 id="products">Products and platforms</h2>
+
+<table>
+  <tr><th>Product</th><th>Type</th><th>Key features</th><th>Reference</th></tr>
+  <tr><td><strong>Neo4j AuraDB</strong></td><td>Managed cloud graph database</td><td>Fully managed, multi-cloud (AWS/GCP/Azure). Free tier available. Business Critical and Enterprise tiers for production. SOC 2, HIPAA compliant.</td><td><a class="ref" href="https://neo4j.com/product/auradb/">auradb</a></td></tr>
+  <tr><td><strong>Neo4j Graph Data Science</strong></td><td>Analytics library</td><td>40+ graph algorithms: PageRank, community detection, pathfinding, similarity, link prediction, embeddings. In-memory parallel execution.</td><td><a class="ref" href="https://neo4j.com/product/graph-data-science/">GDS</a></td></tr>
+  <tr><td><strong>Neo4j Aura Graph Analytics</strong></td><td>Serverless analytics</td><td>Zero-ETL graph analytics on any data source. Connect to Snowflake/Databricks/BigQuery directly. Serverless — pay per use.</td><td><a class="ref" href="https://neo4j.com/blog/neo4j-aura-graph-analytics/">announcement</a></td></tr>
+  <tr><td><strong>Neo4j Bloom</strong></td><td>Visualization</td><td>Interactive graph exploration for business users. No Cypher required. Pattern-based visual search.</td><td><a class="ref" href="https://neo4j.com/product/bloom/">bloom</a></td></tr>
+  <tr><td><strong>NeoDash</strong></td><td>Dashboard builder</td><td>Low-code dashboard builder for graph data. Maps, charts, tables, graph visualizations. Now fully supported (not Labs).</td><td><a class="ref" href="https://neo4j.com/labs/neodash/">neodash</a></td></tr>
+  <tr><td><strong>Amazon Neptune</strong></td><td>AWS-managed graph</td><td>AWS-native. Supports both property graph (openCypher) and RDF (SPARQL). Serverless option. Good for AWS-native shops.</td><td><a class="ref" href="https://aws.amazon.com/neptune/">neptune</a></td></tr>
+  <tr><td><strong>Azure Cosmos DB (Gremlin API)</strong></td><td>Multi-model with graph</td><td>Microsoft's multi-model database. Gremlin query language. Global distribution. Good for Microsoft shops but not a dedicated graph engine.</td><td><a class="ref" href="https://learn.microsoft.com/en-us/azure/cosmos-db/gremlin/">cosmos gremlin</a></td></tr>
+</table>
+
+
+<h2 id="decision">Decision framework — is this a graph problem?</h2>
+
+<p>Not every problem benefits from a graph database. This decision process identifies which problems are graph-shaped:</p>
+
+<div class="decision">
+  <div class="decision-q">Are the relationships between entities the primary subject of the analysis?</div>
+  <div class="decision-yes">YES → Graph is a strong candidate. Continue below.</div>
+  <div class="decision-no">NO → the primary need is aggregation (SUM, COUNT, AVG across rows) → Star schema / data warehouse. Graph adds no value here.</div>
+</div>
+
+<div class="decision">
+  <div class="decision-q">Does the analysis require traversing connections of variable or unknown depth?</div>
+  <div class="decision-yes">YES → Graph. Examples: "trace a product through the supply chain" (3-6 hops), "find all products connected through shared customers" (2-3 hops), "what's the impact if this supplier fails?" (unbounded depth).</div>
+  <div class="decision-no">NO → if the join depth is fixed (e.g., always fact → dim, always 1-2 joins), SQL handles it efficiently. No graph needed.</div>
+</div>
+
+<div class="decision">
+  <div class="decision-q">Do you need to discover patterns in the network structure itself?</div>
+  <div class="decision-yes">YES → Graph. Community detection (which stores cluster together by customer overlap?), centrality (which product is most central to the purchase network?), path analysis (shortest supply chain path), similarity (which customers have the most similar purchase networks?).</div>
+  <div class="decision-no">NO → if the analysis is about the attributes of entities (revenue, quantity, margin) rather than the structure of connections, the warehouse is the right tool.</div>
+</div>
+
+<div class="decision">
+  <div class="decision-q">Is the query performance degrading because of excessive JOINs in SQL?</div>
+  <div class="decision-yes">YES → Graph. If your SQL query has 5+ self-joins on the same table or recursive CTEs to traverse hierarchies, the graph model will be dramatically simpler and faster.</div>
+  <div class="decision-no">NO → if your queries are performing well with standard star schema joins, there's no performance reason to add a graph layer.</div>
+</div>
+
+<div class="card amber">
+<div class="card-title">The litmus test</div>
+<p>If you catch yourself writing <code>SELECT ... FROM table t1 JOIN table t1 AS t2 ON ... JOIN table t1 AS t3 ON ...</code> — self-joining the same table multiple times to traverse connections — you have a graph problem disguised as a SQL query. The graph model makes the traversal explicit and efficient.</p>
+</div>
+
+
+<h2 id="acme-problems">Acme's graph-suitable problems</h2>
+
+<p>Applying the decision framework to the case, four problems emerge as genuinely graph-shaped:</p>
+
+<div class="grid2">
+  <div class="card green">
+    <div class="card-title">1. Supply chain traceability (strongest fit)</div>
+    <p><strong>The path:</strong> Supplier → Warehouse → Shipment → Transporter → Store</p>
+    <p><strong>The question:</strong> "A batch of Samsung TVs arrived damaged at the Bangalore store. Trace back through the chain — which warehouse shipped them? Which transporter handled them? Which supplier provided them? Have other shipments from the same transporter/supplier had similar damage rates?"</p>
+    <p><strong>Why graph:</strong> The chain has variable depth (3-6 nodes depending on intermediate handling). In SQL, this requires 5+ joins across multiple fact tables (fact_order_fulfillment, dim_transporter, dim_warehouse, dim_product, dim_store). In Cypher, it's one path query.</p>
+    <p><strong>Directly relevant to Q2.2</strong> — damage root cause analysis.</p>
+  </div>
+  <div class="card green">
+    <div class="card-title">2. Product recommendation network</div>
+    <p><strong>The pattern:</strong> Customer → PURCHASED → Product ← PURCHASED ← Other Customer → PURCHASED → Other Product</p>
+    <p><strong>The question:</strong> "Customers who bought an Apple MacBook Air also bought Apple AirPods Pro, a laptop bag, and AppleCare warranty. Recommend these as a bundle."</p>
+    <p><strong>Why graph:</strong> Market basket analysis via self-joins in SQL is O(n²). In a graph, co-purchase traversal is O(neighbors). Scales to 12,000 SKUs × 100K+ customers without performance degradation.</p>
+    <p><strong>Directly relevant to Q3</strong> — customer targeting and bundle promotions.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">3. Impact analysis</div>
+    <p><strong>The question:</strong> "If Supplier Samsung delays deliveries for 2 weeks, which products across which stores are affected? What's the revenue at risk?"</p>
+    <p><strong>Why graph:</strong> Impact radiates outward from the supplier through warehouse → store → product availability → customer experience. Unbounded traversal from a single starting node.</p>
+    <p><strong>Directly relevant to</strong> warehouse management and business continuity planning.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">4. Customer 360 / entity resolution</div>
+    <p><strong>The problem:</strong> Acme grew through acquisitions. Same customer may exist in multiple store databases with different IDs, slightly different names, different addresses. The graph can link: <code>(Customer A)-[:SAME_AS]->(Customer B)</code> based on shared phone number, email, or address.</p>
+    <p><strong>Why graph:</strong> Entity resolution is a matching/linking problem — fundamentally graph-shaped. Critical for the loyalty program (Q3) — you can't measure customer lifetime value if one customer appears as three separate records.</p>
+  </div>
+</div>
+
+<div class="card red">
+<div class="card-title">Problems that are NOT graph-shaped at Acme</div>
+<p><strong>Total revenue by category by quarter</strong> → aggregation → warehouse.<br>
+<strong>Promotion ROI calculation</strong> → arithmetic on measures → warehouse.<br>
+<strong>Forecast accuracy measurement</strong> → comparison of predicted vs actual values → warehouse.<br>
+<strong>Inventory turns</strong> → ratio of aggregated measures → warehouse.<br>
+Don't force these into a graph. The star schema handles them better.</p>
+</div>
+
+
+<h2 id="model">Graph data model for Acme</h2>
+
+<pre><span class="cmt">// Node labels and their key properties</span>
+
+(:<span class="fn">Store</span>       {store_id, name, city, state, region, floor_area})
+(:<span class="fn">Warehouse</span>   {warehouse_id, name, city, state, region, capacity})
+(:<span class="fn">Product</span>     {sku_id, name, brand, category, subcategory, unit_price})
+(:<span class="fn">Customer</span>    {customer_id, name, city, segment, loyalty_tier})
+(:<span class="fn">Supplier</span>    {supplier_id, name, location, lead_time_days})
+(:<span class="fn">Transporter</span> {transporter_id, name, service_type, sla_hrs})
+(:<span class="fn">Brand</span>       {brand_name, country_of_origin})
+(:<span class="fn">Category</span>    {category_name})
+(:<span class="fn">Shipment</span>    {shipment_id, ship_date, delivery_date, status})
+
+<span class="cmt">// Relationship types</span>
+
+(Customer)-[:PURCHASED   {date, quantity, amount}]->(Product)
+(Store)-[:RECEIVED       {date, quantity}]->(Shipment)
+(Shipment)-[:CONTAINS    {quantity}]->(Product)
+(Shipment)-[:SHIPPED_FROM]->(Warehouse)
+(Shipment)-[:TRANSPORTED_BY {cost, transit_hrs}]->(Transporter)
+(Warehouse)-[:STOCKS     {quantity_on_hand}]->(Product)
+(Supplier)-[:SUPPLIES    {lead_time, cost}]->(Product)
+(Product)-[:BELONGS_TO]->(Category)
+(Product)-[:MANUFACTURED_BY]->(Brand)
+(Brand)-[:SUPPLIED_BY]->(Supplier)
+(Store)-[:LOCATED_IN]->(City)        <span class="cmt">// geographic hierarchy as graph</span>
+(Warehouse)-[:SERVES]->(Store)       <span class="cmt">// which warehouse serves which stores</span></pre>
+
+
+<h2 id="arch">Hybrid architecture — warehouse + graph</h2>
+
+<div class="card blue">
+<div class="card-title">Architecture principle</div>
+<p>The data warehouse (star schema) and the graph database (Neo4j) sit side by side, fed from the same source systems. They serve different query patterns. The BI team uses the warehouse for aggregation. The operations team uses the graph for traversal and impact analysis. Shared source data, different analytical models.</p>
+</div>
+
+<table>
+  <tr><th>Layer</th><th>Warehouse path</th><th>Graph path</th></tr>
+  <tr><td><strong>Sources</strong></td><td colspan="2">POS systems, WMS, TMS, ERP systems (same sources for both)</td></tr>
+  <tr><td><strong>Ingestion</strong></td><td>ETL/ELT → staging → Bronze/Silver/Gold</td><td>ETL → Neo4j bulk import or Kafka → Neo4j streaming connector</td></tr>
+  <tr><td><strong>Storage</strong></td><td>Snowflake / BigQuery (columnar, star schema)</td><td>Neo4j AuraDB (property graph)</td></tr>
+  <tr><td><strong>Query</strong></td><td>SQL (OLAP operations, aggregation, ROLLUP)</td><td>Cypher (traversal, path finding, pattern matching)</td></tr>
+  <tr><td><strong>Consumption</strong></td><td>Power BI / Tableau dashboards</td><td>Neo4j Bloom / NeoDash, Cypher API for applications</td></tr>
+  <tr><td><strong>Governance</strong></td><td>Unity Catalog / Snowflake Horizon</td><td>Neo4j AuraDB RBAC + audit logs</td></tr>
+</table>
+
+<div class="card">
+<div class="card-title">Integration option: Neo4j Aura Graph Analytics (zero ETL)</div>
+<p>As of May 2025, Neo4j Aura Graph Analytics can connect directly to Snowflake, BigQuery, or Databricks and run graph algorithms on the warehouse data <em>without moving it into Neo4j</em>. This eliminates the need for a separate ETL pipeline to the graph. You keep your star schema as the single source of truth and overlay graph analytics on demand.</p>
+<p><a class="ref" href="https://neo4j.com/blog/neo4j-aura-graph-analytics/">neo4j.com/blog/neo4j-aura-graph-analytics</a></p>
+</div>
+
+
+<h2 id="cypher">Cypher queries for Acme's problems</h2>
+
+<h3>Supply chain trace — damaged product investigation</h3>
+<pre><span class="cmt">// Trace the full chain for a damaged shipment to a specific store</span>
+<span class="kw">MATCH</span> path = (sup:<span class="fn">Supplier</span>)-[:SUPPLIES]->(p:<span class="fn">Product</span>)
+             <-[:CONTAINS]-(ship:<span class="fn">Shipment</span>)-[:SHIPPED_FROM]->(wh:<span class="fn">Warehouse</span>),
+      (ship)-[:TRANSPORTED_BY]->(tr:<span class="fn">Transporter</span>),
+      (store:<span class="fn">Store</span>)-[:RECEIVED]->(ship)
+<span class="kw">WHERE</span> store.name = <span class="str">'MG Road'</span>
+  <span class="kw">AND</span> p.category = <span class="str">'TVs'</span>
+  <span class="kw">AND</span> ship.status = <span class="str">'damaged'</span>
+<span class="kw">RETURN</span> sup.name <span class="kw">AS</span> supplier, wh.name <span class="kw">AS</span> warehouse,
+       tr.name <span class="kw">AS</span> transporter, p.name <span class="kw">AS</span> product,
+       ship.ship_date, ship.delivery_date</pre>
+
+<h3>Product recommendation — co-purchase network</h3>
+<pre><span class="cmt">// Find top co-purchased products for a specific item</span>
+<span class="kw">MATCH</span> (target:<span class="fn">Product</span> {name: <span class="str">'Apple MacBook Air M2'</span>})
+      <-[:PURCHASED]-(c:<span class="fn">Customer</span>)-[:PURCHASED]->(other:<span class="fn">Product</span>)
+<span class="kw">WHERE</span> other <> target
+<span class="kw">RETURN</span> other.name, other.category, other.brand,
+       <span class="kw">count</span>(<span class="kw">DISTINCT</span> c) <span class="kw">AS</span> shared_customers
+<span class="kw">ORDER BY</span> shared_customers <span class="kw">DESC LIMIT</span> 10</pre>
+
+<h3>Impact analysis — supplier disruption</h3>
+<pre><span class="cmt">// If Samsung delays: which stores and how much revenue is at risk?</span>
+<span class="kw">MATCH</span> (sup:<span class="fn">Supplier</span> {name: <span class="str">'Samsung'</span>})-[:SUPPLIES]->(p:<span class="fn">Product</span>)
+      <-[:STOCKS]-(wh:<span class="fn">Warehouse</span>)<-[:SERVES]-(store:<span class="fn">Store</span>)
+<span class="kw">RETURN</span> store.name, store.city,
+       <span class="kw">collect</span>(p.name) <span class="kw">AS</span> affected_products,
+       <span class="kw">count</span>(p) <span class="kw">AS</span> product_count
+<span class="kw">ORDER BY</span> product_count <span class="kw">DESC</span></pre>
+
+<h3>Transporter damage pattern — graph algorithm</h3>
+<pre><span class="cmt">// Find which transporters have the highest damage centrality</span>
+<span class="cmt">// (connected to the most damaged shipments)</span>
+<span class="kw">MATCH</span> (tr:<span class="fn">Transporter</span>)<-[:TRANSPORTED_BY]-(ship:<span class="fn">Shipment</span>)
+<span class="kw">WHERE</span> ship.status = <span class="str">'damaged'</span>
+<span class="kw">WITH</span> tr, <span class="kw">count</span>(ship) <span class="kw">AS</span> damaged_shipments
+<span class="kw">MATCH</span> (tr)<-[:TRANSPORTED_BY]-(all_ship:<span class="fn">Shipment</span>)
+<span class="kw">WITH</span> tr, damaged_shipments, <span class="kw">count</span>(all_ship) <span class="kw">AS</span> total_shipments
+<span class="kw">RETURN</span> tr.name, total_shipments, damaged_shipments,
+       <span class="kw">round</span>(damaged_shipments * 100.0 / total_shipments, 1) <span class="kw">AS</span> damage_rate_pct
+<span class="kw">ORDER BY</span> damage_rate_pct <span class="kw">DESC</span></pre>
+
+
+<h2 id="steps">Investigation steps — the answer to Q5</h2>
+
+<p>The assessment asks: "what is your architecture and which steps do you take to investigate the problem?" Here are the steps:</p>
+
+<table>
+  <tr><th>Step</th><th>Action</th><th>Output</th></tr>
+  <tr><td><strong>1. Identify graph-suitable problems</strong></td><td>Apply the decision framework to all case problems. Separate traversal problems (graph) from aggregation problems (warehouse).</td><td>Problem list: supply chain traceability, product recommendations, impact analysis, entity resolution.</td></tr>
+  <tr><td><strong>2. Design the property graph model</strong></td><td>Define node labels, relationship types, and properties. Map to Acme's entities from the ER diagram (Exhibit 2) and Business Matrix (Exhibit 3).</td><td>Graph schema: 9 node labels, 12 relationship types (as shown above).</td></tr>
+  <tr><td><strong>3. Define the hybrid architecture</strong></td><td>Position Neo4j alongside the data warehouse. Define data flow: shared sources → warehouse (for OLAP) + Neo4j (for traversal). Or: use Neo4j Aura Graph Analytics on top of existing warehouse (zero ETL).</td><td>Architecture diagram showing both paths.</td></tr>
+  <tr><td><strong>4. ETL into Neo4j</strong></td><td>Extract dimension and fact data from warehouse or source systems. Transform into node/relationship CSV format. Load using Neo4j's bulk import or <code>LOAD CSV</code>.</td><td>Populated graph database in AuraDB.</td></tr>
+  <tr><td><strong>5. Write Cypher queries</strong></td><td>For each identified problem, write Cypher queries that answer specific analytical requirements from the case (pages 8-9).</td><td>Query library demonstrating graph value for each use case.</td></tr>
+  <tr><td><strong>6. Demonstrate value</strong></td><td>Compare graph query vs equivalent SQL query for the same problem. Show the complexity difference (Cypher: 5 lines vs SQL: 30 lines with 6 joins). Show performance difference for deep traversals.</td><td>Side-by-side comparison proving graph adds value for traversal problems.</td></tr>
+  <tr><td><strong>7. Visualize in Bloom</strong></td><td>Use Neo4j Bloom to visually explore the supply chain, product network, and customer connections. Business users can interact with the graph without Cypher.</td><td>Visual evidence for stakeholder presentation.</td></tr>
+</table>
+
+
+<h2 id="future-general">Future developments — general</h2>
+
+<div class="grid2">
+  <div class="card">
+    <div class="card-title">GraphRAG — knowledge graphs for AI</div>
+    <p>Combining graph databases with LLMs. The graph provides structured context (entities, relationships, hierarchies) that improves LLM accuracy when answering questions about enterprise data. Neo4j provides native vector search alongside graph traversal — enabling hybrid retrieval (semantic similarity + graph context). Gartner Hype Cycle feature for 2024-2025.</p>
+    <p><a class="ref" href="https://neo4j.com/blog/graphrag-manifesto/">neo4j.com/graphrag</a></p>
+  </div>
+  <div class="card">
+    <div class="card-title">GQL standardization</div>
+    <p>ISO GQL (Graph Query Language) standardized in April 2024. Like SQL did for relational, GQL will enable cross-vendor graph querying. Neo4j's Cypher is GQL-compliant. Amazon Neptune supports openCypher. Portability between graph platforms improves — reducing vendor lock-in concerns.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">Graph + warehouse convergence</div>
+    <p>Neo4j Aura Graph Analytics can run directly on Snowflake/BigQuery/Databricks data. No separate graph database needed for analytics-only use cases. The graph becomes an analytical lens over existing warehouse data rather than a separate data store. Simplifies architecture.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">Real-time graph analytics</div>
+    <p>Streaming data into graph databases via Kafka connectors. Real-time fraud detection, recommendation updates, supply chain monitoring. Neo4j's 15x read capacity improvement (2024) enables real-time workloads that weren't feasible before.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">Graph neural networks (GNNs)</div>
+    <p>ML models that operate directly on graph structure — learning from both node features and network topology. Applications: link prediction (will this customer buy this product?), node classification (is this transaction fraudulent?), graph classification (is this supply chain route at risk?). Research-stage but entering production at scale.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">Digital twins as graphs</div>
+    <p>Physical systems (stores, warehouses, supply chains) modeled as graphs that mirror real-world state in real time. Update the graph as events happen (shipment departs, inventory level changes, transporter reports delay). The graph becomes the operational model, not just the analytical one.</p>
+  </div>
+</div>
+
+
+<h2 id="future-acme">Future for Acme — graph evolution path</h2>
+
+<div class="card purple">
+<div class="card-title">Phase 1 → Phase 4</div>
+
+<p><strong>Phase 1 (pilot — month 3-6):</strong> Load supply chain data into Neo4j AuraDB. Build supply chain traceability queries. Demonstrate damage root cause analysis via graph traversal. Show the value: "this transporter has 3x the damage rate on this route — here's the visual evidence in Bloom." This builds the case for Phase 2.</p>
+
+<p><strong>Phase 2 (expansion — month 6-12):</strong> Add customer-product purchase network. Build co-purchase recommendation queries. Feed recommendations into the loyalty program (Q3). A/B test: stores using graph-based bundle recommendations vs stores using manual bundle selection. Measure revenue lift.</p>
+
+<p><strong>Phase 3 (intelligence — year 2):</strong> Graph Data Science algorithms on the full dataset. Community detection on the customer network: find natural customer segments based on purchase patterns (different from RFM — this is network-based segmentation). PageRank on the product network: which products are most "central" to purchase behavior? Similarity algorithms: which stores have the most similar customer bases? (Useful for new product rollout — test in similar stores first.)</p>
+
+<p><strong>Phase 4 (AI integration — year 2-3):</strong> GraphRAG: build a knowledge graph of Acme's products, categories, features, customer preferences, and supply chain relationships. Use it to power an AI assistant that store managers can query in natural language: "Which Samsung products are at risk of stockout in the South region next week, and which alternative suppliers can fulfill?" The LLM uses the graph for context, the warehouse for numbers, and returns an actionable answer.</p>
+</div>
+
+<div class="card green">
+<div class="card-title">The key message for the assessment</div>
+<p>Neo4j is <strong>complementary</strong> to the data warehouse, not a replacement. It solves specific problems — supply chain traceability, product recommendations, impact analysis, entity resolution — that the star schema handles poorly due to the JOIN-heavy nature of traversal queries. The hybrid architecture (warehouse for aggregation + graph for traversal) is the correct answer. Position Neo4j as an <em>additional analytical layer</em> that enriches the data warehouse investment.</p>
+</div>
+
+</div>
+
+<script>
+const ss=document.querySelectorAll('h2[id],h3[id]');const ls=document.querySelectorAll('.nav a');
+window.addEventListener('scroll',()=>{let c='';ss.forEach(s=>{if(window.scrollY>=s.offsetTop-100)c=s.id});ls.forEach(a=>{a.classList.remove('active');if(a.getAttribute('href')==='#'+c)a.classList.add('active')})});
+</script>
+</body>
+</html>

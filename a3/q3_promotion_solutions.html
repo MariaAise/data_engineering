@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assessment Q3 — Product Promotion Solutions for Acme Inc</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #fafaf8; --surface: #fff; --surface2: #f3f2ee; --border: #e2e0d8;
+  --text: #2c2c2a; --text-dim: #6e6d68; --heading: #1a1a18;
+  --accent: #1a6b4e; --accent-light: #e8f5ee;
+  --amber: #b45309; --amber-light: #fef3e2;
+  --blue: #1d5fa0; --blue-light: #edf4fc;
+  --red: #b91c1c; --red-light: #fef2f2;
+  --purple: #6d28d9; --purple-light: #f3eefb;
+  --code-bg: #f5f4f0; --code-border: #e8e6de;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; line-height: 1.75; font-size: 15px; }
+
+.nav { position: fixed; top: 0; left: 0; width: 240px; height: 100vh; overflow-y: auto; background: var(--surface); border-right: 1px solid var(--border); padding: 1.5rem 1rem; z-index: 10; }
+.nav-title { font-family: 'Source Serif 4', serif; font-size: 0.92rem; font-weight: 700; color: var(--heading); margin-bottom: 1.2rem; line-height: 1.3; }
+.nav a { display: block; padding: 0.3rem 0.5rem; color: var(--text-dim); text-decoration: none; font-size: 0.78rem; border-radius: 4px; line-height: 1.35; margin: 0.1rem 0; }
+.nav a:hover { background: var(--surface2); color: var(--heading); }
+.nav a.active { background: var(--accent-light); color: var(--accent); font-weight: 500; }
+.nav .sep { height: 1px; background: var(--border); margin: 0.6rem 0; }
+.nav .layer-tag { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--accent); background: var(--accent-light); padding: 1px 5px; border-radius: 3px; margin-right: 3px; }
+
+.main { margin-left: 240px; max-width: 800px; padding: 2.5rem 3rem 6rem; }
+h1 { font-family: 'Source Serif 4', serif; font-size: 2rem; color: var(--heading); font-weight: 700; margin-bottom: 0.3rem; line-height: 1.2; }
+.hero-sub { color: var(--text-dim); font-size: 0.92rem; margin-bottom: 2.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
+h2 { font-family: 'Source Serif 4', serif; font-size: 1.4rem; color: var(--heading); font-weight: 700; margin: 2.5rem 0 0.8rem; padding-top: 1rem; display: flex; align-items: center; gap: 0.6rem; }
+h2 .lyr { display: inline-flex; align-items: center; justify-content: center; min-width: 26px; height: 26px; padding: 0 8px; border-radius: 5px; font-family: 'DM Sans', sans-serif; font-size: 0.72rem; font-weight: 700; flex-shrink: 0; color: #fff; }
+h3 { color: var(--accent); font-size: 0.95rem; font-weight: 700; margin: 1.5rem 0 0.4rem; }
+p { margin-bottom: 0.75rem; }
+strong { color: var(--heading); }
+
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.1rem 1.3rem; margin: 0.6rem 0; }
+.card.green { border-left: 3px solid var(--accent); background: var(--accent-light); }
+.card.amber { border-left: 3px solid var(--amber); background: var(--amber-light); }
+.card.blue { border-left: 3px solid var(--blue); background: var(--blue-light); }
+.card.red { border-left: 3px solid var(--red); background: var(--red-light); }
+.card.purple { border-left: 3px solid var(--purple); background: var(--purple-light); }
+.card-title { font-weight: 700; color: var(--heading); margin-bottom: 0.3rem; font-size: 0.88rem; }
+
+code { font-family: 'JetBrains Mono', monospace; font-size: 0.82em; background: var(--code-bg); padding: 1px 5px; border-radius: 3px; }
+pre { background: var(--code-bg); border: 1px solid var(--code-border); border-radius: 8px; padding: 1.1rem 1.3rem; overflow-x: auto; margin: 0.7rem 0; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; line-height: 1.6; color: #4a4a45; }
+.kw { color: var(--accent); font-weight: 600; }
+.str { color: var(--amber); }
+.cmt { color: var(--text-dim); font-style: italic; }
+
+table { width: 100%; border-collapse: collapse; font-size: 0.83rem; margin: 0.6rem 0; }
+th { text-align: left; padding: 0.5rem 0.7rem; background: var(--surface2); color: var(--heading); font-weight: 600; font-size: 0.75rem; border-bottom: 2px solid var(--border); }
+td { padding: 0.45rem 0.7rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem; margin: 0.6rem 0; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.7rem; margin: 0.6rem 0; }
+
+.flow-row { display: flex; align-items: center; gap: 0; margin: 1rem 0; flex-wrap: wrap; }
+.flow-box { padding: 0.5rem 0.8rem; border-radius: 7px; font-size: 0.82rem; font-weight: 600; text-align: center; }
+.flow-arrow { color: var(--text-dim); font-size: 1.1rem; padding: 0 0.3rem; }
+
+.metric-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; }
+.metric-name { font-weight: 700; color: var(--heading); font-size: 0.88rem; margin-bottom: 0.2rem; }
+.metric-formula { font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: var(--blue); background: var(--blue-light); padding: 3px 8px; border-radius: 4px; display: inline-block; margin: 0.3rem 0; }
+.metric-desc { font-size: 0.85rem; color: var(--text-dim); }
+
+.platform-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; }
+.platform-name { font-weight: 700; color: var(--heading); font-size: 0.92rem; }
+.platform-tag { font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; padding: 2px 6px; border-radius: 3px; display: inline-block; }
+.platform-desc { font-size: 0.85rem; color: var(--text-dim); margin-top: 0.3rem; }
+
+@media (max-width: 900px) { .nav { display: none; } .main { margin-left: 0; padding: 2rem 1.2rem 4rem; } .grid2, .grid3 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <div class="nav-title">Q3: Product Promotion Solutions</div>
+  <a href="#problem">Acme's problem</a>
+  <div class="sep"></div>
+  <a href="#L1"><span class="layer-tag">L1</span> Star schema</a>
+  <a href="#L2"><span class="layer-tag">L2</span> BI &amp; OLAP</a>
+  <a href="#L3"><span class="layer-tag">L3</span> Promo effectiveness</a>
+  <a href="#L4"><span class="layer-tag">L4</span> Customer targeting</a>
+  <a href="#L5"><span class="layer-tag">L5</span> Commercial platforms</a>
+  <div class="sep"></div>
+  <a href="#arch">Solution architecture</a>
+  <a href="#rec">Recommendation</a>
+</div>
+
+<div class="main">
+
+<h1>Product Promotion Solutions for Acme Inc</h1>
+<p class="hero-sub">Assessment Q3 — Five-layer solution stack from dimensional model to AI-powered targeting. Every layer builds on the one below it.</p>
+
+<!-- ============================================================ -->
+<h2 id="problem">Acme's promotion problem — from the case</h2>
+
+<div class="card red">
+<div class="card-title">What the case says</div>
+<p>"The sales and marketing team at Acme was interested in building a <strong>loyalty card program</strong> to retain its customers and improve overall profitability. The company also did not have appropriate <strong>metrics in place to measure the effectiveness of their promotional campaigns</strong>. While the basic sales data is available, it lacks the ability to get an <strong>integrated view of the sales across multiple stores</strong>, perform <strong>slicing and dicing of data</strong>, conduct <strong>multi-dimensional data analysis</strong> and build <strong>data mining models for identifying the right customer targets</strong>."</p>
+</div>
+
+<p>The case gives us four explicit requirements. Each maps to a solution layer:</p>
+
+<table>
+  <tr><th>Case requirement</th><th>Solution layer</th></tr>
+  <tr><td>Integrated view of sales across multiple stores</td><td><strong>L1:</strong> Star schema with conformed dim_store across all 150 stores</td></tr>
+  <tr><td>Slicing and dicing of data</td><td><strong>L2:</strong> BI tool (Power BI / Tableau) on top of star schema</td></tr>
+  <tr><td>Multi-dimensional data analysis</td><td><strong>L2 + L3:</strong> OLAP operations + promotion effectiveness metrics</td></tr>
+  <tr><td>Data mining models for identifying customer targets</td><td><strong>L4:</strong> RFM segmentation, market basket analysis, CLV prediction</td></tr>
+  <tr><td>Loyalty card program</td><td><strong>L1 + L4:</strong> dim_customer with loyalty tier + CLV-based tier assignment</td></tr>
+  <tr><td>Metrics for promotional campaign effectiveness</td><td><strong>L3:</strong> Incremental lift, promo ROI, cannibalization analysis</td></tr>
+</table>
+
+
+<!-- ============================================================ -->
+<h2 id="L1"><span class="lyr" style="background: var(--accent);">L1</span> Star schema — the data foundation</h2>
+
+<p>Nothing works without this. The dimensional model is the infrastructure that every layer above depends on.</p>
+
+<h3>Design for the Retail Promotions data mart</h3>
+
+<p>Following Kimball's four-step process from the case:</p>
+
+<div class="grid2">
+  <div class="card green">
+    <div class="card-title">Step 1: Business process</div>
+    <p>Retail Product Sales with promotional context</p>
+  </div>
+  <div class="card green">
+    <div class="card-title">Step 2: Grain</div>
+    <p>One row per line item per transaction — finest level allows roll-up in any direction</p>
+  </div>
+</div>
+
+<div class="card">
+<div class="card-title">Step 3: Dimensions</div>
+<table>
+  <tr><th>Dimension</th><th>Key attributes</th><th>Hierarchy</th></tr>
+  <tr><td><strong>dim_date</strong></td><td>date_key, full_date, day_name, month, quarter, year, is_holiday</td><td>day → week → month → quarter → year</td></tr>
+  <tr><td><strong>dim_store</strong></td><td>store_key, store_name, city, state, region, floor_area</td><td>store → city → state → region</td></tr>
+  <tr><td><strong>dim_product</strong></td><td>product_key, sku_id, product_name, brand, category, subcategory, unit_cost, unit_price</td><td>SKU → subcategory → category</td></tr>
+  <tr><td><strong>dim_customer</strong></td><td>customer_key, customer_name, city, state, segment, loyalty_tier, join_date</td><td>customer → segment → loyalty_tier</td></tr>
+  <tr><td><strong>dim_promotion</strong></td><td>promo_key, promo_name, promo_type, discount_pct, start_date, end_date, media_channel</td><td>promotion → promo_type → media_channel</td></tr>
+  <tr><td><strong>dim_salesperson</strong></td><td>salesperson_key, emp_id, name, store_key, designation</td><td>employee → designation</td></tr>
+</table>
+</div>
+
+<div class="card">
+<div class="card-title">Step 4: Facts (measures)</div>
+<p><code>quantity</code>, <code>unit_price</code>, <code>gross_amount</code>, <code>discount_amount</code>, <code>net_amount</code>, <code>cost_amount</code>, <code>gross_margin</code>, <code>tax_amount</code></p>
+<p>Critical design decision: <strong><code>promo_key = 0</code> means "no promotion"</strong>. Every transaction gets a promo_key — either a real promotion or the "None" row. This makes baseline vs promoted comparison possible in a single query without complex CASE logic.</p>
+</div>
+
+<div class="card amber">
+<div class="card-title">Why dim_promotion is the key to Q3</div>
+<p>Without a promotion dimension, Acme cannot answer "which promotions worked?" The <code>dim_promotion</code> table with its <code>promo_type</code> (festival / seasonal / clearance / flash / bundle) and <code>media_channel</code> (TV / internet / radio / hoarding / social) attributes enables every promotional analysis the case asks for. This is the single most important design decision for Q3.</p>
+</div>
+
+
+<!-- ============================================================ -->
+<h2 id="L2"><span class="lyr" style="background: var(--blue);">L2</span> BI platform &amp; OLAP operations</h2>
+
+<p>This layer delivers the "integrated view across multiple stores" and "slicing and dicing" the case explicitly asks for.</p>
+
+<h3>Platform options for Acme</h3>
+
+<div class="grid2">
+  <div class="card blue">
+    <div class="card-title">Power BI</div>
+    <p>Lowest enterprise cost. Connects to Snowflake / BigQuery / Azure. Drag-and-drop slice/dice/drill. Most realistic for Acme — likely Microsoft presence in Indian retail IT. Rs 750/user/month for Pro.</p>
+  </div>
+  <div class="card blue">
+    <div class="card-title">Tableau</div>
+    <p>Stronger visualization. Higher cost per seat. Better for analyst-heavy teams. Acme doesn't have that maturity yet — but strong long-term option.</p>
+  </div>
+  <div class="card blue">
+    <div class="card-title">Looker (Google)</div>
+    <p>Native to BigQuery. LookML semantic layer defines metrics once. Good if Acme goes GCP.</p>
+  </div>
+  <div class="card blue">
+    <div class="card-title">Apache Superset</div>
+    <p>Open-source. No license cost. Connects to any SQL warehouse. Good for pilot phase if budget is tight.</p>
+  </div>
+</div>
+
+<h3>OLAP operations on promotional data — SQL demonstrations</h3>
+
+<pre><span class="cmt">-- SLICE: All sales during Diwali Dhamaka promotion only</span>
+<span class="kw">SELECT</span> p.category, s.city, <span class="kw">SUM</span>(f.net_amount) <span class="kw">AS</span> revenue
+<span class="kw">FROM</span> fact_sales f
+<span class="kw">JOIN</span> dim_promotion pr <span class="kw">ON</span> f.promo_key = pr.promo_key
+<span class="kw">JOIN</span> dim_product p    <span class="kw">ON</span> f.product_key = p.product_key
+<span class="kw">JOIN</span> dim_store s      <span class="kw">ON</span> f.store_key = s.store_key
+<span class="kw">WHERE</span> pr.promo_name = <span class="str">'Diwali Dhamaka'</span>
+<span class="kw">GROUP BY</span> p.category, s.city
+<span class="kw">ORDER BY</span> revenue <span class="kw">DESC</span>;</pre>
+
+<pre><span class="cmt">-- DICE: Festival promos + South region + TVs + Q4</span>
+<span class="kw">SELECT</span> s.city, p.product_name, pr.promo_name,
+       <span class="kw">SUM</span>(f.quantity) <span class="kw">AS</span> units, <span class="kw">SUM</span>(f.net_amount) <span class="kw">AS</span> revenue
+<span class="kw">FROM</span> fact_sales f
+<span class="kw">JOIN</span> dim_date d       <span class="kw">ON</span> f.date_key = d.date_key
+<span class="kw">JOIN</span> dim_product p    <span class="kw">ON</span> f.product_key = p.product_key
+<span class="kw">JOIN</span> dim_store s      <span class="kw">ON</span> f.store_key = s.store_key
+<span class="kw">JOIN</span> dim_promotion pr <span class="kw">ON</span> f.promo_key = pr.promo_key
+<span class="kw">WHERE</span> p.category = <span class="str">'TVs'</span>
+  <span class="kw">AND</span> s.region = <span class="str">'South'</span>
+  <span class="kw">AND</span> d.quarter = <span class="str">'Q4'</span>
+  <span class="kw">AND</span> pr.promo_type = <span class="str">'Festival'</span>
+<span class="kw">GROUP BY</span> s.city, p.product_name, pr.promo_name
+<span class="kw">ORDER BY</span> revenue <span class="kw">DESC</span>;</pre>
+
+<pre><span class="cmt">-- ROLL-UP: Promotion effectiveness by promo_type → quarter → year</span>
+<span class="kw">SELECT</span>
+    <span class="kw">COALESCE</span>(pr.promo_type, <span class="str">'** ALL TYPES **'</span>) <span class="kw">AS</span> promo_type,
+    <span class="kw">COALESCE</span>(d.quarter, <span class="str">'** ALL QUARTERS **'</span>) <span class="kw">AS</span> quarter,
+    <span class="kw">SUM</span>(f.net_amount) <span class="kw">AS</span> revenue,
+    <span class="kw">SUM</span>(f.discount_amount) <span class="kw">AS</span> total_discount,
+    <span class="kw">SUM</span>(f.gross_margin) <span class="kw">AS</span> margin
+<span class="kw">FROM</span> fact_sales f
+<span class="kw">JOIN</span> dim_promotion pr <span class="kw">ON</span> f.promo_key = pr.promo_key
+<span class="kw">JOIN</span> dim_date d       <span class="kw">ON</span> f.date_key = d.date_key
+<span class="kw">WHERE</span> pr.promo_key > 0
+<span class="kw">GROUP BY</span> pr.promo_type, d.quarter <span class="kw">WITH ROLLUP</span>;</pre>
+
+<pre><span class="cmt">-- DRILL-DOWN: From promo_type → individual promotion → specific SKU</span>
+<span class="kw">SELECT</span> pr.promo_type, pr.promo_name, p.product_name,
+       <span class="kw">SUM</span>(f.quantity) <span class="kw">AS</span> units, <span class="kw">SUM</span>(f.net_amount) <span class="kw">AS</span> revenue
+<span class="kw">FROM</span> fact_sales f
+<span class="kw">JOIN</span> dim_promotion pr <span class="kw">ON</span> f.promo_key = pr.promo_key
+<span class="kw">JOIN</span> dim_product p    <span class="kw">ON</span> f.product_key = p.product_key
+<span class="kw">WHERE</span> pr.promo_type = <span class="str">'Festival'</span>
+<span class="kw">GROUP BY</span> pr.promo_type, pr.promo_name, p.product_name
+<span class="kw">ORDER BY</span> pr.promo_name, revenue <span class="kw">DESC</span>;</pre>
+
+
+<!-- ============================================================ -->
+<h2 id="L3"><span class="lyr" style="background: var(--amber);">L3</span> Promotion effectiveness metrics</h2>
+
+<p>The metrics Acme's marketing managers are missing. Each one is a SQL query on the star schema.</p>
+
+<div class="grid2">
+  <div class="metric-card">
+    <div class="metric-name">Incremental lift</div>
+    <div class="metric-formula">(promo_revenue - baseline_revenue) / baseline_revenue × 100</div>
+    <div class="metric-desc">Did the promotion generate revenue above what would have happened anyway? Baseline = same store, same category, same period prior year (or non-promoted average).</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-name">Promotion ROI</div>
+    <div class="metric-formula">(incremental_margin - discount_cost) / discount_cost × 100</div>
+    <div class="metric-desc">For every rupee of discount given, how many rupees of incremental margin were generated? Negative ROI = promotion destroyed value.</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-name">Cannibalization rate</div>
+    <div class="metric-formula">Δ same-category non-promoted sales during promotion period</div>
+    <div class="metric-desc">Did the Samsung TV promotion reduce LG TV sales? If total category revenue didn't grow — the promotion just shifted revenue within category.</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-name">Halo effect</div>
+    <div class="metric-formula">Δ related-category sales during promotion period</div>
+    <div class="metric-desc">Did the gaming console promotion also lift gaming accessories sales? Cross-category correlation on the same time windows. Positive halo = promotion creates broader value.</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-name">Media channel effectiveness</div>
+    <div class="metric-formula">incremental_revenue per channel / spend per channel</div>
+    <div class="metric-desc">Did the TV campaign drive more revenue than social media contests? Requires dim_promotion.media_channel attribute. Answers: where should Acme allocate promotional budget?</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-name">Discount depth vs lift curve</div>
+    <div class="metric-formula">Plot: discount_pct (x) vs lift_pct (y) across all promotions</div>
+    <div class="metric-desc">At what discount percentage does incremental lift plateau? A 20% discount might only generate 5% more lift than 15%. Finds the optimal discount depth.</div>
+  </div>
+</div>
+
+<h3>Incremental lift — the SQL</h3>
+
+<pre><span class="cmt">-- Compare promoted vs non-promoted avg daily revenue by category</span>
+<span class="kw">WITH</span> baseline <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> p.category,
+           <span class="kw">SUM</span>(f.net_amount) / <span class="kw">COUNT</span>(<span class="kw">DISTINCT</span> f.date_key) <span class="kw">AS</span> avg_daily_rev
+    <span class="kw">FROM</span> fact_sales f
+    <span class="kw">JOIN</span> dim_product p    <span class="kw">ON</span> f.product_key = p.product_key
+    <span class="kw">JOIN</span> dim_promotion pr <span class="kw">ON</span> f.promo_key = pr.promo_key
+    <span class="kw">WHERE</span> pr.promo_key = 0  <span class="cmt">-- non-promoted sales only</span>
+    <span class="kw">GROUP BY</span> p.category
+),
+promoted <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> pr.promo_name, p.category,
+           <span class="kw">SUM</span>(f.net_amount) / <span class="kw">COUNT</span>(<span class="kw">DISTINCT</span> f.date_key) <span class="kw">AS</span> avg_daily_rev,
+           <span class="kw">SUM</span>(f.discount_amount) <span class="kw">AS</span> total_discount
+    <span class="kw">FROM</span> fact_sales f
+    <span class="kw">JOIN</span> dim_product p    <span class="kw">ON</span> f.product_key = p.product_key
+    <span class="kw">JOIN</span> dim_promotion pr <span class="kw">ON</span> f.promo_key = pr.promo_key
+    <span class="kw">WHERE</span> pr.promo_key > 0
+    <span class="kw">GROUP BY</span> pr.promo_name, p.category
+)
+<span class="kw">SELECT</span> promoted.promo_name, promoted.category,
+       <span class="kw">ROUND</span>(baseline.avg_daily_rev, 0) <span class="kw">AS</span> baseline_daily,
+       <span class="kw">ROUND</span>(promoted.avg_daily_rev, 0) <span class="kw">AS</span> promo_daily,
+       <span class="kw">ROUND</span>((promoted.avg_daily_rev - baseline.avg_daily_rev)
+             / baseline.avg_daily_rev * 100, 1) <span class="kw">AS</span> lift_pct,
+       <span class="kw">ROUND</span>(promoted.total_discount, 0) <span class="kw">AS</span> discount_given
+<span class="kw">FROM</span> promoted
+<span class="kw">JOIN</span> baseline <span class="kw">ON</span> promoted.category = baseline.category
+<span class="kw">ORDER BY</span> lift_pct <span class="kw">DESC</span>;</pre>
+
+
+<!-- ============================================================ -->
+<h2 id="L4"><span class="lyr" style="background: var(--purple);">L4</span> Customer targeting &amp; data mining</h2>
+
+<p>This is where Acme moves from descriptive analytics (what happened) to predictive analytics (who to target). Directly addresses "data mining models for identifying the right customer targets."</p>
+
+<h3>RFM segmentation</h3>
+
+<div class="card">
+<div class="card-title">Recency, Frequency, Monetary — the classic customer segmentation</div>
+<p>Score every customer 1–5 on three dimensions using their purchase history from <code>fact_sales</code>. Built entirely in SQL — no ML library required.</p>
+</div>
+
+<pre><span class="cmt">-- RFM scoring from the star schema</span>
+<span class="kw">WITH</span> rfm_raw <span class="kw">AS</span> (
+    <span class="kw">SELECT</span>
+        c.customer_key,
+        c.customer_name,
+        c.customer_segment,
+        <span class="kw">DATEDIFF</span>(<span class="str">'2024-12-31'</span>, <span class="kw">MAX</span>(d.full_date)) <span class="kw">AS</span> recency_days,
+        <span class="kw">COUNT</span>(<span class="kw">DISTINCT</span> f.date_key) <span class="kw">AS</span> frequency,
+        <span class="kw">SUM</span>(f.net_amount) <span class="kw">AS</span> monetary
+    <span class="kw">FROM</span> fact_sales f
+    <span class="kw">JOIN</span> dim_customer c <span class="kw">ON</span> f.customer_key = c.customer_key
+    <span class="kw">JOIN</span> dim_date d     <span class="kw">ON</span> f.date_key = d.date_key
+    <span class="kw">WHERE</span> c.customer_key > 0  <span class="cmt">-- exclude walk-ins</span>
+    <span class="kw">GROUP BY</span> c.customer_key, c.customer_name, c.customer_segment
+)
+<span class="kw">SELECT</span> *,
+    <span class="kw">NTILE</span>(5) <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> recency_days <span class="kw">DESC</span>)  <span class="kw">AS</span> r_score,
+    <span class="kw">NTILE</span>(5) <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> frequency <span class="kw">ASC</span>)      <span class="kw">AS</span> f_score,
+    <span class="kw">NTILE</span>(5) <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> monetary <span class="kw">ASC</span>)       <span class="kw">AS</span> m_score
+<span class="kw">FROM</span> rfm_raw
+<span class="kw">ORDER BY</span> monetary <span class="kw">DESC</span>;</pre>
+
+<div class="card">
+<p>Resulting segments drive targeted promotions:</p>
+<table>
+  <tr><th>Segment</th><th>RFM profile</th><th>Promotion strategy</th></tr>
+  <tr><td><strong>Champions</strong></td><td>R=5, F=5, M=5</td><td>Reward with exclusive early access. Don't discount — they'll buy anyway. Focus on loyalty tier upgrades.</td></tr>
+  <tr><td><strong>Loyal</strong></td><td>R=4-5, F=4-5, M=3-5</td><td>Upsell and cross-sell. Bundle promotions. Invite to loyalty program if not enrolled.</td></tr>
+  <tr><td><strong>Potential loyalists</strong></td><td>R=4-5, F=2-3, M=2-3</td><td>Offer membership incentives. Frequency-building promos ("buy 3 get 10% off next").</td></tr>
+  <tr><td><strong>At risk</strong></td><td>R=2-3, F=3-5, M=3-5</td><td>Win-back campaign. Personalized discount on their preferred category. Time-limited urgency.</td></tr>
+  <tr><td><strong>Lost</strong></td><td>R=1, F=1-2, M=1-2</td><td>Aggressive reactivation offer or accept churn. Don't over-invest — low ROI on this segment.</td></tr>
+</table>
+</div>
+
+<h3>Market basket analysis</h3>
+
+<div class="card">
+<div class="card-title">Association rules for bundle promotions</div>
+<p>"Customers who buy laptops also buy laptop bags and extended warranties in the same transaction." The case mentions product bundling as a promotion type — basket analysis identifies which bundles to create.</p>
+<p><strong>Implementation:</strong> Apriori algorithm via Python <code>mlxtend</code> library reading from <code>fact_sales</code>. Group by transaction (same customer_key + date_key), find frequent itemsets, extract rules with confidence > 0.3 and lift > 1.5.</p>
+<p><strong>Alternative:</strong> BigQuery ML supports association rules natively. Or implement in SQL using self-joins on the fact table to find co-purchased products.</p>
+</div>
+
+<h3>Customer lifetime value (CLV)</h3>
+
+<div class="card">
+<div class="card-title">For the loyalty program Acme wants to build</div>
+<p>Predict future value of each customer based on historical patterns. Determines loyalty tier assignment: which customers justify Platinum benefits (higher discount, free delivery, exclusive access)?</p>
+<p><strong>Simple CLV:</strong> <code>avg_purchase_value × purchase_frequency × avg_customer_lifespan</code> — computable in SQL from the star schema.</p>
+<p><strong>Probabilistic CLV:</strong> BG/NBD model (predicts future transactions) + Gamma-Gamma model (predicts future monetary value). Implemented in Python <code>lifetimes</code> library. More accurate for Acme's mixed walk-in + loyalty customer base.</p>
+</div>
+
+<h3>Churn prediction</h3>
+
+<div class="card">
+<div class="card-title">Which loyalty members are about to leave?</div>
+<p>Train a classifier on historical data: customers who stopped purchasing after being active. Features from the star schema: days since last purchase, purchase frequency trend (declining?), average basket size trend, response rate to promotions (did they buy during promos?). Flag at-risk customers for targeted retention promotions before they're gone.</p>
+<p><strong>Implementation:</strong> Logistic regression or gradient boosting in Python (scikit-learn / XGBoost) or BigQuery ML. The star schema provides all training features.</p>
+</div>
+
+
+<!-- ============================================================ -->
+<h2 id="L5"><span class="lyr" style="background: var(--red);">L5</span> Commercial platforms (2025)</h2>
+
+<p>If Acme wants to buy capability rather than build it. These platforms sit on top of the data warehouse and deliver promotion analytics as a service.</p>
+
+<div class="grid2">
+  <div class="platform-card">
+    <div class="platform-name">Impact Analytics SmartSuite</div>
+    <div class="platform-tag" style="background: var(--blue-light); color: var(--blue);">AI-powered</div>
+    <div class="platform-desc">Promotion management for retail. Planning, demand forecasting for promotions, post-promotion effectiveness analysis. Handles 1M+ SKUs. Dynamic promotion calendars. Used by mid-large retail chains.</div>
+  </div>
+  <div class="platform-card">
+    <div class="platform-name">LEAFIO AI Promotion Planning</div>
+    <div class="platform-tag" style="background: var(--accent-light); color: var(--accent);">Cloud-native</div>
+    <div class="platform-desc">Promo calendar visualization, promotional demand forecasting, inventory alignment for promotions, post-promo effectiveness. 180+ retail companies. Designed for multi-store chains like Acme.</div>
+  </div>
+  <div class="platform-card">
+    <div class="platform-name">Cognira</div>
+    <div class="platform-tag" style="background: var(--purple-light); color: var(--purple);">AI attribution</div>
+    <div class="platform-desc">Isolates true promotion drivers from noise using AI-based attribution models. Consolidates performance data across dimensions (category, location, segment, time). Feeds learning into future planning. Used by major grocery and general merch retailers.</div>
+  </div>
+  <div class="platform-card">
+    <div class="platform-name">SAS Retail Analytics</div>
+    <div class="platform-tag" style="background: var(--amber-light); color: var(--amber);">Enterprise</div>
+    <div class="platform-desc">Demand planning, promotion optimization, price optimization. Automates demand insights across entire supply chain. Heavy implementation, mature platform. Best for large enterprises with budget.</div>
+  </div>
+  <div class="platform-card">
+    <div class="platform-name">Datawiz</div>
+    <div class="platform-tag" style="background: var(--accent-light); color: var(--accent);">Retail-specific</div>
+    <div class="platform-desc">Measures short-term promotion uplift and long-term behavioral shifts. Identifies most effective discount mechanics. Attributes results to customer segments. Modular, cloud-based — scales from 10 to 1,000+ stores.</div>
+  </div>
+  <div class="platform-card">
+    <div class="platform-name">Yieldigo</div>
+    <div class="platform-tag" style="background: var(--blue-light); color: var(--blue);">ML-driven</div>
+    <div class="platform-desc">Simulates different promotion scenarios before execution. Analyzes demand patterns, product relationships, and price elasticity. Designed for retailers with large assortments and dynamic promotional calendars — matches Acme's 12,000 SKUs.</div>
+  </div>
+</div>
+
+<div class="card amber">
+<div class="card-title">Critical point: every commercial platform needs the star schema first</div>
+<p>These tools don't replace the data warehouse — they sit on top of it. They need clean, integrated, dimensional data to function. If Acme buys Cognira but hasn't built the star schema, they'll spend 6 months on data integration before the tool does anything useful. Build L1 first, always.</p>
+</div>
+
+
+<!-- ============================================================ -->
+<h2 id="arch">Solution architecture — how the layers connect</h2>
+
+<div class="flow-row">
+  <div class="flow-box" style="background: var(--red-light); color: var(--red);">POS systems<br><span style="font-size:0.7rem;font-weight:400;">150 stores + e-commerce</span></div>
+  <span class="flow-arrow">→</span>
+  <div class="flow-box" style="background: var(--amber-light); color: var(--amber);">ETL/ELT<br><span style="font-size:0.7rem;font-weight:400;">dbt / Data Factory</span></div>
+  <span class="flow-arrow">→</span>
+  <div class="flow-box" style="background: var(--accent-light); color: var(--accent);">Star schema<br><span style="font-size:0.7rem;font-weight:400;">Snowflake / BigQuery</span></div>
+  <span class="flow-arrow">→</span>
+  <div class="flow-box" style="background: var(--blue-light); color: var(--blue);">BI + OLAP<br><span style="font-size:0.7rem;font-weight:400;">Power BI / Tableau</span></div>
+</div>
+
+<div class="flow-row" style="justify-content: flex-end; margin-top: -0.5rem;">
+  <span class="flow-arrow" style="transform: rotate(90deg); padding: 0.3rem 0;">↓</span>
+</div>
+
+<div class="flow-row" style="justify-content: flex-end;">
+  <div class="flow-box" style="background: var(--purple-light); color: var(--purple);">ML models<br><span style="font-size:0.7rem;font-weight:400;">Python / BigQuery ML</span></div>
+  <span class="flow-arrow">→</span>
+  <div class="flow-box" style="background: var(--red-light); color: var(--red);">Targeted promotions<br><span style="font-size:0.7rem;font-weight:400;">Personalized offers</span></div>
+</div>
+
+<div class="card">
+<div class="card-title">Data flow for a promotion cycle</div>
+<p><strong>Plan:</strong> Use historical promo effectiveness data (L3) + customer segments (L4) to design next promotion → <strong>Execute:</strong> Run promotion across selected stores/channels → <strong>Capture:</strong> POS data flows through ETL into fact_sales with promo_key → <strong>Measure:</strong> Calculate lift, ROI, cannibalization (L3) → <strong>Learn:</strong> Feed results back into next cycle's planning. This is the closed-loop promotion optimization cycle that Acme currently cannot do.</p>
+</div>
+
+
+<!-- ============================================================ -->
+<h2 id="rec">Recommendation for Acme — phased implementation</h2>
+
+<div class="card green">
+<div class="card-title">Phase 1: Foundation (Months 1-3) — L1 + L2</div>
+<p>Build the star schema with dim_promotion in Snowflake or BigQuery. Connect Power BI. Load historical POS data from pilot stores. Deliver the first dashboards showing cross-store promotion performance. This alone delivers the "integrated view" and "slicing and dicing" the case asks for.</p>
+</div>
+
+<div class="card green">
+<div class="card-title">Phase 2: Metrics (Months 3-5) — L3</div>
+<p>Implement incremental lift and promo ROI calculations as SQL views in the warehouse. Build a promotion effectiveness dashboard in Power BI. Marketing managers can now measure which promotions work. This is the capability they explicitly said was missing.</p>
+</div>
+
+<div class="card green">
+<div class="card-title">Phase 3: Loyalty + targeting (Months 5-8) — L4</div>
+<p>Launch loyalty program with tier assignment based on RFM scores calculated from fact_sales. Implement market basket analysis for bundle promotion design. Build churn prediction model. Marketing can now run targeted promotions to specific customer segments instead of blanket discounts.</p>
+</div>
+
+<div class="card">
+<div class="card-title">Phase 4: AI optimization (Year 2) — L5</div>
+<p>Evaluate commercial platforms (Cognira, Impact Analytics, Yieldigo) for AI-powered promotion planning. By this point Acme has 12+ months of clean star schema data — the platforms can deliver immediate value because the data foundation exists.</p>
+</div>
+
+</div>
+
+<script>
+const sections = document.querySelectorAll('h2[id], h3[id]');
+const links = document.querySelectorAll('.nav a');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(s => { if (window.scrollY >= s.offsetTop - 100) current = s.id; });
+  links.forEach(a => { a.classList.remove('active'); if (a.getAttribute('href') === '#' + current) a.classList.add('active'); });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Data Warehouse Architecture — Current Landscape &amp; Future</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fafaf8;--surface:#fff;--surface2:#f3f2ee;--border:#e2e0d8;--text:#2c2c2a;--text-dim:#6e6d68;--heading:#1a1a18;--accent:#1a6b4e;--accent-light:#e8f5ee;--amber:#b45309;--amber-light:#fef3e2;--blue:#1d5fa0;--blue-light:#edf4fc;--red:#b91c1c;--red-light:#fef2f2;--purple:#6d28d9;--purple-light:#f3eefb;--code-bg:#f5f4f0;--code-border:#e8e6de}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;line-height:1.75;font-size:15px}
+.nav{position:fixed;top:0;left:0;width:250px;height:100vh;overflow-y:auto;background:var(--surface);border-right:1px solid var(--border);padding:1.5rem 1rem;z-index:10}
+.nav-title{font-family:'Source Serif 4',serif;font-size:.88rem;font-weight:700;color:var(--heading);margin-bottom:1rem;line-height:1.3}
+.nav a{display:block;padding:.3rem .5rem;color:var(--text-dim);text-decoration:none;font-size:.76rem;border-radius:4px;line-height:1.35;margin:.08rem 0}
+.nav a:hover{background:var(--surface2);color:var(--heading)}
+.nav a.active{background:var(--accent-light);color:var(--accent);font-weight:500}
+.nav .sep{height:1px;background:var(--border);margin:.5rem 0}
+.nav .ns{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;padding:.5rem .5rem .2rem;margin-top:.3rem}
+.main{margin-left:250px;max-width:820px;padding:2.5rem 3rem 6rem}
+h1{font-family:'Source Serif 4',serif;font-size:2rem;color:var(--heading);font-weight:700;margin-bottom:.3rem;line-height:1.15}
+.hero-sub{color:var(--text-dim);font-size:.9rem;margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border)}
+h2{font-family:'Source Serif 4',serif;font-size:1.4rem;color:var(--heading);font-weight:700;margin:2.5rem 0 .8rem;padding-top:1rem;display:flex;align-items:center;gap:.6rem}
+h2 .p{display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:26px;padding:0 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.72rem;font-weight:700;flex-shrink:0;color:#fff}
+h3{color:var(--accent);font-size:.95rem;font-weight:700;margin:1.5rem 0 .4rem}
+h4{font-size:.88rem;font-weight:700;color:var(--heading);margin:1rem 0 .3rem}
+p{margin-bottom:.7rem}
+strong{color:var(--heading)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.1rem 1.3rem;margin:.6rem 0}
+.card.green{border-left:3px solid var(--accent);background:var(--accent-light)}
+.card.amber{border-left:3px solid var(--amber);background:var(--amber-light)}
+.card.blue{border-left:3px solid var(--blue);background:var(--blue-light)}
+.card.red{border-left:3px solid var(--red);background:var(--red-light)}
+.card.purple{border-left:3px solid var(--purple);background:var(--purple-light)}
+.card-title{font-weight:700;color:var(--heading);margin-bottom:.3rem;font-size:.88rem}
+code{font-family:'JetBrains Mono',monospace;font-size:.82em;background:var(--code-bg);padding:1px 5px;border-radius:3px}
+pre{background:var(--code-bg);border:1px solid var(--code-border);border-radius:8px;padding:1rem 1.2rem;overflow-x:auto;margin:.6rem 0;font-family:'JetBrains Mono',monospace;font-size:.78rem;line-height:1.6;color:#4a4a45}
+table{width:100%;border-collapse:collapse;font-size:.83rem;margin:.6rem 0}
+th{text-align:left;padding:.5rem .7rem;background:var(--surface2);color:var(--heading);font-weight:600;font-size:.73rem;border-bottom:2px solid var(--border);letter-spacing:.3px}
+td{padding:.45rem .7rem;border-bottom:1px solid var(--border);vertical-align:top}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin:.6rem 0}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.7rem;margin:.6rem 0}
+.ref{font-size:.78rem;color:var(--blue);text-decoration:none;word-break:break-all}
+.ref:hover{text-decoration:underline}
+.time-tag{font-family:'JetBrains Mono',monospace;font-size:.68rem;color:var(--text-dim);background:var(--surface2);padding:2px 6px;border-radius:3px}
+.example{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1rem 1.2rem;margin:.6rem 0;border-left:3px solid var(--purple)}
+.example::before{content:'EXAMPLE';font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--purple);letter-spacing:.08em;display:block;margin-bottom:.4rem}
+@media(max-width:900px){.nav{display:none}.main{margin-left:0;padding:2rem 1.2rem 4rem}.grid2,.grid3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <div class="nav-title">Data Warehouse Architecture: Current Landscape &amp; Future</div>
+  <div class="ns">Part 1 — Foundations</div>
+  <a href="#tensions">Core tensions</a>
+  <a href="#etl">ETL vs ELT</a>
+  <div class="sep"></div>
+  <div class="ns">Part 2 — Architecture Patterns</div>
+  <a href="#cloud-dw">Cloud data warehouse</a>
+  <a href="#lakehouse">Data lakehouse</a>
+  <a href="#hybrid">Hybrid architecture</a>
+  <a href="#streaming">Real-time / streaming</a>
+  <div class="sep"></div>
+  <div class="ns">Part 3 — Platforms (2025)</div>
+  <a href="#snowflake">Snowflake</a>
+  <a href="#databricks">Databricks</a>
+  <a href="#bigquery">Google BigQuery</a>
+  <a href="#fabric">Microsoft Fabric</a>
+  <a href="#redshift">Amazon Redshift</a>
+  <a href="#convergence">The convergence</a>
+  <div class="sep"></div>
+  <div class="ns">Part 4 — Selection</div>
+  <a href="#criteria">Decision framework</a>
+  <a href="#cloud-pros">Cloud pros &amp; cons</a>
+  <div class="sep"></div>
+  <div class="ns">Part 5 — Semantic Layer</div>
+  <a href="#semantic">Where OLAP is going</a>
+  <div class="sep"></div>
+  <div class="ns">Part 6 — Future</div>
+  <a href="#future">What comes next</a>
+  <a href="#next-problems">Next problems</a>
+</div>
+
+<div class="main">
+
+<h1>Data Warehouse Architecture</h1>
+<p class="hero-sub">Current landscape, platform comparison, and where it's all heading. Lecture format — 1 hour.</p>
+
+
+<!-- ============================================================ -->
+<!-- PART 1 -->
+<!-- ============================================================ -->
+
+<h2 id="tensions"><span class="p" style="background:var(--accent)">1</span> Core tensions every architecture balances <span class="time-tag">~8 min</span></h2>
+
+<p>The fundamental job of a data warehouse architecture hasn't changed: bridge the gap between systems optimized for <em>recording</em> transactions and systems optimized for <em>answering</em> questions. What changed is the scale, the data types, and the tools available. Every architecture makes trade-offs across three tensions:</p>
+
+<div class="grid3">
+  <div class="card">
+    <div class="card-title">Flexibility vs governance</div>
+    <p>Can you add new data sources without breaking existing reports? Can you enforce quality without slowing ingestion? Lean too far toward flexibility → data swamp. Too far toward governance → bottleneck.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">Cost vs performance</div>
+    <p>Pre-aggregate data for fast reads (costs storage, stale data) or query raw data on-demand (slower, always fresh)? Pay for always-on compute or burst on demand?</p>
+  </div>
+  <div class="card">
+    <div class="card-title">Simplicity vs capability</div>
+    <p>SQL-only teams need a warehouse. ML/AI teams need Python/Spark. One platform that does both is complex. Two platforms create integration overhead.</p>
+  </div>
+</div>
+
+<div class="example">
+<p>A 150-store electronics retailer wants to analyze promotion effectiveness across all stores. The operational databases use different ERP vendors across regions. The architecture must integrate heterogeneous sources (flexibility), ensure "revenue" means the same thing everywhere (governance), handle Diwali traffic spikes without paying for peak capacity year-round (cost vs performance), and serve both marketing dashboards (SQL) and demand forecasting models (ML) — ideally without maintaining two separate platforms (simplicity vs capability).</p>
+</div>
+
+<h3 id="etl">ETL vs ELT — the pipeline shift</h3>
+
+<div class="grid2">
+  <div class="card amber">
+    <div class="card-title">ETL — Extract, Transform, Load</div>
+    <p>Transform happens on a <em>separate server</em> before loading into the warehouse. Traditional approach — necessary when warehouse compute was expensive and limited. Tools: Informatica, SSIS, Talend, Ab Initio.</p>
+    <p><strong>When it still makes sense:</strong> heavily regulated industries where data must be cleansed/masked before it touches the warehouse; legacy environments with limited warehouse compute.</p>
+  </div>
+  <div class="card green">
+    <div class="card-title">ELT — Extract, Load, Transform</div>
+    <p>Load raw data first, transform <em>inside the warehouse</em> using its own scalable compute. The dominant modern pattern — made possible by cheap, elastic cloud warehouse compute.</p>
+    <p><strong>Why it won:</strong> the warehouse is now the most powerful compute engine in the stack. Transforming data there is faster, cheaper, and keeps lineage in one system. <strong>dbt</strong> (data build tool) is the standard transformation tool in ELT workflows.</p>
+    <p><a class="ref" href="https://www.getdbt.com/">getdbt.com</a></p>
+  </div>
+</div>
+
+<div class="card blue">
+<div class="card-title">The medallion architecture — ELT's organizing pattern</div>
+<p>Data flows through three progressive refinement layers: <strong>Bronze</strong> (raw, as-received, append-only — the replay source), <strong>Silver</strong> (cleaned, conformed, deduplicated — data quality enforcement happens here), <strong>Gold</strong> (business-ready aggregations and star schemas — what analysts and BI tools query). Kimball's dimensional modeling lives in the Gold layer. This pattern is now the default for both lakehouse (Databricks, Fabric) and warehouse (Snowflake, BigQuery) architectures.</p>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- PART 2 -->
+<!-- ============================================================ -->
+
+<h2 id="cloud-dw"><span class="p" style="background:var(--blue)">2A</span> Cloud data warehouse <span class="time-tag">~10 min</span></h2>
+
+<div class="card">
+<div class="card-title">What it is</div>
+<p>A fully managed SQL engine in the cloud with separated storage and compute. No hardware to buy. Scale each layer independently. Pay for what you use. The dominant model for new warehouse builds.</p>
+</div>
+
+<table>
+  <tr><th>Characteristic</th><th>Detail</th></tr>
+  <tr><td><strong>Core mechanic</strong></td><td>ELT — load raw data, transform inside the warehouse (dbt, stored procedures, SQL pipelines)</td></tr>
+  <tr><td><strong>Data model</strong></td><td>Star schema / snowflake schema in the Gold layer. Staging tables in Bronze/Silver.</td></tr>
+  <tr><td><strong>Data types</strong></td><td>Structured (tables) + semi-structured (JSON, Avro, Parquet). Limited for unstructured (images, video, audio).</td></tr>
+  <tr><td><strong>Query language</strong></td><td>SQL (primary). Python/Java extensions available but SQL is the center of gravity.</td></tr>
+  <tr><td><strong>Who it's for</strong></td><td>Organizations whose primary need is BI, reporting, and SQL-based analytics. SQL-skilled teams.</td></tr>
+  <tr><td><strong>Platforms</strong></td><td>Snowflake, Google BigQuery, Amazon Redshift, Azure Synapse</td></tr>
+</table>
+
+<div class="example">
+<p>A retail chain with 150 stores needs cross-store sales analysis, promotion effectiveness dashboards, and quarterly executive reporting. Their team knows SQL and uses Power BI. A cloud data warehouse (Snowflake or BigQuery) is the natural fit — fast to set up, SQL-native, handles the star schema + OLAP workload perfectly. No Spark or Python expertise required.</p>
+</div>
+
+<h4>What it handles well</h4>
+<p>Concurrent dashboard queries from hundreds of users, OLAP operations (roll-up, drill-down, slice, dice), governed access control, semi-structured data (JSON columns), and increasingly — basic ML via SQL extensions (BigQuery ML, Snowflake Cortex).</p>
+
+<h4>What it doesn't handle well</h4>
+<p>Unstructured data at scale (images, video, sensor logs), large-scale ML model training (need GPUs), real-time streaming (sub-second latency), and very large raw data volumes where storage cost matters (warehouse storage is 3-5x more expensive than object storage).</p>
+
+
+<h2 id="lakehouse"><span class="p" style="background:var(--accent)">2B</span> Data lakehouse <span class="time-tag">~10 min</span></h2>
+
+<div class="card">
+<div class="card-title">What it is</div>
+<p>Data lake storage (S3/ADLS/GCS) + open table format (Delta Lake / Iceberg / Hudi) + SQL engine + ML engine — unified on one platform. Warehouse-grade reliability on lake economics.</p>
+</div>
+
+<h4>The enabling technology: open table formats</h4>
+<p>Before 2020, data lakes couldn't do ACID transactions, schema enforcement, or time travel. Open table formats solved this by tracking <em>metadata about files</em> rather than relying on directory structures:</p>
+
+<table>
+  <tr><th>Format</th><th>Origin</th><th>Philosophy</th><th>Reference</th></tr>
+  <tr><td><strong>Delta Lake</strong></td><td>Databricks (2019)</td><td>Spark-native, transaction log tracks file-level changes</td><td><a class="ref" href="https://delta.io/">delta.io</a></td></tr>
+  <tr><td><strong>Apache Iceberg</strong></td><td>Netflix → Apache (2018)</td><td>Vendor-neutral, snapshot-based metadata. Increasingly the default open standard.</td><td><a class="ref" href="https://iceberg.apache.org/">iceberg.apache.org</a></td></tr>
+  <tr><td><strong>Apache Hudi</strong></td><td>Uber → Apache (2016)</td><td>Optimized for streaming updates and upserts/deletes. Strong for CDC workloads.</td><td><a class="ref" href="https://hudi.apache.org/">hudi.apache.org</a></td></tr>
+</table>
+
+<p>All three provide ACID transactions, time travel (query historical snapshots), schema evolution, and partition pruning — on files stored in cheap cloud object storage.</p>
+
+<div class="example">
+<p>The same retailer now wants to build demand forecasting models to fix 30-40% forecast deviation. They also have customer survey data (semi-structured), product images for the e-commerce catalog (unstructured), and want real-time inventory visibility across stores. A lakehouse (Databricks) handles all of this: star schemas in the Gold layer for BI, Spark ML for forecasting, streaming ingestion for inventory — one platform, one governance layer.</p>
+</div>
+
+<h4>Trade-off vs cloud warehouse</h4>
+<p>More capability, more complexity. The team needs Python/Spark skills, not just SQL. Setup and optimization require engineering expertise. If the primary need is dashboards and OLAP — a pure warehouse is simpler and faster to deliver value.</p>
+
+
+<h2 id="hybrid"><span class="p" style="background:var(--purple)">2C</span> Hybrid architecture <span class="time-tag">~5 min</span></h2>
+
+<div class="card">
+<div class="card-title">What it is</div>
+<p>Best tool for each job. Star schema BI in a warehouse, ML in a lakehouse, semi-structured data in a document store, graph relationships in Neo4j. Shared data layer via open formats (Iceberg) or ETL pipelines feeding multiple targets.</p>
+</div>
+
+<p>Many large retailers use both Snowflake (for BI) and Databricks (for ML). Open table formats are making this less painful — Snowflake, Databricks, Spark, Trino, and Dremio can all read the same Iceberg tables without duplicating data.</p>
+
+<div class="card amber">
+<div class="card-title">The data mesh organizational layer</div>
+<p>Hybrid architectures at scale often adopt a <strong>data mesh</strong> pattern: domain teams (sales, warehouse operations, marketing) own their data products end-to-end, publishing to a central marketplace with governance standards. Each domain picks the tools that fit their workload — but conformed dimensions and shared governance ensure consistency. Relevant for multi-region, multi-department organizations.</p>
+<p><a class="ref" href="https://www.datamesh-architecture.com/">datamesh-architecture.com</a></p>
+</div>
+
+
+<h2 id="streaming"><span class="p" style="background:var(--red)">2D</span> Real-time / streaming-first <span class="time-tag">~5 min</span></h2>
+
+<div class="card">
+<div class="card-title">What it is</div>
+<p>Event streaming platform (Kafka) feeding a real-time OLAP engine (ClickHouse, Druid, Pinot) that queries data seconds after ingestion. For use cases where hours-old data is too stale.</p>
+</div>
+
+<table>
+  <tr><th>Component</th><th>Product</th><th>Role</th><th>Reference</th></tr>
+  <tr><td><strong>Event streaming</strong></td><td>Apache Kafka / Confluent</td><td>Ingest millions of events/second, deliver to consumers in real time</td><td><a class="ref" href="https://kafka.apache.org/">kafka.apache.org</a></td></tr>
+  <tr><td><strong>Real-time OLAP</strong></td><td>ClickHouse</td><td>Column-oriented, sub-second queries on billions of rows</td><td><a class="ref" href="https://clickhouse.com/">clickhouse.com</a></td></tr>
+  <tr><td><strong>Real-time OLAP</strong></td><td>Apache Druid</td><td>Real-time ingestion + fast aggregation, strong for time-series</td><td><a class="ref" href="https://druid.apache.org/">druid.apache.org</a></td></tr>
+  <tr><td><strong>Real-time OLAP</strong></td><td>Apache Pinot</td><td>LinkedIn-origin, optimized for user-facing analytics at scale</td><td><a class="ref" href="https://pinot.apache.org/">pinot.apache.org</a></td></tr>
+</table>
+
+<div class="example">
+<p>The retailer wants real-time fraud detection on payment transactions across 150 stores + e-commerce. Every transaction streams through Kafka, gets scored by a fraud model in milliseconds, and suspicious transactions are flagged before the customer leaves the store. A batch warehouse running nightly ETL cannot serve this use case.</p>
+</div>
+
+<p><strong>When NOT to use:</strong> If the business question can wait 15 minutes for an answer, a cloud warehouse with frequent micro-batch loading is simpler and cheaper. Streaming architecture requires specialist Kafka/ClickHouse engineers.</p>
+
+
+<!-- ============================================================ -->
+<!-- PART 3 -->
+<!-- ============================================================ -->
+
+<h2 id="snowflake"><span class="p" style="background:var(--blue)">3</span> Platform deep-dive (2025) <span class="time-tag">~12 min</span></h2>
+
+<h3>Snowflake — the cloud data warehouse leader</h3>
+
+<div class="card blue">
+<div class="card-title">Core architecture</div>
+<p>Three-layer separation: <strong>Storage</strong> (compressed columnar on cloud object storage), <strong>Compute</strong> (virtual warehouses — independent clusters that can scale from XS to 6XL), <strong>Services</strong> (metadata, authentication, optimization). Storage and compute scale independently. 13,300+ customers. Multi-cloud: AWS, Azure, GCP.</p>
+<p><a class="ref" href="https://www.snowflake.com/en/data-cloud/architecture/">snowflake.com/architecture</a></p>
+</div>
+
+<h4>Key 2025 developments</h4>
+<table>
+  <tr><th>Feature</th><th>What it does</th><th>Why it matters</th></tr>
+  <tr><td><strong>Cortex AI / AISQL</strong></td><td>LLM-powered SQL functions: AI_CLASSIFY, AI_EMBED, AI_TRANSCRIBE, AI_COMPLETE — run directly in SQL queries. Access to Anthropic Claude, Meta Llama, Mistral, OpenAI models inside Snowflake.</td><td>Every SQL analyst becomes an "AI engineer" — classify text, generate embeddings, analyze images without leaving SQL. 30-70% performance improvement on AI workloads.</td></tr>
+  <tr><td><strong>Cortex Agents</strong></td><td>GA Nov 2025. Orchestrate across structured (Cortex Analyst) and unstructured (Cortex Search) data. Plan tasks, use tools, generate responses.</td><td>Natural language → SQL with 95% accuracy on verified schemas. Business users can ask questions in English.</td></tr>
+  <tr><td><strong>Snowflake Intelligence</strong></td><td>Data agents that answer questions about enterprise data and take actions across third-party platforms (Salesforce, Google Workspace).</td><td>Moves Snowflake from "query your data" to "act on your data." 3x faster insight generation vs traditional BI tools (per CEO earnings call).</td></tr>
+  <tr><td><strong>Iceberg tables</strong></td><td>Native read/write support for Apache Iceberg format. Open Catalog (Polaris) for Iceberg-based catalog management.</td><td>Data stored in open format — queryable from Snowflake, Databricks, Spark, Trino. Reduces vendor lock-in.</td></tr>
+  <tr><td><strong>Cortex Code</strong></td><td>AI coding agent for data engineering, analytics, and agent-building tasks. Available in Snowsight and CLI.</td><td>Natural language → dbt models, Airflow DAGs, SQL optimization. Automates repetitive data engineering work.</td></tr>
+</table>
+
+<p><a class="ref" href="https://www.snowflake.com/en/product/features/cortex/">snowflake.com/cortex</a> · <a class="ref" href="https://docs.snowflake.com/en/user-guide/snowflake-cortex/aisql">Cortex AISQL docs</a></p>
+
+<div class="example">
+<p>A marketing team wants to know "which promotions drove the most incremental revenue in the South region last quarter." With Cortex Analyst, they type this in English. The system converts it to SQL against the star schema, executes it, and returns a visualized answer — no analyst intervention needed.</p>
+</div>
+
+
+<h3 id="databricks">Databricks — the lakehouse pioneer</h3>
+
+<div class="card green">
+<div class="card-title">Core architecture</div>
+<p>Built on Apache Spark + Delta Lake. Positions itself as a "Data Intelligence Platform" — unified for data engineering, BI, ML/AI, and now operational workloads. 15,000+ customers including 60% of Fortune 500. Multi-cloud: AWS, Azure, GCP.</p>
+<p><a class="ref" href="https://www.databricks.com/product/data-intelligence-platform">databricks.com/data-intelligence-platform</a></p>
+</div>
+
+<h4>Key 2025 developments</h4>
+<table>
+  <tr><th>Feature</th><th>What it does</th><th>Why it matters</th></tr>
+  <tr><td><strong>Lakebase</strong></td><td>PostgreSQL-compatible operational database (OLTP) integrated with the lakehouse. Built on acquired Neon technology. GA Feb 2026. 19,000 queries/sec, 4.56ms median latency.</td><td>Eliminates the gap between operational apps and analytics. No more reverse ETL — operational and analytical data live on one platform. 80% of Neon databases were created by AI agents.</td></tr>
+  <tr><td><strong>Unity Catalog</strong></td><td>Unified governance for all data and AI assets: tables (Delta + Iceberg + Hudi), ML models, metrics, notebooks, dashboards. Auto-classifies PII. Column-level lineage. ABAC (attribute-based access control).</td><td>The industry's only unified governance layer for both data and AI. Governs data across Databricks AND external systems (Snowflake, Redshift, BigQuery, Salesforce, SAP) via Lakehouse Federation.</td></tr>
+  <tr><td><strong>Unity Catalog Metric Views</strong></td><td>Define business metrics (KPIs) as first-class catalog assets. Reusable across BI dashboards, AI models, and notebooks.</td><td>The semantic layer lives in the governance catalog — metrics defined once, consumed everywhere. Eliminates "sales says $18M, finance says $17.2M" problem.</td></tr>
+  <tr><td><strong>Mosaic AI</strong></td><td>Foundation model training and serving. Agent Bricks for building AI agents. MLflow 3.0 for model lifecycle management.</td><td>Train, fine-tune, and deploy ML/AI models on the same platform that holds the data. No data movement.</td></tr>
+  <tr><td><strong>Native Iceberg support</strong></td><td>Read/write managed Iceberg tables. UniForm serves tables in both Delta and Iceberg format simultaneously. Share tables to external Iceberg clients (Snowflake, Trino, Flink).</td><td>Zero-copy data access across platforms. One table, multiple engines — true openness.</td></tr>
+  <tr><td><strong>Liquid clustering</strong></td><td>Automatic clustering replaces manual partitioning. Platform intelligently selects clustering keys based on query patterns.</td><td>Self-optimizing storage — no DBA needed to tune partition strategies. Just load data and query.</td></tr>
+</table>
+
+<p><a class="ref" href="https://www.databricks.com/product/unity-catalog">Unity Catalog</a> · <a class="ref" href="https://www.databricks.com/blog/whats-new-databricks-unity-catalog-data-ai-summit-2025">DAIS 2025 announcements</a> · <a class="ref" href="https://www.prnewswire.com/news-releases/databricks-launches-lakebase-302478815.html">Lakebase launch</a></p>
+
+
+<h3 id="bigquery">Google BigQuery — serverless analytics</h3>
+
+<div class="card">
+<div class="card-title">Core architecture</div>
+<p>Fully serverless — no clusters to manage, no warehouses to size. Pay per query (bytes scanned) or flat-rate reservations. Columnar storage (Capacitor format). Dremel execution engine. Separate from compute.</p>
+<p><a class="ref" href="https://cloud.google.com/bigquery">cloud.google.com/bigquery</a></p>
+</div>
+
+<h4>Key capabilities</h4>
+<table>
+  <tr><th>Feature</th><th>Detail</th></tr>
+  <tr><td><strong>BigQuery ML</strong></td><td>Train ML models (linear/logistic regression, XGBoost, deep neural networks, time-series forecasting, LLM inference) directly in SQL. No Python needed.</td></tr>
+  <tr><td><strong>Continuous queries</strong></td><td>Streaming SQL — queries that run continuously on incoming data. Blurs batch/streaming boundary.</td></tr>
+  <tr><td><strong>Vector search</strong></td><td>Built-in embedding generation and nearest-neighbor search for RAG and recommendation use cases.</td></tr>
+  <tr><td><strong>BigQuery Studio</strong></td><td>Notebooks, SQL editor, and Python runtime in one interface. Jupyter-like experience inside BigQuery.</td></tr>
+  <tr><td><strong>Gemini integration</strong></td><td>Natural language to SQL. Data insights generation. Duet AI for code completion.</td></tr>
+</table>
+
+<div class="example">
+<p>A retailer wants to predict which customers will churn from their loyalty program. In BigQuery: write a SQL query to create a training dataset from the star schema, train an XGBoost model with <code>CREATE MODEL</code>, evaluate it with <code>ML.EVALUATE</code>, and score every customer with <code>ML.PREDICT</code> — all without leaving SQL. No separate ML platform needed.</p>
+</div>
+
+
+<h3 id="fabric">Microsoft Fabric — unified analytics</h3>
+
+<div class="card">
+<div class="card-title">Core architecture</div>
+<p>Microsoft's all-in-one analytics platform. Unifies Power BI, Synapse Data Engineering, Data Factory, Data Science, and Real-Time Intelligence under a single SaaS product. <strong>OneLake</strong> as the single storage layer (built on ADLS Gen2). Medallion architecture built into the product.</p>
+<p><a class="ref" href="https://www.microsoft.com/en-us/microsoft-fabric">microsoft.com/microsoft-fabric</a></p>
+</div>
+
+<h4>Key differentiators</h4>
+<p><strong>Direct Lake mode:</strong> Power BI queries Parquet/Delta files in OneLake directly — no import step, no data duplication. Combines the speed of imported data with the freshness of DirectQuery.</p>
+<p><strong>Copilot integration:</strong> Natural language analytics in Power BI, Data Factory, and notebooks. AI-assisted report building, DAX formula generation, pipeline creation.</p>
+<p><strong>Best for:</strong> Organizations already in the Microsoft ecosystem (Office 365, Azure AD, Teams). Power BI is the most deployed BI tool globally — Fabric makes it the consumption layer of a unified analytics platform.</p>
+
+
+<h3 id="redshift">Amazon Redshift — AWS-native warehouse</h3>
+
+<div class="card">
+<div class="card-title">Core architecture</div>
+<p>Columnar storage, massively parallel processing (MPP). Tight integration with the AWS ecosystem: S3, Glue, SageMaker, Athena, Kinesis. <strong>Redshift Serverless</strong> available for pay-per-query model.</p>
+<p><a class="ref" href="https://aws.amazon.com/redshift/">aws.amazon.com/redshift</a></p>
+</div>
+
+<h4>Key developments</h4>
+<p><strong>Zero-ETL:</strong> Automatic replication from Aurora (PostgreSQL/MySQL), DynamoDB, and other AWS services directly into Redshift — no pipeline to build. Data available for analytics seconds after operational write.</p>
+<p><strong>Redshift Spectrum:</strong> Query data in S3 directly without loading into Redshift. Extends the warehouse into a lakehouse pattern.</p>
+<p><strong>Best for:</strong> AWS-native organizations. Strongest when combined with the broader AWS data stack (Glue for ETL, SageMaker for ML, Athena for ad-hoc S3 queries).</p>
+
+
+<h2 id="convergence"><span class="p" style="background:var(--amber)">→</span> The convergence <span class="time-tag">~3 min</span></h2>
+
+<div class="card amber">
+<div class="card-title">Every platform is adding the others' features</div>
+<p>Snowflake adds Iceberg support, Python execution (Snowpark), ML (Cortex), and operational data. Databricks adds BI-grade SQL performance, semantic layer (Metric Views), and an operational database (Lakebase). BigQuery adds continuous queries, ML, and vector search. Fabric unifies warehouse + lakehouse + BI in one product.</p>
+<p><strong>The architectural category (warehouse vs lakehouse) matters less each year. What matters: which platform fits your team's skills, existing ecosystem, and primary workload mix.</strong></p>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- PART 4 -->
+<!-- ============================================================ -->
+
+<h2 id="criteria"><span class="p" style="background:var(--accent)">4</span> Decision framework <span class="time-tag">~5 min</span></h2>
+
+<table>
+  <tr><th>Criterion</th><th>If this → consider this</th></tr>
+  <tr><td><strong>Primary workload is 80%+ BI/reporting</strong></td><td>Cloud warehouse (Snowflake, BigQuery). Simplest path to value.</td></tr>
+  <tr><td><strong>Need both BI and ML/AI from same data</strong></td><td>Lakehouse (Databricks, Fabric). One platform, one governance layer.</td></tr>
+  <tr><td><strong>Real-time operational analytics (sub-second)</strong></td><td>Streaming-first (Kafka + ClickHouse/Druid). Specialized but powerful.</td></tr>
+  <tr><td><strong>Diverse teams with different needs</strong></td><td>Hybrid. Warehouse for BI team, lakehouse for data science. Open formats (Iceberg) as the shared layer.</td></tr>
+  <tr><td><strong>Team knows SQL only</strong></td><td>Snowflake or BigQuery. SQL-native. Don't force Spark on a SQL team.</td></tr>
+  <tr><td><strong>Team has Python/Spark skills</strong></td><td>Databricks. Full power of the lakehouse.</td></tr>
+  <tr><td><strong>Already in Microsoft ecosystem</strong></td><td>Microsoft Fabric. Power BI + OneLake + Azure AD integration.</td></tr>
+  <tr><td><strong>Already all-in on AWS</strong></td><td>Redshift + Glue + SageMaker. Tight native integration.</td></tr>
+  <tr><td><strong>Low vendor lock-in tolerance</strong></td><td>Lakehouse with open formats (Iceberg). Data is portable.</td></tr>
+  <tr><td><strong>Need results in weeks, not months</strong></td><td>Cloud warehouse. Lowest setup friction. Star schema running in days.</td></tr>
+  <tr><td><strong>India data sovereignty required</strong></td><td>All major platforms have India regions: AWS Mumbai, Azure Central India, GCP Mumbai.</td></tr>
+</table>
+
+<h2 id="cloud-pros">Cloud architecture — pros &amp; cons <span class="time-tag">~5 min</span></h2>
+
+<div class="grid2">
+  <div class="card green">
+    <div class="card-title">Pros</div>
+    <p><strong>Eliminates hardware sizing</strong> — start small, scale on demand. No upfront capacity planning.</p>
+    <p><strong>Elastic for seasonal peaks</strong> — spin up compute for Diwali, scale down to near-zero in quiet months. Pay only for what you use.</p>
+    <p><strong>Managed infrastructure</strong> — no DBA staff for patching, backups, disaster recovery, performance tuning.</p>
+    <p><strong>Fast time-to-value</strong> — spin up a warehouse and load data in hours, not months of procurement.</p>
+    <p><strong>Built-in governance</strong> — encryption, access control, audit logging, lineage out of the box.</p>
+    <p><strong>Global availability</strong> — data stays in-country with regional deployments (India, EU, US, APAC regions available).</p>
+  </div>
+  <div class="card red">
+    <div class="card-title">Cons</div>
+    <p><strong>Ongoing operational cost</strong> — no "buy once" model. Monthly bills must be monitored. Usage spikes can surprise.</p>
+    <p><strong>Vendor lock-in</strong> — migrating between platforms is expensive. SQL dialects differ, pipelines need rewriting. Open formats (Iceberg) mitigate this but don't eliminate it.</p>
+    <p><strong>Data sovereignty concerns</strong> — data managed by foreign cloud provider, even in local regions. May face regulatory or board-level resistance in some industries/countries.</p>
+    <p><strong>Internet dependency</strong> — stores/offices need reliable connectivity. If connectivity fails, data ingestion stops. Requires fallback: local staging → batch upload.</p>
+    <p><strong>Cost unpredictability</strong> — poorly written queries scanning entire fact tables, or compute left running over weekends, create surprise bills. Requires cost monitoring discipline.</p>
+    <p><strong>Training investment</strong> — team must learn cloud platform. Cloud-specific concepts (virtual warehouses, credits, partitioning) require upskilling.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- PART 5 -->
+<!-- ============================================================ -->
+
+<h2 id="semantic"><span class="p" style="background:var(--purple)">5</span> The semantic layer — where OLAP is heading <span class="time-tag">~7 min</span></h2>
+
+<h3>The problem (unchanged since the 1990s)</h3>
+<p>Sales says revenue is $18M. Finance says $17.2M. Both numbers are "correct" — different filters, different date logic, different currency handling. This inconsistency erodes trust in data.</p>
+
+<h3>The old solution: OLAP cubes</h3>
+<p>Pre-aggregated, pre-defined multidimensional structures (SSAS, Cognos, Hyperion). Baked metric logic into the cube. Solved consistency but created rigidity — new dimensions required rebuilding the cube. Vendor-locked (MDX query language). <strong>Being phased out.</strong></p>
+
+<h3>The modern solution: semantic layer</h3>
+<p>Define metrics once, in code, serve them to every consuming tool (BI dashboards, notebooks, AI agents, APIs). Three architectural approaches emerged between 2020-2025:</p>
+
+<table>
+  <tr><th>Approach</th><th>Product</th><th>How it works</th><th>Best for</th><th>Reference</th></tr>
+  <tr><td><strong>Transformation-layer</strong></td><td>dbt Semantic Layer / MetricFlow</td><td>Metrics-as-code in YAML, version-controlled in Git, compiled to optimized SQL at query time</td><td>Multi-cloud, vendor-neutral environments. Teams already using dbt.</td><td><a class="ref" href="https://www.getdbt.com/blog/universal-semantic-layer">dbt semantic layer</a></td></tr>
+  <tr><td><strong>Warehouse-native</strong></td><td>Snowflake Semantic Views, Databricks Metric Views</td><td>Metric definitions stored as database objects in the warehouse/catalog itself</td><td>Single-platform environments. Tightest integration.</td><td><a class="ref" href="https://www.databricks.com/blog/whats-new-databricks-unity-catalog-data-ai-summit-2025">Databricks Metric Views</a></td></tr>
+  <tr><td><strong>OLAP-acceleration</strong></td><td>Cube.dev</td><td>Pre-aggregation layer with REST/GraphQL API. Caches results for sub-second latency.</td><td>Embedded analytics, customer-facing dashboards. High concurrency.</td><td><a class="ref" href="https://cube.dev/">cube.dev</a></td></tr>
+</table>
+
+<div class="card purple">
+<div class="card-title">Why AI is the killer use case for the semantic layer</div>
+<p>LLMs querying a semantic layer produce dramatically more accurate results than LLMs querying raw tables. The semantic layer provides the business context — what "revenue" means, which filters to apply, how dimensions join — that models need to generate correct SQL. Accuracy increases up to 300% with a semantic layer vs raw table access. <strong>The semantic layer is becoming AI infrastructure, not just BI infrastructure.</strong></p>
+</div>
+
+<h4>Open Semantic Interchange (OSI)</h4>
+<p>Launched 2025 by dbt Labs, Snowflake, and Salesforce. Goal: standardize metric definitions in vendor-neutral YAML so metrics are portable across tools. Define a metric once, consume it in Looker, Tableau, Power BI, notebooks, and AI agents. Still early but signals industry convergence.</p>
+
+
+<!-- ============================================================ -->
+<!-- PART 6 -->
+<!-- ============================================================ -->
+
+<h2 id="future"><span class="p" style="background:var(--red)">6</span> What comes next <span class="time-tag">~5 min</span></h2>
+
+<div class="grid2">
+  <div class="card">
+    <div class="card-title">AI-native data platforms</div>
+    <p>Architectures designed primarily for AI workloads (model training, RAG, embeddings, agent workflows) with traditional analytics as secondary. Databricks is furthest along — Lakebase + Mosaic AI + Unity Catalog makes it an AI development platform that also does BI, not the other way around.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">Real-time convergence</div>
+    <p>The batch/streaming distinction dissolving. Delta Live Tables, Kafka-to-Iceberg pipelines, BigQuery continuous queries, Snowflake Snowpipe Streaming — the architecture handles both in one pipeline. "Batch is just a special case of streaming with a very long window."</p>
+  </div>
+  <div class="card">
+    <div class="card-title">Automated governance via AI</div>
+    <p>Data catalogs that auto-classify PII, auto-detect schema drift, auto-suggest access policies. Unity Catalog already auto-classifies sensitive data within 24 hours. Snowflake AI_REDACT detects and masks PII automatically. Manual governance doesn't scale to petabytes.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">Edge analytics</div>
+    <p>Process data at the point of capture (store POS, factory sensor, IoT device) before sending to the cloud. Gartner predicts 55%+ of deep neural network analysis will occur at the edge by 2025. Relevant for retailers: if internet fails, edge processing keeps local analytics running.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">Composable data stack</div>
+    <p>Instead of one monolithic platform, assemble best-of-breed tools: Fivetran/Airbyte for ingestion, dbt for transformation, Snowflake/Databricks for warehouse, Looker/Power BI for BI, Monte Carlo/Soda for data quality. Connected via APIs and open formats. The "anti-lock-in" movement.</p>
+    <p><a class="ref" href="https://www.fivetran.com/">fivetran.com</a> · <a class="ref" href="https://airbyte.com/">airbyte.com</a> · <a class="ref" href="https://www.montecarlodata.com/">montecarlodata.com</a></p>
+  </div>
+  <div class="card">
+    <div class="card-title">Natural language as the query interface</div>
+    <p>Snowflake Cortex Analyst, Databricks Genie, BigQuery Gemini — all converting English questions into SQL. The BI tool becomes optional for simple queries. Business users ask questions directly, the semantic layer ensures correctness. The "last mile" of data democratization.</p>
+  </div>
+</div>
+
+
+<h2 id="next-problems"><span class="p" style="background:var(--amber)">→</span> Next problems — once the warehouse is running</h2>
+
+<p>The warehouse/lakehouse is live, the star schema is serving dashboards, the initial analytical requirements are met. What breaks next?</p>
+
+<div class="card">
+<div class="card-title">Problem 1: Forecast accuracy</div>
+<p>Descriptive analytics (what happened) is solved. Now the business wants predictive analytics (what will happen). Demand forecasting, inventory optimization, customer churn prediction. The star schema provides the training data — but you need ML models. This is where BigQuery ML (SQL-based, lowest friction) or Databricks (full ML platform) enters the stack.</p>
+</div>
+
+<div class="card">
+<div class="card-title">Problem 2: Real-time inventory visibility</div>
+<p>Batch ETL means inventory data is hours old. Store managers need to know current stock across all 150 stores — not yesterday's snapshot. This pushes toward streaming ingestion (Kafka/Snowpipe/Kinesis) and near-real-time dashboard refresh. The architecture evolves from nightly batch to micro-batch (every 5-15 minutes) to streaming.</p>
+</div>
+
+<div class="card">
+<div class="card-title">Problem 3: Personalization at scale</div>
+<p>The loyalty program is live, customer segments are defined (RFM). Now marketing wants personalized recommendations — "customers who bought X also bought Y" — served in real-time on the e-commerce site. This requires a recommendation engine (collaborative filtering / embeddings), a feature store (serving customer features at low latency), and an operational database (Lakebase / DynamoDB) to serve recommendations to the application layer.</p>
+</div>
+
+<div class="card">
+<div class="card-title">Problem 4: Unstructured data</div>
+<p>Customer survey free text, product reviews, social media mentions, call center transcripts. These don't fit in a star schema. The lakehouse handles them natively — store in Bronze, process with LLMs (sentiment analysis, entity extraction), land structured outputs in Gold alongside the star schema. Snowflake Cortex AI functions (AI_CLASSIFY, AI_EMBED) can process unstructured data directly in SQL queries.</p>
+</div>
+
+<div class="card">
+<div class="card-title">Problem 5: Governance at scale</div>
+<p>With 150 stores, dozens of data domains, multiple teams, and ML models making decisions — who owns what? How do you audit which model made which recommendation? Column-level lineage, model governance, metric consistency, automated PII detection — this is where Unity Catalog and Snowflake Horizon earn their value. Governance is not a "later" problem — it's the problem that determines whether anyone trusts the numbers.</p>
+</div>
+
+</div><!-- /main -->
+
+<script>
+const sections = document.querySelectorAll('h2[id],h3[id]');
+const links = document.querySelectorAll('.nav a');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(s => { if (window.scrollY >= s.offsetTop - 100) current = s.id; });
+  links.forEach(a => { a.classList.remove('active'); if (a.getAttribute('href') === '#' + current) a.classList.add('active'); });
+});
+</script>
+</body>
+</html>

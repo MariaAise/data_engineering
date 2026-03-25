@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assessment Q4 — Architecture Choices for Acme Inc</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #fafaf8; --surface: #fff; --surface2: #f3f2ee; --border: #e2e0d8;
+  --text: #2c2c2a; --text-dim: #6e6d68; --heading: #1a1a18;
+  --accent: #1a6b4e; --accent-light: #e8f5ee;
+  --amber: #b45309; --amber-light: #fef3e2;
+  --blue: #1d5fa0; --blue-light: #edf4fc;
+  --red: #b91c1c; --red-light: #fef2f2;
+  --purple: #6d28d9; --purple-light: #f3eefb;
+  --code-bg: #f5f4f0;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; line-height: 1.75; font-size: 15px; }
+
+.nav { position: fixed; top: 0; left: 0; width: 240px; height: 100vh; overflow-y: auto; background: var(--surface); border-right: 1px solid var(--border); padding: 1.5rem 1rem; z-index: 10; }
+.nav-title { font-family: 'Source Serif 4', serif; font-size: 0.92rem; font-weight: 700; color: var(--heading); margin-bottom: 1.2rem; line-height: 1.3; }
+.nav a { display: block; padding: 0.3rem 0.5rem; color: var(--text-dim); text-decoration: none; font-size: 0.78rem; border-radius: 4px; line-height: 1.35; margin: 0.1rem 0; }
+.nav a:hover { background: var(--surface2); color: var(--heading); }
+.nav a.active { background: var(--accent-light); color: var(--accent); font-weight: 500; }
+.nav .sep { height: 1px; background: var(--border); margin: 0.6rem 0; }
+
+.main { margin-left: 240px; max-width: 800px; padding: 2.5rem 3rem 6rem; }
+h1 { font-family: 'Source Serif 4', serif; font-size: 2rem; color: var(--heading); font-weight: 700; margin-bottom: 0.3rem; line-height: 1.2; }
+.hero-sub { color: var(--text-dim); font-size: 0.92rem; margin-bottom: 2.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
+h2 { font-family: 'Source Serif 4', serif; font-size: 1.4rem; color: var(--heading); font-weight: 700; margin: 2.5rem 0 0.8rem; padding-top: 1rem; }
+h3 { color: var(--accent); font-size: 0.95rem; font-weight: 700; margin: 1.5rem 0 0.4rem; }
+p { margin-bottom: 0.75rem; }
+strong { color: var(--heading); }
+
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.1rem 1.3rem; margin: 0.6rem 0; }
+.card.green { border-left: 3px solid var(--accent); background: var(--accent-light); }
+.card.amber { border-left: 3px solid var(--amber); background: var(--amber-light); }
+.card.blue { border-left: 3px solid var(--blue); background: var(--blue-light); }
+.card.red { border-left: 3px solid var(--red); background: var(--red-light); }
+.card.purple { border-left: 3px solid var(--purple); background: var(--purple-light); }
+.card-title { font-weight: 700; color: var(--heading); margin-bottom: 0.3rem; font-size: 0.88rem; }
+
+code { font-family: 'JetBrains Mono', monospace; font-size: 0.82em; background: var(--code-bg); padding: 1px 5px; border-radius: 3px; }
+table { width: 100%; border-collapse: collapse; font-size: 0.83rem; margin: 0.6rem 0; }
+th { text-align: left; padding: 0.5rem 0.7rem; background: var(--surface2); color: var(--heading); font-weight: 600; font-size: 0.75rem; border-bottom: 2px solid var(--border); }
+td { padding: 0.45rem 0.7rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem; margin: 0.6rem 0; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.7rem; margin: 0.6rem 0; }
+
+.verdict { background: var(--accent-light); border: 2px solid var(--accent); border-radius: 10px; padding: 1.2rem 1.5rem; margin: 1rem 0; }
+.verdict-title { font-family: 'Source Serif 4', serif; font-weight: 700; color: var(--accent); font-size: 1rem; margin-bottom: 0.4rem; }
+
+@media (max-width: 900px) { .nav { display: none; } .main { margin-left: 0; padding: 2rem 1.2rem 4rem; } .grid2, .grid3 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <div class="nav-title">Q4: Architecture Choices for Acme Inc</div>
+  <a href="#acme">Acme's constraints</a>
+  <a href="#selection">Selection criteria</a>
+  <div class="sep"></div>
+  <a href="#arch">Architecture options</a>
+  <a href="#onprem">On-premises DW</a>
+  <a href="#cloud">Cloud warehouse</a>
+  <a href="#lakehouse">Lakehouse</a>
+  <a href="#hybrid">Hybrid</a>
+  <div class="sep"></div>
+  <a href="#platforms">Platform comparison</a>
+  <a href="#cloudpros">Cloud pros &amp; cons</a>
+  <a href="#rec">Recommendation</a>
+</div>
+
+<div class="main">
+
+<h1>Architecture Choices for Acme Inc</h1>
+<p class="hero-sub">Assessment Q4 — Moving beyond Exhibit 6 into the current platform landscape. Grounded in Acme's specific business constraints.</p>
+
+
+<!-- ============================================================ -->
+<h2 id="acme">Acme's constraints — what shapes the architecture decision</h2>
+
+<p>Before evaluating architectures, you need to understand what makes Acme's situation specific. These constraints eliminate options and force trade-offs:</p>
+
+<table>
+  <tr><th>Constraint</th><th>Detail</th><th>Architecture implication</th></tr>
+  <tr><td><strong>Heterogeneous IT</strong></td><td>Multiple ERP vendors, different DB products and versions across 150+ stores and regional warehouses. Grown through acquisitions.</td><td>Integration layer (ETL/ELT) is non-negotiable. Must handle schema mismatches, naming inconsistencies, data type conflicts from dozens of source systems.</td></tr>
+  <tr><td><strong>Scale</strong></td><td>150 stores, 9 states, 24 cities, 12,000 SKUs, 180 brands, Rs 3,300Cr revenue</td><td>Not a small business. Needs enterprise-grade platform. But also not a global bank — doesn't need the absolute largest scale.</td></tr>
+  <tr><td><strong>Multiple business processes</strong></td><td>11 business processes in the Business Matrix (Exhibit 3): retail sales, inventory, receipts, promotions, returns, warehouse orders, etc.</td><td>Needs multiple data marts. Architecture must support incremental mart development — can't build everything at once.</td></tr>
+  <tr><td><strong>Analytical maturity: zero</strong></td><td>"Cannot get an integrated view of sales across multiple stores." No existing BI infrastructure. No promotion metrics. No forecasting capability.</td><td>First priority is proving value fast with a pilot. Architecture must support quick wins before enterprise rollout.</td></tr>
+  <tr><td><strong>Team skill gap</strong></td><td>CIO Vishal Mehta: "lacked sufficient expertise on BI/DW related projects." Hired external consultant.</td><td>Platform must be manageable by a team building DW skills. Simpler = better at this stage. Avoid platforms requiring deep Spark/engineering expertise.</td></tr>
+  <tr><td><strong>India-specific</strong></td><td>Operations across 9 Indian states. Data sovereignty matters. GST compliance. INR-denominated.</td><td>Cloud region availability in India matters. AWS Mumbai, Azure Central India, GCP Mumbai all available.</td></tr>
+  <tr><td><strong>Online + offline</strong></td><td>Physical stores + e-commerce portal serving 300 cities</td><td>Must integrate POS transaction data (batch) with online clickstream data (potentially real-time). Architecture needs both batch and near-real-time ingestion.</td></tr>
+</table>
+
+
+<!-- ============================================================ -->
+<h2 id="selection">Selection criteria — how to evaluate any architecture</h2>
+
+<p>These are the benchmarks that determine fit. Every architecture option should be scored against these:</p>
+
+<div class="grid2">
+  <div class="card">
+    <div class="card-title">1. Data integration complexity</div>
+    <p>How many source systems? How different are they? Acme's answer: very high. Multiple ERPs, different DB vendors, acquisition-inherited systems. This is the hardest problem.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">2. Time-to-value</div>
+    <p>How quickly can you deliver the pilot data mart? Vishal has a July 2015 deadline to present to VP Retail. Fast iteration > architectural purity at this stage.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">3. Scalability</div>
+    <p>Can the architecture grow from one data mart (sales) to 11 business processes without rebuilding? Acme will expand — the architecture must not be a dead end.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">4. Team capability</div>
+    <p>What skills does the team have? Acme's team knows relational databases and SQL. They don't know Spark, Python, or ML engineering. Platform must meet them where they are.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">5. Total cost of ownership</div>
+    <p>Capital expense (hardware) vs operational expense (cloud subscription). Acme is a Rs 3,300Cr company — has budget, but needs to justify ROI to VP Retail.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">6. Data governance</div>
+    <p>Who owns each dimension? How are data quality issues resolved? With 150 stores submitting data, governance is a survival requirement, not a nice-to-have.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<h2 id="arch">Architecture options — the current landscape</h2>
+
+<p>Exhibit 6 from the case shows five architectures from the 2014 textbook era. Here's how those map to today's actual options, plus what's new:</p>
+
+
+<!-- ============================================================ -->
+<h3 id="onprem">Option A: On-premises data warehouse (traditional)</h3>
+
+<div class="card">
+<div class="card-title">What it is</div>
+<p>Physical servers running a relational database (Oracle, SQL Server, Teradata) in Acme's own data centre. ETL tools (Informatica, SSIS) extract from source systems, transform, and load into a star schema warehouse. BI tools (Tableau, Power BI) sit on top.</p>
+</div>
+
+<table>
+  <tr><th>Pros</th><th>Cons</th></tr>
+  <tr><td>Full control over data — no sovereignty concerns</td><td>Large upfront capital expense: servers, storage, licenses, networking</td></tr>
+  <tr><td>Predictable cost once purchased</td><td>Sizing must be done upfront — over-provision = wasted money, under-provision = performance bottleneck</td></tr>
+  <tr><td>No dependency on internet connectivity</td><td>Scaling requires purchasing more hardware — weeks to months lead time</td></tr>
+  <tr><td>Familiar to teams with traditional database skills</td><td>Requires DBA staff for maintenance, patching, backups, disaster recovery</td></tr>
+  <tr><td></td><td>Holiday season spikes (Diwali) can't be handled elastically — you either pay for peak capacity year-round or suffer during peaks</td></tr>
+</table>
+
+<div class="card amber">
+<div class="card-title">Acme fit assessment</div>
+<p><strong>Poor fit for 2025.</strong> Acme's IT is already fragmented — adding on-premises infrastructure adds operational burden to a team that already lacks DW expertise. The sizing problem (constraint 1c from the assessment) becomes critical: Acme would need to estimate hardware needs for 3-5 years upfront without any historical DW usage data to base it on. The cost and risk of getting this wrong is high.</p>
+</div>
+
+
+<!-- ============================================================ -->
+<h3 id="cloud">Option B: Cloud data warehouse</h3>
+
+<div class="card">
+<div class="card-title">What it is</div>
+<p>A fully managed warehouse service in the cloud. No hardware to buy, no servers to maintain. Separation of storage and compute — scale each independently. Pay for what you use. The dominant model for new warehouse builds in 2025.</p>
+</div>
+
+<p>Three major platforms for Acme to evaluate:</p>
+
+<div class="grid3">
+  <div class="card blue">
+    <div class="card-title">Snowflake</div>
+    <p>Cloud-native warehouse. Separation of storage and compute. Near-zero admin. Multi-cloud (AWS, Azure, GCP). Strong for structured analytics and BI. SQL-first — fits Acme's team skills. Available in AWS Mumbai region.</p>
+    <p><strong>Why it fits Acme:</strong> Simplest to adopt for a SQL-skilled team. Excellent for the dimensional modeling + OLAP workload Acme needs. Can start small (one warehouse) and scale as marts are added.</p>
+  </div>
+  <div class="card blue">
+    <div class="card-title">Google BigQuery</div>
+    <p>Serverless — no infrastructure at all. Pay per query (bytes scanned). Zero cluster management. Built-in ML (BigQuery ML). GCP Mumbai region available.</p>
+    <p><strong>Why it fits Acme:</strong> Lowest operational overhead. No warehouses to size or manage. But: less ecosystem maturity in India compared to AWS/Azure. GCP adoption is lower in Indian enterprise.</p>
+  </div>
+  <div class="card blue">
+    <div class="card-title">Azure Synapse / Fabric</div>
+    <p>Microsoft unified analytics. Integrates with Power BI, Azure Data Factory, OneLake. Medallion architecture built-in. Azure Central India region available.</p>
+    <p><strong>Why it fits Acme:</strong> If Acme's existing ERP systems include any SAP or Microsoft products (common in Indian retail), Azure integration is seamless. Power BI is likely the cheapest BI tool for enterprise rollout.</p>
+  </div>
+</div>
+
+<table>
+  <tr><th>Pros (all cloud options)</th><th>Cons (all cloud options)</th></tr>
+  <tr><td>No upfront capital — operational expense model</td><td>Ongoing cost — can grow unexpectedly if not monitored</td></tr>
+  <tr><td>Elastic scaling — handle Diwali traffic spikes, scale down in quiet months</td><td>Data leaves Acme's premises — data sovereignty and compliance considerations</td></tr>
+  <tr><td>No hardware sizing needed — eliminates the estimation problem entirely</td><td>Vendor lock-in risk — migrating between cloud platforms is painful</td></tr>
+  <tr><td>Managed infrastructure — no DBA staff for patching, backups, DR</td><td>Requires reliable internet connectivity across 150 stores to cloud</td></tr>
+  <tr><td>Start in minutes, not months</td><td>Team needs to learn cloud platform — training investment required</td></tr>
+  <tr><td>Built-in governance, security, encryption</td><td>Cost predictability is harder — usage-based billing can surprise</td></tr>
+</table>
+
+
+<!-- ============================================================ -->
+<h3 id="lakehouse">Option C: Data lakehouse</h3>
+
+<div class="card">
+<div class="card-title">What it is</div>
+<p>A unified platform that combines data lake storage (cheap, flexible, handles all data types) with warehouse-grade reliability (ACID transactions, schema enforcement, SQL performance). Data is stored in open formats (Delta Lake, Apache Iceberg) on cloud object storage. One copy of data serves both BI analytics and advanced ML workloads.</p>
+</div>
+
+<div class="card">
+<div class="card-title">Databricks — the lakehouse pioneer</div>
+<p>Built on Apache Spark + Delta Lake. Strongest ML/AI integration. Unity Catalog for governance. Medallion architecture (Bronze → Silver → Gold) is the recommended data organization pattern. Available on AWS/Azure/GCP in India regions.</p>
+<p><strong>Why it might fit Acme:</strong> If Acme plans to build forecasting models (the 30-40% deviation problem from Q2), recommendation engines, or customer segmentation ML models, Databricks provides both the warehouse and the ML platform in one. The medallion architecture gives a clean structure for handling Acme's heterogeneous source data.</p>
+<p><strong>Why it might not fit:</strong> Requires more technical skill than Snowflake. The team needs Python/Spark capability, not just SQL. Overkill if the primary need is star schema BI — which it is for the pilot.</p>
+</div>
+
+<table>
+  <tr><th>Lakehouse pros</th><th>Lakehouse cons</th></tr>
+  <tr><td>One platform for BI + ML + data engineering</td><td>Steeper learning curve than a pure cloud warehouse</td></tr>
+  <tr><td>Open formats — no vendor lock-in on data</td><td>Requires engineering expertise to set up and optimize</td></tr>
+  <tr><td>Handles structured + semi-structured + unstructured data</td><td>Higher complexity than needed for Acme's current maturity level</td></tr>
+  <tr><td>Medallion architecture provides clean data lifecycle management</td><td>More expensive for pure BI workloads — the ML capability goes unused initially</td></tr>
+  <tr><td>Future-proof — can grow into AI/ML without re-platforming</td><td>Acme's team (SQL-focused, no Spark experience) would need significant training</td></tr>
+</table>
+
+
+<!-- ============================================================ -->
+<h3 id="hybrid">Option D: Hybrid architecture</h3>
+
+<div class="card">
+<div class="card-title">What it is</div>
+<p>Combine cloud warehouse for structured BI with a lakehouse or document store for advanced analytics. For example: Snowflake for the star schema data marts + Databricks for ML forecasting models, or Snowflake + MongoDB for semi-structured customer profile data (Q6 from the assessment). Many large retailers use both platforms.</p>
+</div>
+
+<table>
+  <tr><th>Pros</th><th>Cons</th></tr>
+  <tr><td>Best tool for each job — BI in a warehouse, ML in a lakehouse</td><td>More complex to manage — two platforms, two skill sets, two cost models</td></tr>
+  <tr><td>Can start with warehouse only, add lakehouse later as needs mature</td><td>Data synchronization between platforms adds ETL complexity</td></tr>
+  <tr><td>No single vendor lock-in</td><td>Higher total cost — paying for two platforms</td></tr>
+</table>
+
+
+<!-- ============================================================ -->
+<h2 id="platforms">Platform comparison — Acme-specific scoring</h2>
+
+<table>
+  <tr>
+    <th>Criteria</th>
+    <th>Snowflake</th>
+    <th>BigQuery</th>
+    <th>Azure Fabric</th>
+    <th>Databricks</th>
+    <th>On-prem (Oracle/SQL Server)</th>
+  </tr>
+  <tr>
+    <td><strong>Team skill match</strong><br>(SQL-first team)</td>
+    <td style="color: var(--accent); font-weight: 600;">Excellent — SQL native</td>
+    <td style="color: var(--accent); font-weight: 600;">Excellent — SQL native</td>
+    <td style="color: var(--amber); font-weight: 600;">Good — SQL + Power BI</td>
+    <td style="color: var(--red); font-weight: 600;">Steep — needs Python/Spark</td>
+    <td style="color: var(--accent); font-weight: 600;">Excellent — familiar DB</td>
+  </tr>
+  <tr>
+    <td><strong>Time to first data mart</strong></td>
+    <td>Days to weeks</td>
+    <td>Days</td>
+    <td>Weeks</td>
+    <td>Weeks to months</td>
+    <td>Months (hardware procurement)</td>
+  </tr>
+  <tr>
+    <td><strong>Scaling for 150 stores</strong></td>
+    <td>Automatic</td>
+    <td>Automatic (serverless)</td>
+    <td>Automatic</td>
+    <td>Automatic (with tuning)</td>
+    <td>Manual — buy more hardware</td>
+  </tr>
+  <tr>
+    <td><strong>Diwali spike handling</strong></td>
+    <td>Spin up extra warehouses, shut down after</td>
+    <td>Automatic — pay per query</td>
+    <td>Auto-scale compute</td>
+    <td>Auto-scaling clusters</td>
+    <td>Over-provision year-round or suffer</td>
+  </tr>
+  <tr>
+    <td><strong>India region availability</strong></td>
+    <td>AWS Mumbai ✓</td>
+    <td>GCP Mumbai ✓</td>
+    <td>Azure Central India ✓</td>
+    <td>AWS/Azure India ✓</td>
+    <td>Local data centre ✓</td>
+  </tr>
+  <tr>
+    <td><strong>ML/forecasting capability</strong></td>
+    <td>Snowpark ML (growing)</td>
+    <td>BigQuery ML (built-in)</td>
+    <td>Azure ML integration</td>
+    <td style="color: var(--accent); font-weight: 600;">Best in class</td>
+    <td>Separate tool needed</td>
+  </tr>
+  <tr>
+    <td><strong>Governance</strong></td>
+    <td>Horizon (strong)</td>
+    <td>Data Catalog + Dataplex</td>
+    <td>Microsoft Purview</td>
+    <td>Unity Catalog (strong)</td>
+    <td>Manual / third-party</td>
+  </tr>
+  <tr>
+    <td><strong>Cost model</strong></td>
+    <td>Credits (compute) + storage</td>
+    <td>Per query (bytes scanned)</td>
+    <td>Capacity units</td>
+    <td>DBUs + compute + storage</td>
+    <td>Upfront capital + ongoing DBA</td>
+  </tr>
+  <tr>
+    <td><strong>ETL/ELT integration</strong></td>
+    <td>dbt, Fivetran, Airbyte</td>
+    <td>Dataflow, dbt</td>
+    <td>Data Factory (built-in)</td>
+    <td>DLT, Spark, dbt</td>
+    <td>SSIS, Informatica, Talend</td>
+  </tr>
+</table>
+
+
+<!-- ============================================================ -->
+<h2 id="cloudpros">Cloud-based architecture — pros and cons (assessment requirement)</h2>
+
+<div class="grid2">
+  <div class="card green">
+    <div class="card-title">Pros for Acme</div>
+    <p><strong>Eliminates the sizing problem</strong> — Q1c asks about hardware estimation. Cloud makes this question irrelevant: start small, scale on demand. No upfront capacity planning needed.</p>
+    <p><strong>Elastic for seasonal peaks</strong> — Acme's electronics retail has massive Diwali/Navratri spikes. Cloud compute can scale up in minutes for festival periods, scale down to near-zero cost in quiet months.</p>
+    <p><strong>Faster pilot delivery</strong> — Vishal can spin up a Snowflake account today and have the sales data mart loaded within days. No procurement, no hardware setup, no DBA hiring. Directly addresses the 6-month pilot deadline.</p>
+    <p><strong>Managed governance</strong> — built-in encryption, access control, audit logging. Acme doesn't need to build these from scratch.</p>
+    <p><strong>No DBA overhead</strong> — the platform handles backups, patching, performance tuning, disaster recovery. Acme's team can focus on building data marts, not managing infrastructure.</p>
+    <p><strong>India cloud regions available</strong> — AWS Mumbai, Azure Central India, GCP Mumbai all operational. Data stays in-country.</p>
+  </div>
+  <div class="card red">
+    <div class="card-title">Cons for Acme</div>
+    <p><strong>Ongoing operational cost</strong> — no "buy once" model. Monthly cloud bills must be budgeted and monitored. 150 stores uploading data continuously = non-trivial ingestion cost.</p>
+    <p><strong>Data sovereignty</strong> — even with Indian cloud regions, data is managed by a foreign cloud provider (AWS/Google/Microsoft). May face regulatory or board-level resistance. Some Indian sectors have data localization requirements.</p>
+    <p><strong>Vendor lock-in</strong> — migrating from Snowflake to BigQuery (or vice versa) is a major project. The SQL dialects differ, ETL pipelines need rewriting, governance policies need remapping. Choose carefully because switching is expensive.</p>
+    <p><strong>Internet dependency</strong> — 150 stores need reliable connectivity to upload POS data to the cloud. If a store's internet goes down, data ingestion stops. Need fallback: local staging → batch upload.</p>
+    <p><strong>Cost unpredictability</strong> — usage-based billing means costs can spike if a poorly written query scans the entire fact table, or if someone leaves a compute warehouse running over a weekend. Requires cost monitoring discipline.</p>
+    <p><strong>Training investment</strong> — team must learn the cloud platform. While SQL skills transfer, cloud-specific concepts (virtual warehouses, credits, partitioning, clustering) require training.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<h2 id="rec">Recommendation for Acme</h2>
+
+<div class="verdict">
+  <div class="verdict-title">Recommended architecture: Cloud data warehouse (Snowflake or Azure Synapse) with phased data mart rollout</div>
+  <p><strong>Why:</strong></p>
+  <p>1. <strong>Team skill match</strong> — Acme's team knows SQL and relational databases. Snowflake and Azure Synapse are SQL-native. No Python/Spark skill gap to bridge for the pilot.</p>
+  <p>2. <strong>Time-to-value</strong> — Vishal has 6 months to deliver a pilot. Cloud warehouse can have the sales data mart running in weeks, not months. No hardware procurement cycle.</p>
+  <p>3. <strong>Eliminates sizing risk</strong> — The assessment asks about hardware estimation. Cloud makes this a non-issue: start with a small compute tier, scale as data grows. No risk of over-provisioning.</p>
+  <p>4. <strong>Supports phased expansion</strong> — Start with retail sales data mart (Kimball bottom-up approach). Add inventory, warehouse operations, promotions as separate marts with conformed dimensions. The Business Matrix (Exhibit 3) becomes the roadmap — one row per phase.</p>
+  <p>5. <strong>Seasonal elasticity</strong> — Acme's Diwali period likely generates 3-5x normal transaction volume. Cloud handles this without over-provisioning year-round.</p>
+  <p>6. <strong>India region available</strong> — data stays in-country, addresses sovereignty concerns.</p>
+</div>
+
+<div class="card amber">
+  <div class="card-title">Growth path: add Databricks later for ML</div>
+  <p>When Acme is ready to tackle the forecasting problem (30-40% deviation in Q2) and customer segmentation for loyalty programs (Q3), they can add Databricks alongside the cloud warehouse. The warehouse handles BI; Databricks handles ML. This is the hybrid path — and it's what many large retailers actually do in practice. Don't try to solve everything with one platform on day one.</p>
+</div>
+
+<div class="card">
+  <div class="card-title">Implementation phasing</div>
+  <p><strong>Phase 1 (Months 1-3):</strong> Pilot — Retail Product Sales data mart. Star schema with dim_date, dim_product, dim_store, dim_customer, dim_promotion, dim_salesperson + fact_sales. Load data from 5-10 stores. Prove the OLAP queries from the case's analytic requirements work.</p>
+  <p><strong>Phase 2 (Months 4-6):</strong> Expand — add remaining 140+ stores. Add Retail Inventory data mart (second row of Business Matrix). Deploy BI dashboards to regional managers.</p>
+  <p><strong>Phase 3 (Months 7-12):</strong> Warehouse Operations data mart — fact_order_fulfillment for the shipment delay problem. Retail Promotions data mart for campaign effectiveness.</p>
+  <p><strong>Phase 4 (Year 2):</strong> Add ML capability (Databricks or BigQuery ML) for demand forecasting, customer segmentation, recommendation engine. This addresses Q2.1 and Q3 at a deeper level.</p>
+</div>
+
+</div>
+
+<script>
+const sections = document.querySelectorAll('h2[id], h3[id]');
+const links = document.querySelectorAll('.nav a');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(s => { if (window.scrollY >= s.offsetTop - 100) current = s.id; });
+  links.forEach(a => { a.classList.remove('active'); if (a.getAttribute('href') === '#' + current) a.classList.add('active'); });
+});
+</script>
+</body>
+</html>

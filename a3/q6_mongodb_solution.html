@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Q6 — MongoDB Document Database Solution for Acme Inc</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fafaf8;--surface:#fff;--surface2:#f3f2ee;--border:#e2e0d8;--text:#2c2c2a;--text-dim:#6e6d68;--heading:#1a1a18;--accent:#1a6b4e;--accent-light:#e8f5ee;--amber:#b45309;--amber-light:#fef3e2;--blue:#1d5fa0;--blue-light:#edf4fc;--red:#b91c1c;--red-light:#fef2f2;--purple:#6d28d9;--purple-light:#f3eefb;--code-bg:#f5f4f0;--code-border:#e8e6de}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;line-height:1.75;font-size:15px}
+.nav{position:fixed;top:0;left:0;width:250px;height:100vh;overflow-y:auto;background:var(--surface);border-right:1px solid var(--border);padding:1.5rem 1rem;z-index:10}
+.nav-title{font-family:'Source Serif 4',serif;font-size:.88rem;font-weight:700;color:var(--heading);margin-bottom:1rem;line-height:1.3}
+.nav a{display:block;padding:.3rem .5rem;color:var(--text-dim);text-decoration:none;font-size:.76rem;border-radius:4px;line-height:1.35;margin:.08rem 0}
+.nav a:hover{background:var(--surface2);color:var(--heading)}
+.nav a.active{background:var(--accent-light);color:var(--accent);font-weight:500}
+.nav .sep{height:1px;background:var(--border);margin:.5rem 0}
+.nav .ns{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;padding:.4rem .5rem .2rem}
+.main{margin-left:250px;max-width:820px;padding:2.5rem 3rem 6rem}
+h1{font-family:'Source Serif 4',serif;font-size:2rem;color:var(--heading);font-weight:700;margin-bottom:.3rem;line-height:1.15}
+.hero-sub{color:var(--text-dim);font-size:.9rem;margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border)}
+h2{font-family:'Source Serif 4',serif;font-size:1.35rem;color:var(--heading);font-weight:700;margin:2.5rem 0 .8rem;padding-top:1rem}
+h3{color:var(--accent);font-size:.95rem;font-weight:700;margin:1.5rem 0 .4rem}
+h4{font-size:.88rem;font-weight:700;color:var(--heading);margin:1rem 0 .3rem}
+p{margin-bottom:.7rem}
+strong{color:var(--heading)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.1rem 1.3rem;margin:.6rem 0}
+.card.green{border-left:3px solid var(--accent);background:var(--accent-light)}
+.card.amber{border-left:3px solid var(--amber);background:var(--amber-light)}
+.card.blue{border-left:3px solid var(--blue);background:var(--blue-light)}
+.card.red{border-left:3px solid var(--red);background:var(--red-light)}
+.card.purple{border-left:3px solid var(--purple);background:var(--purple-light)}
+.card-title{font-weight:700;color:var(--heading);margin-bottom:.3rem;font-size:.88rem}
+code{font-family:'JetBrains Mono',monospace;font-size:.82em;background:var(--code-bg);padding:1px 5px;border-radius:3px}
+pre{background:var(--code-bg);border:1px solid var(--code-border);border-radius:8px;padding:1rem 1.2rem;overflow-x:auto;margin:.6rem 0;font-family:'JetBrains Mono',monospace;font-size:.78rem;line-height:1.6;color:#4a4a45}
+.kw{color:var(--accent);font-weight:600}
+.cmt{color:var(--text-dim);font-style:italic}
+.str{color:var(--amber)}
+.fn{color:var(--blue)}
+table{width:100%;border-collapse:collapse;font-size:.83rem;margin:.6rem 0}
+th{text-align:left;padding:.5rem .7rem;background:var(--surface2);color:var(--heading);font-weight:600;font-size:.73rem;border-bottom:2px solid var(--border)}
+td{padding:.45rem .7rem;border-bottom:1px solid var(--border);vertical-align:top}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin:.6rem 0}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.7rem;margin:.6rem 0}
+.ref{font-size:.78rem;color:var(--blue);text-decoration:none}
+.ref:hover{text-decoration:underline}
+.decision{background:var(--surface);border:2px solid var(--border);border-radius:10px;padding:1.2rem 1.5rem;margin:.8rem 0}
+.decision-q{font-weight:700;color:var(--heading);font-size:.92rem;margin-bottom:.6rem;padding-left:1.2rem;position:relative}
+.decision-q::before{content:'?';position:absolute;left:0;color:var(--blue);font-family:'JetBrains Mono',monospace}
+.decision-yes{color:var(--accent);font-family:'JetBrains Mono',monospace;font-size:.75rem;font-weight:600;margin:.3rem 0 .2rem 1.5rem}
+.decision-no{color:var(--red);font-family:'JetBrains Mono',monospace;font-size:.75rem;font-weight:600;margin:.3rem 0 .2rem 1.5rem}
+.decision-graph{color:var(--purple);font-family:'JetBrains Mono',monospace;font-size:.75rem;font-weight:600;margin:.3rem 0 .2rem 1.5rem}
+.decision-result{font-size:.85rem;margin-left:1.5rem;margin-bottom:.4rem}
+@media(max-width:900px){.nav{display:none}.main{margin-left:0;padding:2rem 1.2rem 4rem}.grid2,.grid3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <div class="nav-title">Q6 — MongoDB Solution for Acme Inc</div>
+  <div class="ns">Refresher</div>
+  <a href="#refresher">Document model</a>
+  <a href="#when">When document vs others</a>
+  <div class="sep"></div>
+  <div class="ns">Industry</div>
+  <a href="#landscape">Current landscape</a>
+  <a href="#usecases">Use cases</a>
+  <a href="#products">Products &amp; platforms</a>
+  <div class="sep"></div>
+  <div class="ns">Decision framework</div>
+  <a href="#decision">Document vs relational vs graph</a>
+  <div class="sep"></div>
+  <div class="ns">Acme solution</div>
+  <a href="#acme-problems">Document-suitable problems</a>
+  <a href="#collections">Collection designs</a>
+  <a href="#queries">Aggregation queries</a>
+  <a href="#arch">Hybrid architecture</a>
+  <a href="#steps">Investigation steps</a>
+  <div class="sep"></div>
+  <div class="ns">Future</div>
+  <a href="#future-general">General developments</a>
+  <a href="#future-acme">Acme next steps</a>
+</div>
+
+<div class="main">
+
+<h1>Q6 — MongoDB Document Database Solution</h1>
+<p class="hero-sub">When to use a document database, how it complements both the data warehouse and the graph database, and what it solves for a multi-store electronics retailer.</p>
+
+
+<h2 id="refresher">Document model — concept refresher</h2>
+
+<p>A document database stores data as <strong>documents</strong> — self-contained JSON-like objects (BSON in MongoDB). Documents are grouped into <strong>collections</strong> (analogous to tables). Unlike relational databases, documents in the same collection can have <strong>different structures</strong> — no fixed schema is enforced.</p>
+
+<div class="grid3">
+  <div class="card">
+    <div class="card-title">Document</div>
+    <p>A JSON-like object with key-value pairs. Values can be strings, numbers, arrays, or <strong>nested documents</strong>. Example: a product document can embed its specifications, reviews, and images as nested objects — all in one document.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">Collection</div>
+    <p>A group of documents. Unlike a relational table, documents in a collection don't need the same fields. A <code>products</code> collection can hold a laptop document with <code>ram</code> and <code>cpu</code> fields alongside a refrigerator document with <code>capacity_litres</code> and <code>energy_rating</code>.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">Aggregation pipeline</div>
+    <p>MongoDB's analytical query engine. A sequence of stages (<code>$match</code>, <code>$group</code>, <code>$project</code>, <code>$unwind</code>, <code>$lookup</code>) that process documents through a pipeline. Analogous to SQL's SELECT/WHERE/GROUP BY but operating on nested document structures.</p>
+  </div>
+</div>
+
+<h3>Embedded vs referenced — the key design decision</h3>
+
+<div class="grid2">
+  <div class="card green">
+    <div class="card-title">Embed (denormalize)</div>
+    <p>Put related data inside the document. A customer document embeds their address, preferences, and recent purchase summary. <strong>Best when:</strong> the related data is always read together, the embedded data doesn't grow unboundedly, and updates to embedded data are infrequent.</p>
+  </div>
+  <div class="card amber">
+    <div class="card-title">Reference (normalize)</div>
+    <p>Store related data in separate collections and link with IDs. An order document references a <code>customer_id</code> rather than embedding the full customer. <strong>Best when:</strong> the related data is large, shared across documents, or updated independently. Use <code>$lookup</code> to join at query time.</p>
+  </div>
+</div>
+
+<pre><span class="cmt">// Embedded: product with specifications nested inside</span>
+{
+  <span class="str">"_id"</span>: <span class="str">"SKU1001"</span>,
+  <span class="str">"name"</span>: <span class="str">"Lenovo ThinkPad T14"</span>,
+  <span class="str">"category"</span>: <span class="str">"Computers"</span>,
+  <span class="str">"brand"</span>: <span class="str">"Lenovo"</span>,
+  <span class="str">"price"</span>: 72000,
+  <span class="str">"specs"</span>: {                        <span class="cmt">// nested document — different per category</span>
+    <span class="str">"ram_gb"</span>: 16,
+    <span class="str">"storage_gb"</span>: 512,
+    <span class="str">"cpu"</span>: <span class="str">"Intel i7-1365U"</span>,
+    <span class="str">"screen_inches"</span>: 14,
+    <span class="str">"battery_hrs"</span>: 12.5
+  },
+  <span class="str">"reviews"</span>: [                      <span class="cmt">// array of embedded reviews</span>
+    { <span class="str">"rating"</span>: 4, <span class="str">"text"</span>: <span class="str">"Great for work"</span>, <span class="str">"date"</span>: <span class="str">"2024-09-15"</span> },
+    { <span class="str">"rating"</span>: 5, <span class="str">"text"</span>: <span class="str">"Excellent battery"</span>, <span class="str">"date"</span>: <span class="str">"2024-10-02"</span> }
+  ]
+}
+
+<span class="cmt">// Compare: a refrigerator document — completely different specs fields</span>
+{
+  <span class="str">"_id"</span>: <span class="str">"SKU1016"</span>,
+  <span class="str">"name"</span>: <span class="str">"Samsung 253L Refrigerator"</span>,
+  <span class="str">"category"</span>: <span class="str">"Home Appliances"</span>,
+  <span class="str">"brand"</span>: <span class="str">"Samsung"</span>,
+  <span class="str">"price"</span>: 26000,
+  <span class="str">"specs"</span>: {                        <span class="cmt">// completely different fields — this is fine</span>
+    <span class="str">"capacity_litres"</span>: 253,
+    <span class="str">"energy_rating"</span>: <span class="str">"5 star"</span>,
+    <span class="str">"type"</span>: <span class="str">"Double Door"</span>,
+    <span class="str">"inverter"</span>: true,
+    <span class="str">"warranty_years"</span>: 10
+  }
+}</pre>
+
+<h3 id="when">When document vs relational — the fundamental distinction</h3>
+
+<div class="grid2">
+  <div class="card green">
+    <div class="card-title">Use a document database when</div>
+    <p>The <strong>data structure varies</strong> across records of the same type. Different products have different attributes. Different survey responses have different questions. Different customer profiles have different fields.</p>
+    <p>You need to <strong>embed related data</strong> that's always read together — a customer with their entire profile, preferences, and activity history in one read.</p>
+    <p>The <strong>schema evolves frequently</strong> — new fields added to new documents without migrating existing data. Critical for agile development.</p>
+    <p><strong>High write throughput</strong> — MongoDB's horizontal sharding handles millions of writes/second (event logs, clickstream, IoT sensor data).</p>
+  </div>
+  <div class="card amber">
+    <div class="card-title">Use relational / star schema when</div>
+    <p>The primary need is <strong>aggregation across millions of rows</strong> — SUM, COUNT, AVG, ROLLUP, CUBE. Columnar storage in warehouses (Snowflake, BigQuery) is 10-100x faster than MongoDB for these operations.</p>
+    <p>The data has a <strong>fixed, stable schema</strong> — all rows have the same columns. Star schemas with fact and dimension tables.</p>
+    <p><strong>Multi-collection joins</strong> are the primary query pattern. MongoDB's <code>$lookup</code> exists but is not optimized for the 5-table star schema join pattern. SQL is purpose-built for this.</p>
+  </div>
+</div>
+
+
+<h2 id="landscape">Industry landscape (2025)</h2>
+
+<div class="card">
+<div class="card-title">Market position</div>
+<p>MongoDB is the most popular document database and the 5th most popular database overall (DB-Engines ranking). MongoDB Atlas (managed cloud) serves 47,000+ customers across AWS, Azure, and GCP in 125+ regions. MongoDB 8.0 (released 2024) delivers up to 45% faster queries. The company's revenue reached $2B+ annually.</p>
+</div>
+
+<h3>Key 2024-2025 developments</h3>
+<table>
+  <tr><th>Development</th><th>What it means</th></tr>
+  <tr><td><strong>Atlas Vector Search</strong></td><td>Native vector search alongside operational data. Store embeddings in the same document as the data they represent. Powers RAG and semantic search without a separate vector database. Supports up to 8,192 dimensions.</td></tr>
+  <tr><td><strong>Search &amp; Vector Search on self-managed</strong></td><td>Sept 2025: full-text and vector search now available in Community Edition and Enterprise Server — no longer Atlas-exclusive. Developers can build AI apps on any infrastructure.</td></tr>
+  <tr><td><strong>MongoDB 8.0 performance</strong></td><td>Up to 45% faster queries on large datasets. Improved aggregation pipeline performance. Better sharding rebalancing for horizontal scaling.</td></tr>
+  <tr><td><strong>Atlas Serverless instances</strong></td><td>Pay only for operations consumed. Auto-scales from zero. No cluster management. Ideal for variable workloads — like e-commerce with Diwali traffic spikes.</td></tr>
+  <tr><td><strong>Time-series collections</strong></td><td>Purpose-built storage for time-stamped data: IoT sensors, event logs, metrics. Efficient compression and windowed aggregation.</td></tr>
+  <tr><td><strong>Change Streams</strong></td><td>Real-time event notification when documents change. Enables reactive architectures: when a new customer survey is inserted, automatically trigger sentiment analysis.</td></tr>
+  <tr><td><strong>Voyage AI acquisition</strong></td><td>MongoDB acquired Voyage AI (embedding model provider). Native embedding generation inside MongoDB — no external API calls needed to create vector embeddings.</td></tr>
+</table>
+
+<p><a class="ref" href="https://www.mongodb.com/products/platform/atlas-database">mongodb.com/atlas</a> · <a class="ref" href="https://www.mongodb.com/products/platform/atlas-vector-search">Atlas Vector Search</a> · <a class="ref" href="https://www.mongodb.com/docs/atlas/ai-integrations/">AI integrations</a></p>
+
+
+<h2 id="usecases">Industry use cases</h2>
+
+<table>
+  <tr><th>Use case</th><th>Why document model fits</th><th>Industries</th></tr>
+  <tr><td><strong>Product catalogs</strong></td><td>Products have variable attributes across categories. Laptops have RAM/CPU. Shirts have size/color/material. One collection, flexible schema per document.</td><td>E-commerce, retail, marketplace</td></tr>
+  <tr><td><strong>Customer 360</strong></td><td>Embed a customer's profile, preferences, activity history, support tickets, and segmentation data in one document. One read returns everything about a customer.</td><td>Retail, banking, telecom, SaaS</td></tr>
+  <tr><td><strong>Content management</strong></td><td>Articles, pages, media assets have different structures. CMS data is inherently semi-structured with nested components.</td><td>Media, publishing, SaaS</td></tr>
+  <tr><td><strong>IoT / event logging</strong></td><td>High-volume, time-stamped, schema-variable events. Millions of writes/second. Time-series collections optimize storage and queries.</td><td>Manufacturing, logistics, smart infrastructure</td></tr>
+  <tr><td><strong>Mobile app backends</strong></td><td>JSON-native — documents map directly to mobile app objects. No ORM needed. Realm (MongoDB mobile) syncs local and cloud data.</td><td>Any mobile-first business</td></tr>
+  <tr><td><strong>AI/ML feature stores</strong></td><td>Embedding vectors stored alongside the data they represent. Atlas Vector Search enables RAG without a separate vector DB. AI agent memory stored as documents.</td><td>AI-native companies, any enterprise deploying LLMs</td></tr>
+</table>
+
+<div class="card green">
+<div class="card-title">Retail-specific example</div>
+<p><strong>Cars24 (India):</strong> Uses MongoDB Atlas for its multi-country operations. Customer data, vehicle catalog (highly variable attributes per vehicle), and search powered by Atlas Vector Search. Presented at MongoDB.local Bengaluru July 2025. Migrated from a complex relational setup to MongoDB — simplified architecture and improved search relevance.</p>
+</div>
+
+
+<h2 id="products">Products and platforms</h2>
+
+<table>
+  <tr><th>Product</th><th>Type</th><th>Key features</th><th>Reference</th></tr>
+  <tr><td><strong>MongoDB Atlas</strong></td><td>Managed cloud database</td><td>Multi-cloud (AWS/Azure/GCP, 125+ regions). Free tier. Serverless option. Built-in search, vector search, analytics. SOC 2, HIPAA, PCI DSS compliant.</td><td><a class="ref" href="https://www.mongodb.com/products/platform/atlas-database">atlas</a></td></tr>
+  <tr><td><strong>Atlas Vector Search</strong></td><td>Vector database capability</td><td>Native vector search in MongoDB. RAG, semantic search, similarity. HNSW algorithm. Up to 8,192 dimensions. Hybrid search (vector + filter).</td><td><a class="ref" href="https://www.mongodb.com/products/platform/atlas-vector-search">vector search</a></td></tr>
+  <tr><td><strong>Atlas Charts</strong></td><td>Visualization</td><td>Embedded charts for MongoDB data. No BI tool needed for basic visualization. Dashboards shareable via URL.</td><td><a class="ref" href="https://www.mongodb.com/products/charts">charts</a></td></tr>
+  <tr><td><strong>MongoDB Compass</strong></td><td>GUI tool</td><td>Desktop app for exploring data, building aggregation pipelines visually, schema analysis. Useful for learning and development.</td><td><a class="ref" href="https://www.mongodb.com/products/tools/compass">compass</a></td></tr>
+  <tr><td><strong>Relational Migrator</strong></td><td>Migration tool</td><td>Migrates from relational databases (MySQL, PostgreSQL, Oracle, SQL Server) to MongoDB. AI-powered schema conversion. Converts SQL queries to aggregation pipelines.</td><td><a class="ref" href="https://www.mongodb.com/products/relational-migrator">migrator</a></td></tr>
+  <tr><td><strong>AWS DocumentDB</strong></td><td>MongoDB-compatible</td><td>AWS-managed, MongoDB API-compatible. Not actually MongoDB — proprietary engine. Good for AWS-locked environments but lacks some MongoDB features (vector search, change streams).</td><td><a class="ref" href="https://aws.amazon.com/documentdb/">documentdb</a></td></tr>
+  <tr><td><strong>Azure Cosmos DB</strong></td><td>Multi-model</td><td>MongoDB API compatible mode. Global distribution. Multi-model (document, graph, key-value, column-family). Microsoft-native.</td><td><a class="ref" href="https://learn.microsoft.com/en-us/azure/cosmos-db/mongodb/">cosmos mongodb</a></td></tr>
+</table>
+
+
+<h2 id="decision">Decision framework — document vs relational vs graph</h2>
+
+<p>The assessment covers three database paradigms: relational (Q1-Q4), graph (Q5), and document (Q6). This framework determines which paradigm fits each problem:</p>
+
+<div class="decision">
+  <div class="decision-q">What is the primary analytical need?</div>
+  <div class="decision-result"><strong>Aggregation</strong> (SUM, COUNT, AVG across millions of rows, ROLLUP/CUBE, time-series trends) → <span style="color:var(--amber);font-weight:700">Relational / Star Schema</span></div>
+  <div class="decision-result"><strong>Traversal</strong> (follow connections, find paths, network patterns, impact analysis) → <span style="color:var(--purple);font-weight:700">Graph (Neo4j)</span></div>
+  <div class="decision-result"><strong>Flexible storage &amp; retrieval</strong> (variable-schema data, embedded nested objects, high-volume writes) → <span style="color:var(--accent);font-weight:700">Document (MongoDB)</span></div>
+</div>
+
+<div class="decision">
+  <div class="decision-q">Does the data have a fixed, consistent schema across all records?</div>
+  <div class="decision-yes">YES → Relational. Fixed columns, well-defined types. Star schema works perfectly.</div>
+  <div class="decision-no">NO — the schema varies per record → MongoDB. Different products have different attributes. Different surveys have different questions.</div>
+  <div class="decision-graph">N/A — graph doesn't care about schema consistency per se, but about relationships between entities.</div>
+</div>
+
+<div class="decision">
+  <div class="decision-q">Are the relationships between entities the primary subject of analysis?</div>
+  <div class="decision-yes">YES → Graph (Neo4j). Supply chain traversal, co-purchase networks, impact analysis.</div>
+  <div class="decision-no">NO — the entities themselves (and their attributes) are the primary subject → MongoDB or Relational, depending on schema variability.</div>
+</div>
+
+<div class="decision">
+  <div class="decision-q">Do you need to embed related data that's always read together?</div>
+  <div class="decision-yes">YES → MongoDB. A customer document with embedded profile, preferences, and activity log. One read returns everything. In relational, this requires multiple JOINs.</div>
+  <div class="decision-no">NO — the data is naturally tabular and joins are well-defined → Relational. Star schema for analytics.</div>
+  <div class="decision-graph">Graph embeds properties on nodes and relationships but doesn't nest documents. If you need deep nesting, MongoDB is the choice.</div>
+</div>
+
+<div class="decision">
+  <div class="decision-q">Is write volume extremely high (millions of events/second)?</div>
+  <div class="decision-yes">YES → MongoDB (sharded clusters) or a dedicated event store (Kafka). Relational databases struggle with this write volume. Graph databases are optimized for read-heavy traversal, not high-throughput writes.</div>
+  <div class="decision-no">NO → write volume doesn't drive the database choice. Focus on query patterns instead.</div>
+</div>
+
+<div class="card blue">
+<div class="card-title">Why not graph for document problems?</div>
+<p>Graphs model <strong>relationships between entities</strong>. Documents model <strong>the entities themselves with rich, variable attributes</strong>. A customer profile with 50+ demographic and psychographic fields is a document problem — the richness of the entity's attributes matters, not its connections to other entities. Putting 50 properties on a Neo4j node technically works but is an antipattern: graph databases are optimized for traversal performance, not for storing and querying rich attribute sets. MongoDB's indexing, text search, and aggregation pipeline are purpose-built for querying attributes within documents.</p>
+<p>Similarly, a product catalog where you need to search "all laptops with RAM >= 16GB and screen >= 14 inches and price < 50000" is a <strong>filtered attribute query</strong>, not a graph traversal. MongoDB handles this natively with compound indexes. In Neo4j, you'd need to filter properties on nodes — possible but inefficient compared to MongoDB's optimized document scanning.</p>
+<p><strong>Rule of thumb:</strong> If the question starts with "find entities where [attribute conditions]" → document/relational. If the question starts with "find what's connected to X through Y" → graph.</p>
+</div>
+
+<div class="card amber">
+<div class="card-title">The three-way split for Acme</div>
+<table>
+  <tr><th>Problem type</th><th>Database</th><th>Examples at Acme</th></tr>
+  <tr><td>Aggregation / OLAP</td><td><strong>Relational (star schema)</strong></td><td>Revenue by category by quarter, promotion ROI, forecast accuracy, inventory turns</td></tr>
+  <tr><td>Relationship traversal</td><td><strong>Graph (Neo4j)</strong></td><td>Supply chain traceability, co-purchase recommendations, supplier impact analysis</td></tr>
+  <tr><td>Variable-schema storage</td><td><strong>Document (MongoDB)</strong></td><td>Product catalog, customer profiles, surveys, event logs, e-commerce clickstream</td></tr>
+</table>
+</div>
+
+
+<h2 id="acme-problems">Acme's document-suitable problems</h2>
+
+<div class="grid2">
+  <div class="card green">
+    <div class="card-title">1. Product catalog (strongest fit)</div>
+    <p>12,000 SKUs across 9 categories. A laptop has RAM, CPU, screen size. A refrigerator has capacity, energy rating, door count. A camera has megapixels, sensor size, lens mount. <strong>In relational:</strong> one massive table with hundreds of sparse columns (mostly NULL), or an EAV pattern (painful to query). <strong>In MongoDB:</strong> each product has whatever fields are relevant to its category. A laptop and a refrigerator have completely different <code>specs</code> fields — and that's fine.</p>
+    <p>Enables rich product search and filtering on the e-commerce portal without EAV hell.</p>
+  </div>
+  <div class="card green">
+    <div class="card-title">2. Customer profiles</div>
+    <p>Exhibit 2 shows <code>CUSTOMER_PROFILE</code> with "demographic profile, psychographic profile." This is semi-structured by definition. A corporate buyer has company, industry, procurement contact. A retail customer has age, family size, interests. A student has institution, course.</p>
+    <p>Directly enables the loyalty program (Q3) and customer targeting — rich profiles power personalized promotions.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">3. Customer surveys</div>
+    <p>The case mentions "periodic customer survey reports." Survey formats change over time — new questions added, old ones removed. Different stores may run different surveys. <strong>In relational:</strong> every format change requires schema migration. <strong>In MongoDB:</strong> each survey response is a document with whatever questions were asked. Old and new formats coexist.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">4. Activity / event log</div>
+    <p>POS transactions, customer queries, product returns, complaint records, warranty claims. Each event type has different attributes. MongoDB's flexible schema handles mixed event types in one collection. Useful for Customer 360 — unified activity history per customer.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">5. E-commerce clickstream</div>
+    <p>Acme has an online portal (300 cities). Clickstream data: page views, searches, cart additions, abandonments. High-volume, semi-structured, schema-variable. Too granular and volatile for a star schema. MongoDB (or data lake) is the natural landing zone. Feeds recommendation and personalization models.</p>
+  </div>
+</div>
+
+<div class="card red">
+<div class="card-title">Problems that are NOT document-shaped at Acme</div>
+<p><strong>Total revenue by category by quarter</strong> → aggregation → star schema / warehouse<br>
+<strong>Promotion ROI across all stores</strong> → arithmetic on measures across millions of rows → warehouse<br>
+<strong>Supply chain traceability</strong> → traversal of connected entities → graph (Q5)<br>
+<strong>Co-purchase recommendations</strong> → network traversal → graph (Q5)<br>
+<strong>OLAP operations (slice/dice/rollup)</strong> → star schema with columnar storage<br>
+Don't force these into MongoDB. The right tool for each job.</p>
+</div>
+
+
+<h2 id="collections">Collection designs for Acme</h2>
+
+<h3>products collection</h3>
+<pre>{
+  <span class="str">"_id"</span>: <span class="str">"SKU1039"</span>,
+  <span class="str">"name"</span>: <span class="str">"Apple iPhone 14"</span>,
+  <span class="str">"brand"</span>: <span class="str">"Apple"</span>,
+  <span class="str">"category"</span>: <span class="str">"Mobile Phones"</span>,
+  <span class="str">"subcategory"</span>: <span class="str">"Smartphone"</span>,
+  <span class="str">"price"</span>: 65000,
+  <span class="str">"cost"</span>: 46800,
+  <span class="str">"specs"</span>: {
+    <span class="str">"display_inches"</span>: 6.1,
+    <span class="str">"storage_options"</span>: [128, 256, 512],
+    <span class="str">"ram_gb"</span>: 6,
+    <span class="str">"camera_mp"</span>: 48,
+    <span class="str">"battery_mah"</span>: 3279,
+    <span class="str">"5g"</span>: true,
+    <span class="str">"colors"</span>: [<span class="str">"Blue"</span>, <span class="str">"Purple"</span>, <span class="str">"Midnight"</span>, <span class="str">"Starlight"</span>, <span class="str">"Red"</span>]
+  },
+  <span class="str">"images"</span>: [<span class="str">"iphone14_front.jpg"</span>, <span class="str">"iphone14_back.jpg"</span>],
+  <span class="str">"avg_rating"</span>: 4.3,
+  <span class="str">"review_count"</span>: 847,
+  <span class="str">"lifecycle_stage"</span>: <span class="str">"maturity"</span>,
+  <span class="str">"launch_date"</span>: <span class="str">"2022-09-16"</span>,
+  <span class="str">"stores_stocking"</span>: [1, 2, 3, 4, 5, 7, 10, 12]
+}</pre>
+
+<h3>customer_profiles collection</h3>
+<pre>{
+  <span class="str">"_id"</span>: <span class="str">"C10042"</span>,
+  <span class="str">"name"</span>: <span class="str">"Priya Sharma"</span>,
+  <span class="str">"loyalty"</span>: {
+    <span class="str">"member"</span>: true,
+    <span class="str">"tier"</span>: <span class="str">"Gold"</span>,
+    <span class="str">"join_date"</span>: <span class="str">"2023-03-15"</span>,
+    <span class="str">"points"</span>: 12400
+  },
+  <span class="str">"demographic"</span>: {
+    <span class="str">"age_group"</span>: <span class="str">"25-34"</span>,
+    <span class="str">"city"</span>: <span class="str">"Bangalore"</span>,
+    <span class="str">"state"</span>: <span class="str">"Karnataka"</span>,
+    <span class="str">"household_size"</span>: 3
+  },
+  <span class="str">"psychographic"</span>: {
+    <span class="str">"tech_savviness"</span>: <span class="str">"early adopter"</span>,
+    <span class="str">"price_sensitivity"</span>: <span class="str">"medium"</span>,
+    <span class="str">"preferred_brands"</span>: [<span class="str">"Apple"</span>, <span class="str">"Samsung"</span>, <span class="str">"Sony"</span>],
+    <span class="str">"preferred_categories"</span>: [<span class="str">"Mobile Phones"</span>, <span class="str">"Audio"</span>]
+  },
+  <span class="str">"rfm"</span>: { <span class="str">"recency_days"</span>: 12, <span class="str">"frequency"</span>: 8, <span class="str">"monetary"</span>: 185000, <span class="str">"segment"</span>: <span class="str">"Champion"</span> },
+  <span class="str">"recent_activity"</span>: [
+    { <span class="str">"type"</span>: <span class="str">"purchase"</span>, <span class="str">"date"</span>: <span class="str">"2024-12-18"</span>, <span class="str">"product"</span>: <span class="str">"Sony WH-1000XM5"</span>, <span class="str">"amount"</span>: 24000 },
+    { <span class="str">"type"</span>: <span class="str">"browse"</span>, <span class="str">"date"</span>: <span class="str">"2024-12-20"</span>, <span class="str">"product"</span>: <span class="str">"Apple MacBook Air M2"</span> },
+    { <span class="str">"type"</span>: <span class="str">"survey"</span>, <span class="str">"date"</span>: <span class="str">"2024-11-30"</span>, <span class="str">"nps_score"</span>: 9 }
+  ]
+}</pre>
+
+<h3>surveys collection</h3>
+<pre><span class="cmt">// 2023 format — 5 questions</span>
+{
+  <span class="str">"store_id"</span>: <span class="str">"S103"</span>,
+  <span class="str">"date"</span>: <span class="str">"2023-06-15"</span>,
+  <span class="str">"customer_id"</span>: <span class="str">"C10042"</span>,
+  <span class="str">"responses"</span>: {
+    <span class="str">"overall_satisfaction"</span>: 4,
+    <span class="str">"staff_helpfulness"</span>: 5,
+    <span class="str">"product_availability"</span>: 3,
+    <span class="str">"store_cleanliness"</span>: 4,
+    <span class="str">"would_recommend"</span>: true
+  },
+  <span class="str">"free_text"</span>: <span class="str">"Great staff but the TV section was out of stock on Samsung models."</span>
+}
+
+<span class="cmt">// 2024 format — different questions (added delivery, removed cleanliness)</span>
+{
+  <span class="str">"store_id"</span>: <span class="str">"S103"</span>,
+  <span class="str">"date"</span>: <span class="str">"2024-10-22"</span>,
+  <span class="str">"customer_id"</span>: <span class="str">"C10042"</span>,
+  <span class="str">"responses"</span>: {
+    <span class="str">"overall_satisfaction"</span>: 5,
+    <span class="str">"staff_helpfulness"</span>: 5,
+    <span class="str">"product_availability"</span>: 4,
+    <span class="str">"delivery_experience"</span>: 3,
+    <span class="str">"online_experience"</span>: 4,
+    <span class="str">"nps_score"</span>: 9
+  },
+  <span class="str">"free_text"</span>: <span class="str">"Delivery was slow but in-store experience was excellent."</span>,
+  <span class="str">"sentiment"</span>: <span class="str">"positive"</span>
+}</pre>
+
+<div class="card blue">
+<div class="card-title">Note: both formats coexist in the same collection</div>
+<p>The 2023 survey has <code>store_cleanliness</code> and <code>would_recommend</code>. The 2024 survey has <code>delivery_experience</code>, <code>online_experience</code>, and <code>nps_score</code>. In relational, you'd need separate tables or a messy ALTER TABLE migration. In MongoDB, they just coexist. Queries adapt: <code>db.surveys.find({"responses.nps_score": {$exists: true}})</code> returns only 2024+ surveys with NPS.</p>
+</div>
+
+
+<h2 id="queries">Aggregation pipeline queries</h2>
+
+<pre><span class="cmt">// Customer segmentation from profiles — group by loyalty tier and psychographic</span>
+db.<span class="fn">customer_profiles</span>.aggregate([
+  { <span class="kw">$match</span>: { <span class="str">"loyalty.member"</span>: true } },
+  { <span class="kw">$group</span>: {
+      <span class="str">"_id"</span>: {
+        <span class="str">"tier"</span>: <span class="str">"$loyalty.tier"</span>,
+        <span class="str">"tech_savviness"</span>: <span class="str">"$psychographic.tech_savviness"</span>
+      },
+      <span class="str">"count"</span>: { <span class="kw">$sum</span>: 1 },
+      <span class="str">"avg_monetary"</span>: { <span class="kw">$avg</span>: <span class="str">"$rfm.monetary"</span> },
+      <span class="str">"avg_frequency"</span>: { <span class="kw">$avg</span>: <span class="str">"$rfm.frequency"</span> }
+  }},
+  { <span class="kw">$sort</span>: { <span class="str">"avg_monetary"</span>: -1 } }
+])</pre>
+
+<pre><span class="cmt">// Product search — all laptops with RAM >= 16GB, price < 60000, in stock at Bangalore stores</span>
+db.<span class="fn">products</span>.find({
+  <span class="str">"category"</span>: <span class="str">"Computers"</span>,
+  <span class="str">"subcategory"</span>: <span class="str">"Laptop"</span>,
+  <span class="str">"specs.ram_gb"</span>: { <span class="kw">$gte</span>: 16 },
+  <span class="str">"price"</span>: { <span class="kw">$lt</span>: 60000 },
+  <span class="str">"stores_stocking"</span>: { <span class="kw">$in</span>: [6, 7, 22] }  <span class="cmt">// Bangalore store keys</span>
+})</pre>
+
+<pre><span class="cmt">// Survey sentiment analysis — average NPS by store, only 2024+ surveys</span>
+db.<span class="fn">surveys</span>.aggregate([
+  { <span class="kw">$match</span>: { <span class="str">"responses.nps_score"</span>: { <span class="kw">$exists</span>: true } } },
+  { <span class="kw">$group</span>: {
+      <span class="str">"_id"</span>: <span class="str">"$store_id"</span>,
+      <span class="str">"avg_nps"</span>: { <span class="kw">$avg</span>: <span class="str">"$responses.nps_score"</span> },
+      <span class="str">"survey_count"</span>: { <span class="kw">$sum</span>: 1 },
+      <span class="str">"promoters"</span>: { <span class="kw">$sum</span>: { <span class="kw">$cond</span>: [{ <span class="kw">$gte</span>: [<span class="str">"$responses.nps_score"</span>, 9] }, 1, 0] } },
+      <span class="str">"detractors"</span>: { <span class="kw">$sum</span>: { <span class="kw">$cond</span>: [{ <span class="kw">$lte</span>: [<span class="str">"$responses.nps_score"</span>, 6] }, 1, 0] } }
+  }},
+  { <span class="kw">$sort</span>: { <span class="str">"avg_nps"</span>: -1 } }
+])</pre>
+
+<pre><span class="cmt">// Customer activity log — find customers who browsed but didn't purchase in last 30 days</span>
+db.<span class="fn">customer_profiles</span>.aggregate([
+  { <span class="kw">$match</span>: { <span class="str">"loyalty.member"</span>: true } },
+  { <span class="kw">$project</span>: {
+      <span class="str">"name"</span>: 1,
+      <span class="str">"loyalty.tier"</span>: 1,
+      <span class="str">"recent_browses"</span>: {
+        <span class="kw">$filter</span>: {
+          <span class="str">"input"</span>: <span class="str">"$recent_activity"</span>,
+          <span class="str">"as"</span>: <span class="str">"a"</span>,
+          <span class="str">"cond"</span>: { <span class="kw">$and</span>: [
+            { <span class="kw">$eq</span>: [<span class="str">"$$a.type"</span>, <span class="str">"browse"</span>] },
+            { <span class="kw">$gte</span>: [<span class="str">"$$a.date"</span>, <span class="str">"2024-12-01"</span>] }
+          ]}
+        }
+      },
+      <span class="str">"recent_purchases"</span>: {
+        <span class="kw">$filter</span>: {
+          <span class="str">"input"</span>: <span class="str">"$recent_activity"</span>,
+          <span class="str">"as"</span>: <span class="str">"a"</span>,
+          <span class="str">"cond"</span>: { <span class="kw">$and</span>: [
+            { <span class="kw">$eq</span>: [<span class="str">"$$a.type"</span>, <span class="str">"purchase"</span>] },
+            { <span class="kw">$gte</span>: [<span class="str">"$$a.date"</span>, <span class="str">"2024-12-01"</span>] }
+          ]}
+        }
+      }
+  }},
+  { <span class="kw">$match</span>: {
+      <span class="str">"recent_browses.0"</span>: { <span class="kw">$exists</span>: true },
+      <span class="str">"recent_purchases.0"</span>: { <span class="kw">$exists</span>: false }
+  }}
+])</pre>
+
+
+<h2 id="arch">Hybrid architecture — the full picture</h2>
+
+<div class="card blue">
+<div class="card-title">Three databases, three purposes</div>
+<p>The complete Acme solution uses all three paradigms — each handling what it does best. They share source data through ETL pipelines or direct connections.</p>
+</div>
+
+<table>
+  <tr><th>Layer</th><th>Star schema (Snowflake/BigQuery)</th><th>Graph (Neo4j)</th><th>Document (MongoDB)</th></tr>
+  <tr><td><strong>Purpose</strong></td><td>OLAP aggregation, BI dashboards, KPI reporting</td><td>Relationship traversal, path analysis, network patterns</td><td>Flexible storage, variable-schema data, operational serving</td></tr>
+  <tr><td><strong>Data</strong></td><td>fact_sales, fact_inventory, dim tables</td><td>Supply chain graph, co-purchase network</td><td>Product catalog, customer profiles, surveys, event logs</td></tr>
+  <tr><td><strong>Query</strong></td><td>SQL (ROLLUP, CUBE, window functions)</td><td>Cypher (MATCH paths, algorithms)</td><td>Aggregation pipeline ($match, $group, $lookup)</td></tr>
+  <tr><td><strong>Users</strong></td><td>Analysts, executives, regional managers</td><td>Operations team, data scientists</td><td>E-commerce app, customer service app, data scientists</td></tr>
+  <tr><td><strong>Consumption</strong></td><td>Power BI, Tableau</td><td>Neo4j Bloom, NeoDash</td><td>Application APIs, Atlas Charts, Compass</td></tr>
+</table>
+
+<div class="card">
+<div class="card-title">Data flow between systems</div>
+<p><strong>MongoDB → Warehouse:</strong> MongoDB aggregation pipeline produces structured summaries (e.g., average NPS per store per month) → loaded into the warehouse as a dimension or fact for OLAP analysis alongside sales data.</p>
+<p><strong>Warehouse → MongoDB:</strong> RFM scores calculated in the warehouse (SQL window functions on fact_sales) → written back into customer profile documents in MongoDB as the <code>rfm</code> embedded object. The e-commerce app reads from MongoDB to personalize the experience.</p>
+<p><strong>MongoDB → Neo4j:</strong> Customer purchase events from MongoDB → loaded as relationships in the co-purchase graph. Product catalog from MongoDB → loaded as Product nodes with category/brand relationships.</p>
+</div>
+
+
+<h2 id="steps">Investigation steps — the answer to Q6</h2>
+
+<table>
+  <tr><th>Step</th><th>Action</th><th>Output</th></tr>
+  <tr><td><strong>1. Identify document-suitable data</strong></td><td>Review all Acme data sources. Identify what has variable schema, semi-structured content, or high-volume writes.</td><td>5 document-suitable data types: product catalog, customer profiles, surveys, activity logs, clickstream.</td></tr>
+  <tr><td><strong>2. Design collections</strong></td><td>For each data type, design the document structure. Decide embed vs reference for each relationship.</td><td>Collection schemas: products, customer_profiles, surveys, events, clickstream.</td></tr>
+  <tr><td><strong>3. Define the hybrid architecture</strong></td><td>Position MongoDB alongside the warehouse (OLAP) and Neo4j (traversal). Define data flow between all three.</td><td>Architecture diagram showing three complementary databases.</td></tr>
+  <tr><td><strong>4. Deploy and load data</strong></td><td>Create MongoDB Atlas cluster (or local instance). Use Compass or mongoimport to load initial data. Use Relational Migrator if converting from existing relational tables.</td><td>Populated MongoDB collections.</td></tr>
+  <tr><td><strong>5. Build aggregation pipelines</strong></td><td>Write queries that answer case analytical requirements: customer segmentation from profiles, product search with variable attributes, survey analysis, activity log analysis.</td><td>Query library proving MongoDB value for document-shaped problems.</td></tr>
+  <tr><td><strong>6. Build data flow to warehouse</strong></td><td>Create aggregation pipelines that produce structured summaries. Schedule with Atlas Triggers or Airflow. Load summaries into the warehouse for OLAP analysis.</td><td>Integration pipeline: MongoDB summaries → warehouse facts/dimensions.</td></tr>
+  <tr><td><strong>7. Demonstrate value</strong></td><td>Show how a product search with variable attributes is simple in MongoDB vs painful in relational (EAV pattern). Show how survey format changes require zero migration in MongoDB vs ALTER TABLE in relational.</td><td>Side-by-side comparison proving document model advantage for variable-schema data.</td></tr>
+</table>
+
+
+<h2 id="future-general">Future developments — general</h2>
+
+<div class="grid2">
+  <div class="card">
+    <div class="card-title">Vector search &amp; AI-native databases</div>
+    <p>MongoDB Atlas Vector Search eliminates the need for a separate vector database. Store embeddings alongside operational data. Power RAG, semantic search, and AI agents from the same database. With the Voyage AI acquisition, MongoDB can generate embeddings natively — no external API needed. 74% of organizations plan to use integrated vector databases for agentic AI workflows.</p>
+    <p><a class="ref" href="https://www.mongodb.com/products/platform/atlas-vector-search">Atlas Vector Search</a></p>
+  </div>
+  <div class="card">
+    <div class="card-title">Serverless &amp; auto-scaling</div>
+    <p>Atlas Serverless instances scale from zero to peak automatically. No capacity planning. Pay per operation. Ideal for variable-traffic applications like e-commerce — Diwali traffic spike handled automatically, costs drop to near-zero during quiet periods.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">Real-time with Change Streams</div>
+    <p>Change Streams notify applications in real-time when documents change. Enables reactive architectures: new survey inserted → trigger sentiment analysis → update customer profile → trigger personalized promotion. Event-driven without polling.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">Time-series collections</div>
+    <p>Purpose-built for IoT, metrics, and event data. Efficient compression, windowed aggregation, automated expiration (TTL). Relevant for Acme's store sensor data, POS event streams, and equipment monitoring in warehouses.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">Multi-model convergence</div>
+    <p>MongoDB increasingly handles multiple paradigms: document storage + search + vector search + time-series + streaming. Azure Cosmos DB offers document + graph + column-family in one service. The trend: fewer specialized databases, more multi-model platforms.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">Edge to cloud sync</div>
+    <p>MongoDB Atlas Device Sync (formerly Realm) synchronizes data between edge devices (store POS, mobile apps) and cloud. Relevant for Acme's 150 stores: local MongoDB on store servers syncs to Atlas when connected. Offline-capable — works even if internet fails.</p>
+  </div>
+</div>
+
+
+<h2 id="future-acme">Future for Acme — MongoDB evolution path</h2>
+
+<div class="card purple">
+<div class="card-title">Phase 1 → Phase 4</div>
+
+<p><strong>Phase 1 (pilot — month 3-6):</strong> Deploy MongoDB Atlas. Migrate product catalog from relational tables — use Relational Migrator to convert the ITEM table from Exhibit 2 into rich product documents with category-specific specs. Build product search API for the e-commerce portal. Demonstrate: "find all 5-star rated laptops with 16GB RAM under Rs 60,000 in Bangalore stores" — one query, no JOINs.</p>
+
+<p><strong>Phase 2 (expansion — month 6-12):</strong> Build customer_profiles collection. Embed loyalty data, demographic/psychographic profiles, and RFM scores (calculated in the warehouse, synced back to MongoDB). Customer service agents can see the complete customer picture in one read. E-commerce portal shows personalized product recommendations based on profile data.</p>
+
+<p><strong>Phase 3 (intelligence — year 2):</strong> Atlas Vector Search on product descriptions and customer queries. Semantic product search: customer types "something for my home office" → vector search finds laptops, monitors, desk accessories — not keyword matching but meaning matching. Survey free-text analysis: embed survey comments, find clusters of similar feedback without manual categorization.</p>
+
+<p><strong>Phase 4 (AI-native — year 2-3):</strong> Build an AI shopping assistant powered by MongoDB Atlas + Vector Search + LLM. Customer asks "I need a camera for wildlife photography under Rs 50,000" → the agent queries the product catalog (MongoDB), retrieves similar products via vector search, checks inventory (warehouse), and returns a personalized recommendation with availability. The document model stores the conversation history, customer preferences, and product context in one place.</p>
+</div>
+
+<div class="card green">
+<div class="card-title">The key message for the assessment</div>
+<p>MongoDB is <strong>complementary</strong> to both the data warehouse and the graph database. It solves specific problems — variable-schema storage, rich entity profiles, high-volume event ingestion, AI/vector search — that relational star schemas handle poorly (due to fixed schema) and graph databases don't address (because they're about relationships, not rich entity attributes). The three-database hybrid architecture (warehouse + graph + document) gives Acme the right tool for each problem type.</p>
+</div>
+
+</div>
+
+<script>
+const ss=document.querySelectorAll('h2[id],h3[id]');const ls=document.querySelectorAll('.nav a');
+window.addEventListener('scroll',()=>{let c='';ss.forEach(s=>{if(window.scrollY>=s.offsetTop-100)c=s.id});ls.forEach(a=>{a.classList.remove('active');if(a.getAttribute('href')==='#'+c)a.classList.add('active')})});
+</script>
+</body>
+</html>

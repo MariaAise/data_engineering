@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Q2.1 — Forecasting Accuracy at Acme Inc</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fafaf8;--surface:#fff;--surface2:#f3f2ee;--border:#e2e0d8;--text:#2c2c2a;--text-dim:#6e6d68;--heading:#1a1a18;--accent:#1a6b4e;--accent-light:#e8f5ee;--amber:#b45309;--amber-light:#fef3e2;--blue:#1d5fa0;--blue-light:#edf4fc;--red:#b91c1c;--red-light:#fef2f2;--purple:#6d28d9;--purple-light:#f3eefb;--code-bg:#f5f4f0;--code-border:#e8e6de}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;line-height:1.75;font-size:15px}
+.nav{position:fixed;top:0;left:0;width:240px;height:100vh;overflow-y:auto;background:var(--surface);border-right:1px solid var(--border);padding:1.5rem 1rem;z-index:10}
+.nav-title{font-family:'Source Serif 4',serif;font-size:.92rem;font-weight:700;color:var(--heading);margin-bottom:1.2rem;line-height:1.3}
+.nav a{display:block;padding:.3rem .5rem;color:var(--text-dim);text-decoration:none;font-size:.78rem;border-radius:4px;line-height:1.35;margin:.1rem 0}
+.nav a:hover{background:var(--surface2);color:var(--heading)}
+.nav a.active{background:var(--accent-light);color:var(--accent);font-weight:500}
+.nav .sep{height:1px;background:var(--border);margin:.6rem 0}
+.nav .ns{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;padding:.4rem .5rem .2rem}
+.main{margin-left:240px;max-width:800px;padding:2.5rem 3rem 6rem}
+h1{font-family:'Source Serif 4',serif;font-size:2rem;color:var(--heading);font-weight:700;margin-bottom:.3rem;line-height:1.15}
+.hero-sub{color:var(--text-dim);font-size:.9rem;margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border)}
+h2{font-family:'Source Serif 4',serif;font-size:1.35rem;color:var(--heading);font-weight:700;margin:2.5rem 0 .8rem;padding-top:1rem}
+h3{color:var(--accent);font-size:.95rem;font-weight:700;margin:1.5rem 0 .4rem}
+p{margin-bottom:.7rem}
+strong{color:var(--heading)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.1rem 1.3rem;margin:.6rem 0}
+.card.green{border-left:3px solid var(--accent);background:var(--accent-light)}
+.card.amber{border-left:3px solid var(--amber);background:var(--amber-light)}
+.card.blue{border-left:3px solid var(--blue);background:var(--blue-light)}
+.card.red{border-left:3px solid var(--red);background:var(--red-light)}
+.card.purple{border-left:3px solid var(--purple);background:var(--purple-light)}
+.card-title{font-weight:700;color:var(--heading);margin-bottom:.3rem;font-size:.88rem}
+code{font-family:'JetBrains Mono',monospace;font-size:.82em;background:var(--code-bg);padding:1px 5px;border-radius:3px}
+pre{background:var(--code-bg);border:1px solid var(--code-border);border-radius:8px;padding:1rem 1.2rem;overflow-x:auto;margin:.6rem 0;font-family:'JetBrains Mono',monospace;font-size:.78rem;line-height:1.6;color:#4a4a45}
+.kw{color:var(--accent);font-weight:600}
+.cmt{color:var(--text-dim);font-style:italic}
+.str{color:var(--amber)}
+table{width:100%;border-collapse:collapse;font-size:.83rem;margin:.6rem 0}
+th{text-align:left;padding:.5rem .7rem;background:var(--surface2);color:var(--heading);font-weight:600;font-size:.73rem;border-bottom:2px solid var(--border);letter-spacing:.3px}
+td{padding:.45rem .7rem;border-bottom:1px solid var(--border);vertical-align:top}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin:.6rem 0}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.7rem;margin:.6rem 0}
+.ref{font-size:.78rem;color:var(--blue);text-decoration:none}
+.ref:hover{text-decoration:underline}
+.flow-row{display:flex;align-items:center;gap:0;margin:1rem 0;flex-wrap:wrap}
+.flow-box{padding:.5rem .8rem;border-radius:7px;font-size:.82rem;font-weight:600;text-align:center}
+.flow-arrow{color:var(--text-dim);font-size:1.1rem;padding:0 .3rem}
+@media(max-width:900px){.nav{display:none}.main{margin-left:0;padding:2rem 1.2rem 4rem}.grid2,.grid3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <div class="nav-title">Q2.1 — Forecasting Accuracy</div>
+  <div class="ns">Analysis</div>
+  <a href="#problem">The problem</a>
+  <a href="#causes">Root causes</a>
+  <div class="sep"></div>
+  <div class="ns">Data solution</div>
+  <a href="#data">Data requirements</a>
+  <a href="#schema">Star schema design</a>
+  <a href="#queries">Diagnostic queries</a>
+  <div class="sep"></div>
+  <div class="ns">Solutions</div>
+  <a href="#current">Current methods</a>
+  <a href="#tools">Tools &amp; platforms</a>
+  <a href="#future">Future scenario</a>
+</div>
+
+<div class="main">
+
+<h1>Q2.1 — Forecasting Accuracy</h1>
+<p class="hero-sub">Forecast estimates deviate 30-40% for some SKUs, causing excess inventory and stockouts. How to diagnose, measure, and fix it.</p>
+
+
+<!-- ============================================================ -->
+<h2 id="problem">The problem — stated precisely</h2>
+
+<div class="card red">
+<div class="card-title">From the case</div>
+<p>"The forecast estimates were often inaccurate deviating as much as 30-40% for some SKUs. This results in excess inventory in a few cases and stock-outs in many other cases."</p>
+</div>
+
+<p>30-40% forecast deviation is catastrophic for a retailer. It means:</p>
+
+<div class="grid2">
+  <div class="card">
+    <div class="card-title">Excess inventory (overforecast)</div>
+    <p>Capital tied up in unsold stock. Storage costs in regional warehouses. Markdown risk — products lose value (especially electronics with rapid model cycles). Increases the shrinkage rate (currently 1.2-1.5% of sales — Acme wants to reduce to 0.6%).</p>
+  </div>
+  <div class="card">
+    <div class="card-title">Stockouts (underforecast)</div>
+    <p>Lost sales — customer wanted to buy but the product isn't there. Customer goes to competitor. Particularly damaging during festival periods (Diwali, Navratri) when foot traffic peaks. Erodes brand trust: "Acme never has what I want."</p>
+  </div>
+</div>
+
+<p><strong>The 74% problem:</strong> The case states Acme uses standard EOQ (Economic Order Quantity) models driven by warehouse managers' estimates. EOQ assumes stable, predictable demand — which doesn't hold for a consumer electronics retailer with 12,000 SKUs, seasonal spikes, promotional effects, and product lifecycle variability.</p>
+
+
+<!-- ============================================================ -->
+<h2 id="causes">Root cause analysis</h2>
+
+<p>The 30-40% deviation isn't one problem — it's multiple problems compounding:</p>
+
+<table>
+  <tr><th>Root cause</th><th>Why it happens at Acme</th><th>Data signal</th></tr>
+  <tr>
+    <td><strong>1. No integrated demand data</strong></td>
+    <td>Each store and warehouse uses different DB products. Warehouse managers forecast based on their regional view, not national patterns. A product trending in Mumbai stores is invisible to the Kolkata warehouse manager.</td>
+    <td>Cross-store sales data not available in one place. The data warehouse solves this directly.</td>
+  </tr>
+  <tr>
+    <td><strong>2. Seasonality not modeled</strong></td>
+    <td>Electronics retail has extreme seasonality: Diwali (Oct-Nov) drives 3-5x normal volume. Back-to-school (Jun-Jul) spikes laptops/tablets. Summer spikes ACs and refrigerators. EOQ doesn't capture this.</td>
+    <td>Sales data by month shows seasonal patterns — but only if you have multi-year history in one place.</td>
+  </tr>
+  <tr>
+    <td><strong>3. Promotional demand not separated</strong></td>
+    <td>A "Diwali Dhamaka" promotion causes a sales spike. The next month's forecast is inflated because it includes the promotional uplift as if it were organic demand. When no promotion runs, actual sales fall short of forecast.</td>
+    <td>Requires <code>dim_promotion</code> to separate promoted vs baseline sales.</td>
+  </tr>
+  <tr>
+    <td><strong>4. Product lifecycle effects</strong></td>
+    <td>New Samsung Galaxy launches → old model demand drops. Forecasts based on historical data for the old model overpredict. New model has no history to forecast from.</td>
+    <td>Product age, lifecycle stage (introduction / growth / maturity / decline) need to be tracked.</td>
+  </tr>
+  <tr>
+    <td><strong>5. SKU-level granularity</strong></td>
+    <td>12,000 SKUs. Forecasting at category level is easy. Forecasting at SKU level (Samsung Galaxy S23 128GB Black vs 256GB Blue) is exponentially harder — sparse data per SKU, high variance.</td>
+    <td>Need sufficient history at SKU level. Some SKUs will always be hard to forecast — the system should flag these.</td>
+  </tr>
+  <tr>
+    <td><strong>6. No forecast accuracy measurement</strong></td>
+    <td>"The company was unable to clearly identify the root cause." They can't fix what they can't measure. There's no system comparing forecasted demand vs actual demand to identify which SKUs, stores, or categories have the worst accuracy.</td>
+    <td>Need a <code>fact_forecast_accuracy</code> or comparison table: forecast vs actual, by SKU × store × week.</td>
+  </tr>
+</table>
+
+
+<!-- ============================================================ -->
+<h2 id="data">Data requirements — what needs to be captured</h2>
+
+<p>Before building forecasting models, you need the data infrastructure to support them:</p>
+
+<div class="card green">
+<div class="card-title">Data currently available at Acme</div>
+<p>POS transaction data (fact_sales), store inventory counts (fortnightly physical verification), indent records (orders from store to warehouse), shipment records (warehouse to store).</p>
+</div>
+
+<div class="card amber">
+<div class="card-title">Data that needs to be captured or derived</div>
+<p><strong>Inventory snapshots</strong> — daily or weekly on-hand quantity per SKU per store. Currently only fortnightly physical counts. Need periodic automated snapshots from the inventory system.</p>
+<p><strong>Forecast vs actual</strong> — the warehouse manager's forecast for each SKU must be recorded at the time it's made, then compared against actual sales. Without this, forecast accuracy cannot be measured.</p>
+<p><strong>Promotional flags</strong> — which transactions were promoted vs organic. Without <code>dim_promotion</code>, you can't separate promotional spikes from baseline demand.</p>
+<p><strong>External data</strong> — festival calendar (Diwali/Navratri dates vary yearly), school term dates (back-to-school timing), new product launch dates (from manufacturers), competitor activity (price matching).</p>
+</div>
+
+
+<!-- ============================================================ -->
+<h2 id="schema">Star schema — Inventory Data Mart</h2>
+
+<p>A separate data mart from the sales mart, sharing conformed dimensions:</p>
+
+<h3>Fact table: fact_inventory_snapshot</h3>
+<pre><span class="cmt">-- Grain: one row per product per store per week</span>
+<span class="kw">CREATE TABLE</span> fact_inventory_snapshot (
+  snapshot_key       INT <span class="kw">NOT NULL</span> AUTO_INCREMENT,
+  date_key           INT <span class="kw">NOT NULL</span>,        <span class="cmt">-- FK → dim_date (week-ending date)</span>
+  store_key          INT <span class="kw">NOT NULL</span>,        <span class="cmt">-- FK → dim_store</span>
+  product_key        INT <span class="kw">NOT NULL</span>,        <span class="cmt">-- FK → dim_product</span>
+  quantity_on_hand   INT <span class="kw">NOT NULL</span>,        <span class="cmt">-- current stock level</span>
+  quantity_on_order  INT <span class="kw">NOT NULL DEFAULT</span> 0, <span class="cmt">-- indented but not yet received</span>
+  quantity_received  INT <span class="kw">NOT NULL DEFAULT</span> 0, <span class="cmt">-- received this week from warehouse</span>
+  quantity_sold      INT <span class="kw">NOT NULL DEFAULT</span> 0, <span class="cmt">-- sold this week (from fact_sales)</span>
+  quantity_shrinkage INT <span class="kw">NOT NULL DEFAULT</span> 0, <span class="cmt">-- losses this week</span>
+  stockout_days      TINYINT <span class="kw">DEFAULT</span> 0,    <span class="cmt">-- days with zero stock this week</span>
+  reorder_point      INT,                   <span class="cmt">-- current reorder level for this SKU</span>
+  forecasted_demand  INT,                   <span class="cmt">-- warehouse manager's forecast</span>
+  <span class="kw">PRIMARY KEY</span> (snapshot_key),
+  <span class="kw">FOREIGN KEY</span> (date_key) <span class="kw">REFERENCES</span> dim_date(date_key),
+  <span class="kw">FOREIGN KEY</span> (store_key) <span class="kw">REFERENCES</span> dim_store(store_key),
+  <span class="kw">FOREIGN KEY</span> (product_key) <span class="kw">REFERENCES</span> dim_product(product_key)
+);</pre>
+
+<div class="card blue">
+<div class="card-title">Why this is a periodic snapshot fact table (not transactional)</div>
+<p>Unlike <code>fact_sales</code> (one row per event), this captures the <em>state</em> of inventory at regular intervals. This enables trend analysis: is on-hand quantity rising or falling? How many weeks of supply remain? What's the trajectory toward stockout? Kimball calls this a "periodic snapshot" fact table — the second most common fact table type after transactional.</p>
+</div>
+
+<h3>Shared conformed dimensions</h3>
+<p><code>dim_date</code>, <code>dim_store</code>, <code>dim_product</code> — same tables used by the sales data mart. This is why conformed dimensions matter: the same product_key joins both fact_sales and fact_inventory_snapshot, enabling combined sales + inventory analysis.</p>
+
+
+<!-- ============================================================ -->
+<h2 id="queries">Diagnostic queries — measuring the problem</h2>
+
+<pre><span class="cmt">-- Forecast accuracy by product category</span>
+<span class="kw">SELECT</span>
+    p.category,
+    <span class="kw">COUNT</span>(*) <span class="kw">AS</span> observations,
+    <span class="kw">ROUND</span>(<span class="kw">AVG</span>(<span class="kw">ABS</span>(i.forecasted_demand - i.quantity_sold)
+        / <span class="kw">NULLIF</span>(i.quantity_sold, 0) * 100), 1) <span class="kw">AS</span> avg_deviation_pct,
+    <span class="kw">SUM</span>(<span class="kw">CASE WHEN</span> i.stockout_days > 0 <span class="kw">THEN</span> 1 <span class="kw">ELSE</span> 0 <span class="kw">END</span>) <span class="kw">AS</span> stockout_weeks,
+    <span class="kw">SUM</span>(<span class="kw">CASE WHEN</span> i.quantity_on_hand > i.quantity_sold * 4
+        <span class="kw">THEN</span> 1 <span class="kw">ELSE</span> 0 <span class="kw">END</span>) <span class="kw">AS</span> excess_inventory_weeks
+<span class="kw">FROM</span> fact_inventory_snapshot i
+<span class="kw">JOIN</span> dim_product p <span class="kw">ON</span> i.product_key = p.product_key
+<span class="kw">WHERE</span> i.forecasted_demand <span class="kw">IS NOT NULL</span>
+<span class="kw">GROUP BY</span> p.category
+<span class="kw">ORDER BY</span> avg_deviation_pct <span class="kw">DESC</span>;</pre>
+
+<pre><span class="cmt">-- Worst-forecasted SKUs (the "30-40% deviation" offenders)</span>
+<span class="kw">SELECT</span>
+    p.sku_id, p.product_name, p.category, s.store_name,
+    <span class="kw">SUM</span>(i.forecasted_demand) <span class="kw">AS</span> total_forecast,
+    <span class="kw">SUM</span>(i.quantity_sold) <span class="kw">AS</span> total_actual,
+    <span class="kw">ROUND</span>((<span class="kw">SUM</span>(i.forecasted_demand) - <span class="kw">SUM</span>(i.quantity_sold))
+        / <span class="kw">NULLIF</span>(<span class="kw">SUM</span>(i.quantity_sold), 0) * 100, 1) <span class="kw">AS</span> bias_pct
+<span class="kw">FROM</span> fact_inventory_snapshot i
+<span class="kw">JOIN</span> dim_product p <span class="kw">ON</span> i.product_key = p.product_key
+<span class="kw">JOIN</span> dim_store s   <span class="kw">ON</span> i.store_key = s.store_key
+<span class="kw">GROUP BY</span> p.sku_id, p.product_name, p.category, s.store_name
+<span class="kw">HAVING ABS</span>(bias_pct) > 30
+<span class="kw">ORDER BY ABS</span>(bias_pct) <span class="kw">DESC</span>;</pre>
+
+<pre><span class="cmt">-- Inventory turns by category (annual)</span>
+<span class="cmt">-- Low turns = excess inventory. High turns = healthy or at risk of stockout.</span>
+<span class="kw">SELECT</span>
+    p.category,
+    <span class="kw">ROUND</span>(<span class="kw">SUM</span>(s.quantity_sold * p.unit_cost)
+        / <span class="kw">NULLIF</span>(<span class="kw">AVG</span>(s.quantity_on_hand * p.unit_cost), 0), 1) <span class="kw">AS</span> inventory_turns,
+    <span class="kw">ROUND</span>(365 / <span class="kw">NULLIF</span>(
+        <span class="kw">SUM</span>(s.quantity_sold * p.unit_cost)
+        / <span class="kw">NULLIF</span>(<span class="kw">AVG</span>(s.quantity_on_hand * p.unit_cost), 0)
+    , 0), 0) <span class="kw">AS</span> days_of_supply
+<span class="kw">FROM</span> fact_inventory_snapshot s
+<span class="kw">JOIN</span> dim_product p <span class="kw">ON</span> s.product_key = p.product_key
+<span class="kw">GROUP BY</span> p.category
+<span class="kw">ORDER BY</span> inventory_turns <span class="kw">DESC</span>;</pre>
+
+
+<!-- ============================================================ -->
+<h2 id="current">Current solution methods</h2>
+
+<h3>Level 1: Statistical baselines (SQL-based — immediate)</h3>
+
+<p>Replace warehouse manager gut-feel with data-driven baselines. Implementable immediately on the star schema, no ML required:</p>
+
+<div class="grid2">
+  <div class="card">
+    <div class="card-title">Moving average</div>
+    <p>4-week or 8-week moving average of sales per SKU per store. Smooths noise, captures recent trends. Simple: <code>AVG(quantity_sold) OVER (ORDER BY date_key ROWS 7 PRECEDING)</code>. Limitation: lags behind sudden changes.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">Same-period-last-year (SPLY)</div>
+    <p>Use last year's sales for the same week as the forecast baseline. Captures annual seasonality (Diwali, summer). Adjust for growth trend: SPLY × year-over-year growth rate. Limitation: doesn't work for new products with no prior year data.</p>
+  </div>
+</div>
+
+<div class="card">
+<div class="card-title">Promotional adjustment</div>
+<p>Calculate a "promotion uplift factor" per promo_type from historical data: <code>avg promoted daily sales / avg baseline daily sales</code>. When planning a future promotion, multiply baseline forecast by the uplift factor. When no promotion is planned, use only the baseline. This directly fixes root cause #3 (promotional demand not separated).</p>
+</div>
+
+<h3>Level 2: Time-series forecasting (Python/ML — medium term)</h3>
+
+<p>Once 12-24 months of clean star schema data exists, apply proper time-series models:</p>
+
+<table>
+  <tr><th>Method</th><th>What it does</th><th>Best for</th><th>Tool</th></tr>
+  <tr><td><strong>ARIMA / SARIMA</strong></td><td>Auto-regressive integrated moving average with seasonal component. Classical statistical method.</td><td>Stable products with clear seasonal patterns. Categories with consistent demand (kitchen appliances, basic TVs).</td><td>Python <code>statsmodels</code></td></tr>
+  <tr><td><strong>Facebook Prophet</strong></td><td>Decomposable time-series model: trend + seasonality (multiple) + holidays. Handles missing data and outliers well.</td><td>Acme's use case: built-in holiday effects (Diwali, Navratri as custom holidays), weekly + annual seasonality, handles promotional events as regressors.</td><td>Python <code>prophet</code> — <a class="ref" href="https://facebook.github.io/prophet/">facebook.github.io/prophet</a></td></tr>
+  <tr><td><strong>Exponential smoothing (ETS)</strong></td><td>Weighted average giving more weight to recent observations. Handles trend and seasonality.</td><td>Short-term forecasting (next 2-4 weeks). Fast to train, easy to interpret.</td><td>Python <code>statsmodels</code></td></tr>
+  <tr><td><strong>XGBoost / LightGBM</strong></td><td>Gradient boosting trees on tabular features: lagged sales, price, promotion flag, day-of-week, month, store attributes.</td><td>Complex interactions: "this SKU sells well in South stores during festivals when priced under Rs 30,000." Feature-rich models beat pure time-series for retail.</td><td>Python <code>xgboost</code> / <code>lightgbm</code></td></tr>
+</table>
+
+<h3>Level 3: Deep learning (long term)</h3>
+
+<table>
+  <tr><th>Method</th><th>What it does</th><th>When to use</th></tr>
+  <tr><td><strong>LSTM / GRU</strong></td><td>Recurrent neural networks that learn long-range temporal dependencies. Can model complex seasonal patterns and trend changes.</td><td>When you have 3+ years of daily data and hundreds/thousands of SKUs. Acme's 12,000 SKUs is ideal scale.</td></tr>
+  <tr><td><strong>Temporal Fusion Transformer (TFT)</strong></td><td>Attention-based model that handles multiple time-series simultaneously. Provides interpretable attention weights showing which features drive the forecast.</td><td>State-of-the-art for multi-horizon retail forecasting. Handles covariates (promotions, holidays, price) natively.</td></tr>
+  <tr><td><strong>Amazon Forecast / GCP Vertex AI Forecast</strong></td><td>Managed ML forecasting services. Upload historical data, get forecasts. AutoML selects the best model.</td><td>When the team lacks ML expertise but has clean data. Trade-off: less control, vendor dependency.</td></tr>
+</table>
+
+
+<!-- ============================================================ -->
+<h2 id="tools">Current tools and platforms</h2>
+
+<div class="grid2">
+  <div class="card">
+    <div class="card-title">BigQuery ML — SQL-based forecasting</div>
+    <p><code>CREATE MODEL ... OPTIONS(model_type='ARIMA_PLUS')</code> trains a forecasting model directly in SQL. No Python needed. Handles seasonality, holidays, trend. Built on Google's internal forecasting stack. Lowest friction for SQL-skilled teams.</p>
+    <p><a class="ref" href="https://cloud.google.com/bigquery/docs/bqml-introduction">BigQuery ML docs</a></p>
+  </div>
+  <div class="card">
+    <div class="card-title">Snowflake Cortex ML</div>
+    <p>Built-in forecasting function. Train on historical data, get multi-step forecasts. Integrated with Snowflake's SQL environment. Used in retail for same-store sales forecasting (12% improvement reported at Snowflake World Tour 2025).</p>
+    <p><a class="ref" href="https://docs.snowflake.com/en/user-guide/ml-functions/forecasting">Snowflake forecasting docs</a></p>
+  </div>
+  <div class="card">
+    <div class="card-title">Databricks Mosaic AI — full ML platform</div>
+    <p>Serverless forecasting (public preview 2025). MLflow 3.0 for model lifecycle. Train Prophet/XGBoost/TFT on Spark clusters across all 12,000 SKUs in parallel. Feature store serves features to models at inference time.</p>
+    <p><a class="ref" href="https://www.databricks.com/product/machine-learning">Databricks ML</a></p>
+  </div>
+  <div class="card">
+    <div class="card-title">LEAFIO AI — retail-specific forecasting</div>
+    <p>Purpose-built for retail demand forecasting. Handles promotional demand, seasonal patterns, new product launches. Integrates promotional calendar with demand forecasts — adjusts stock levels automatically for planned promotions. 180+ retail companies.</p>
+    <p><a class="ref" href="https://www.leafio.ai/blog/retail-promotion-strategy-best-tools-and-techniques/">LEAFIO AI</a></p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<h2 id="future">Future scenario</h2>
+
+<p>Once the data warehouse is mature (12-24 months of clean data) and the basic forecasting models are working:</p>
+
+<div class="card purple">
+<div class="card-title">Phase 1 → Phase 3 evolution</div>
+
+<p><strong>Phase 1 (immediate):</strong> Build the inventory data mart. Measure forecast accuracy for the first time. Identify the worst-performing SKU × store combinations. Replace gut-feel with moving average + SPLY baselines. Promotional adjustment factor applied manually.</p>
+
+<p><strong>Phase 2 (6-12 months):</strong> Enough historical data for Prophet/XGBoost models. Train per-category or per-brand models. Automated weekly forecast generation. Forecast accuracy dashboard showing improvement over time. Promotional uplift automatically incorporated as a model feature.</p>
+
+<p><strong>Phase 3 (12-24 months):</strong> Deep learning models (TFT) across all 12,000 SKUs. Automated reorder point adjustment based on forecast + safety stock calculation. Demand sensing: incorporate real-time signals — e-commerce browsing data, competitor price changes, weather, social media mentions — to adjust short-term forecasts. The warehouse manager shifts from "forecaster" to "forecast reviewer" — the model does the prediction, the human applies judgment.</p>
+</div>
+
+<div class="card green">
+<div class="card-title">What "good" looks like</div>
+<p>Industry benchmark for electronics retail: 15-20% MAPE (Mean Absolute Percentage Error) at SKU-store-week level. Acme is currently at 30-40%. Getting to 20% would reduce excess inventory by ~40% and stockout incidents by ~50%. The data warehouse is the prerequisite — without it, none of these methods have the integrated, clean, historical data they need to work.</p>
+</div>
+
+</div>
+
+<script>
+const ss=document.querySelectorAll('h2[id],h3[id]');const ls=document.querySelectorAll('.nav a');
+window.addEventListener('scroll',()=>{let c='';ss.forEach(s=>{if(window.scrollY>=s.offsetTop-100)c=s.id});ls.forEach(a=>{a.classList.remove('active');if(a.getAttribute('href')==='#'+c)a.classList.add('active')})});
+</script>
+</body>
+</html>
