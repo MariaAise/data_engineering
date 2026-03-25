@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Introduction to MongoDB — Document Databases for Business Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fafaf8;--surface:#fff;--surface2:#f3f2ee;--border:#e2e0d8;--text:#2c2c2a;--text-dim:#6e6d68;--heading:#1a1a18;--accent:#1a6b4e;--accent-light:#e8f5ee;--amber:#b45309;--amber-light:#fef3e2;--blue:#1d5fa0;--blue-light:#edf4fc;--red:#b91c1c;--red-light:#fef2f2;--purple:#6d28d9;--purple-light:#f3eefb;--code-bg:#f5f4f0;--code-border:#e8e6de;--mongo:#00684a;--mongo-light:#e6f3ed}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;line-height:1.75;font-size:15px}
+.nav{position:fixed;top:0;left:0;width:250px;height:100vh;overflow-y:auto;background:var(--surface);border-right:1px solid var(--border);padding:1.5rem 1rem;z-index:10}
+.nav-title{font-family:'Source Serif 4',serif;font-size:.88rem;font-weight:700;color:var(--heading);margin-bottom:1rem;line-height:1.3}
+.nav a{display:block;padding:.3rem .5rem;color:var(--text-dim);text-decoration:none;font-size:.76rem;border-radius:4px;line-height:1.35;margin:.08rem 0}
+.nav a:hover{background:var(--surface2);color:var(--heading)}
+.nav a.active{background:var(--accent-light);color:var(--accent);font-weight:500}
+.nav .sep{height:1px;background:var(--border);margin:.5rem 0}
+.nav .ns{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;padding:.4rem .5rem .2rem}
+.main{margin-left:250px;max-width:820px;padding:2.5rem 3rem 6rem}
+h1{font-family:'Source Serif 4',serif;font-size:2rem;color:var(--heading);font-weight:700;margin-bottom:.3rem;line-height:1.15}
+.hero-sub{color:var(--text-dim);font-size:.9rem;margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border)}
+h2{font-family:'Source Serif 4',serif;font-size:1.35rem;color:var(--heading);font-weight:700;margin:2.5rem 0 .8rem;padding-top:1rem;display:flex;align-items:center;gap:.6rem}
+h2 .n{display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:28px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:.78rem;font-weight:700;flex-shrink:0;color:#fff;background:var(--mongo)}
+h3{color:var(--accent);font-size:.95rem;font-weight:700;margin:1.5rem 0 .4rem}
+h4{font-size:.88rem;font-weight:700;color:var(--heading);margin:1rem 0 .3rem}
+p{margin-bottom:.7rem}
+strong{color:var(--heading)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.1rem 1.3rem;margin:.6rem 0}
+.card.green{border-left:3px solid var(--accent);background:var(--accent-light)}
+.card.amber{border-left:3px solid var(--amber);background:var(--amber-light)}
+.card.blue{border-left:3px solid var(--blue);background:var(--blue-light)}
+.card.red{border-left:3px solid var(--red);background:var(--red-light)}
+.card.purple{border-left:3px solid var(--purple);background:var(--purple-light)}
+.card.mongo{border-left:3px solid var(--mongo);background:var(--mongo-light)}
+.card-title{font-weight:700;color:var(--heading);margin-bottom:.3rem;font-size:.88rem}
+code{font-family:'JetBrains Mono',monospace;font-size:.82em;background:var(--code-bg);padding:1px 5px;border-radius:3px}
+pre{background:var(--code-bg);border:1px solid var(--code-border);border-radius:8px;padding:1rem 1.2rem;overflow-x:auto;margin:.6rem 0;font-family:'JetBrains Mono',monospace;font-size:.78rem;line-height:1.65;color:#4a4a45}
+.kw{color:var(--mongo);font-weight:600}
+.cmt{color:var(--text-dim);font-style:italic}
+.str{color:var(--amber)}
+.fn{color:var(--blue)}
+table{width:100%;border-collapse:collapse;font-size:.83rem;margin:.6rem 0}
+th{text-align:left;padding:.5rem .7rem;background:var(--surface2);color:var(--heading);font-weight:600;font-size:.73rem;border-bottom:2px solid var(--border)}
+td{padding:.45rem .7rem;border-bottom:1px solid var(--border);vertical-align:top}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin:.6rem 0}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.7rem;margin:.6rem 0}
+.ref{font-size:.78rem;color:var(--blue);text-decoration:none}
+.ref:hover{text-decoration:underline}
+.vs{display:grid;grid-template-columns:1fr auto 1fr;gap:0;margin:.8rem 0;align-items:start}
+.vs-col{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1rem 1.2rem}
+.vs-mid{display:flex;align-items:center;justify-content:center;padding:0 .5rem;font-family:'JetBrains Mono',monospace;color:var(--text-dim);font-size:.8rem;align-self:center}
+@media(max-width:900px){.nav{display:none}.main{margin-left:0;padding:2rem 1.2rem 4rem}.grid2,.grid3,.vs{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <div class="nav-title">MongoDB for Business Intelligence</div>
+  <div class="ns">Block 1 — Why</div>
+  <a href="#why">The problem it solves</a>
+  <a href="#vs-relational">SQL comparison</a>
+  <div class="sep"></div>
+  <div class="ns">Block 2 — What</div>
+  <a href="#model">The document model</a>
+  <a href="#terminology">Terminology mapping</a>
+  <a href="#embedded">Embedded vs referenced</a>
+  <div class="sep"></div>
+  <div class="ns">Block 3 — How</div>
+  <a href="#crud">CRUD operations</a>
+  <a href="#queries">Querying documents</a>
+  <a href="#pipeline">Aggregation pipeline</a>
+  <div class="sep"></div>
+  <div class="ns">Block 4 — Where</div>
+  <a href="#three-way">Three-way routing</a>
+  <a href="#when-mongo">When to use MongoDB</a>
+  <a href="#when-not">When NOT to use</a>
+  <div class="sep"></div>
+  <div class="ns">Block 5 — Platform</div>
+  <a href="#atlas">MongoDB Atlas</a>
+  <a href="#tools">Tools &amp; ecosystem</a>
+  <div class="sep"></div>
+  <div class="ns">Block 6 — Practice</div>
+  <a href="#retail">Retail worked example</a>
+  <a href="#pipeline-demo">Pipeline walkthrough</a>
+</div>
+
+<div class="main">
+
+<h1>Introduction to MongoDB</h1>
+<p class="hero-sub">Document databases for business intelligence. For learners who already know relational databases and graph databases — this lecture bridges you to the third paradigm.</p>
+
+
+<h2 id="why"><span class="n">1</span> The problem MongoDB solves</h2>
+
+<p>You already know that relational databases store data in tables with fixed columns, and graph databases store data as nodes connected by relationships. Both assume you know the <strong>shape</strong> of your data in advance.</p>
+
+<p>But what happens when you don't?</p>
+
+<div class="card amber">
+<div class="card-title">The electronics retailer problem</div>
+<p>An electronics retailer sells 12,000 products across 9 categories. A laptop has RAM, CPU, screen size, battery life, and weight. A refrigerator has capacity in litres, energy rating, number of doors, and compressor type. A camera has megapixels, sensor size, and lens mount. A washing machine has drum capacity, spin speed, and water efficiency.</p>
+<p>In a relational table, you have three options — none of them good:</p>
+</div>
+
+<table>
+  <tr><th>Relational approach</th><th>What you do</th><th>Why it hurts</th></tr>
+  <tr><td><strong>One wide table</strong></td><td>Create a PRODUCTS table with columns for every possible attribute across all categories: ram_gb, capacity_litres, megapixels, drum_capacity, spin_speed...</td><td>Hundreds of columns, most NULL for any given row. A laptop row has NULL for capacity_litres, energy_rating, drum_capacity. Wastes storage, confuses queries, and breaks when a new category arrives.</td></tr>
+  <tr><td><strong>Table per category</strong></td><td>Create LAPTOPS, REFRIGERATORS, CAMERAS, etc. — each with category-specific columns.</td><td>Queries across categories require UNION ALL of 9 tables. Adding a new category means a new table + new application code. Cross-category reporting is painful.</td></tr>
+  <tr><td><strong>Entity-Attribute-Value (EAV)</strong></td><td>Three columns: product_id, attribute_name, attribute_value. One row per attribute per product.</td><td>Querying "all laptops with RAM >= 16GB and price < 60000" requires self-joins and type casting from strings. Performance degrades. Universally regarded as an antipattern.</td></tr>
+</table>
+
+<div class="card mongo">
+<div class="card-title">MongoDB's answer</div>
+<p>Each product is a <strong>document</strong> — a self-contained JSON-like object. A laptop document has <code>ram_gb</code> and <code>cpu</code> fields. A refrigerator document has <code>capacity_litres</code> and <code>energy_rating</code> fields. They live in the same collection. No NULLs, no UNION ALLs, no EAV. The database doesn't require all documents to have the same structure.</p>
+</div>
+
+
+<h3 id="vs-relational">Side-by-side: relational vs document</h3>
+
+<div class="vs">
+  <div class="vs-col">
+    <div class="card-title" style="color:var(--blue);">Relational (MySQL)</div>
+<pre style="font-size:.72rem;">CREATE TABLE products (
+  product_id INT PRIMARY KEY,
+  name       VARCHAR(100),
+  category   VARCHAR(30),
+  brand      VARCHAR(30),
+  price      DECIMAL(10,2),
+  -- laptop-specific
+  ram_gb     INT,          -- NULL for non-laptops
+  cpu        VARCHAR(50),  -- NULL for non-laptops
+  -- fridge-specific
+  capacity_l INT,          -- NULL for non-fridges
+  energy_rat VARCHAR(10),  -- NULL for non-fridges
+  -- camera-specific
+  megapixels INT,          -- NULL for non-cameras
+  -- ... 50+ more columns
+);
+
+-- Query: find 16GB+ laptops under 60K
+SELECT * FROM products
+WHERE category = 'Computers'
+  AND ram_gb >= 16
+  AND price < 60000;</pre>
+  </div>
+  <div class="vs-mid">vs</div>
+  <div class="vs-col">
+    <div class="card-title" style="color:var(--mongo);">Document (MongoDB)</div>
+<pre style="font-size:.72rem;"><span class="cmt">// Laptop document</span>
+{
+  <span class="str">"name"</span>: <span class="str">"Lenovo ThinkPad T14"</span>,
+  <span class="str">"category"</span>: <span class="str">"Computers"</span>,
+  <span class="str">"brand"</span>: <span class="str">"Lenovo"</span>,
+  <span class="str">"price"</span>: 58000,
+  <span class="str">"specs"</span>: {
+    <span class="str">"ram_gb"</span>: 16,
+    <span class="str">"cpu"</span>: <span class="str">"Intel i7"</span>,
+    <span class="str">"screen"</span>: 14
+  }
+}
+<span class="cmt">// Fridge document — different fields, same collection</span>
+{
+  <span class="str">"name"</span>: <span class="str">"Samsung 253L"</span>,
+  <span class="str">"category"</span>: <span class="str">"Home Appliances"</span>,
+  <span class="str">"brand"</span>: <span class="str">"Samsung"</span>,
+  <span class="str">"price"</span>: 26000,
+  <span class="str">"specs"</span>: {
+    <span class="str">"capacity_litres"</span>: 253,
+    <span class="str">"energy_rating"</span>: <span class="str">"5 star"</span>,
+    <span class="str">"doors"</span>: 2
+  }
+}
+
+<span class="cmt">// Query: find 16GB+ laptops under 60K</span>
+db.products.find({
+  <span class="str">"category"</span>: <span class="str">"Computers"</span>,
+  <span class="str">"specs.ram_gb"</span>: { <span class="kw">$gte</span>: 16 },
+  <span class="str">"price"</span>: { <span class="kw">$lt</span>: 60000 }
+})</pre>
+  </div>
+</div>
+
+<p>The MongoDB query reaches <em>inside</em> the nested <code>specs</code> object using dot notation (<code>specs.ram_gb</code>). No JOINs, no NULL filtering, no type casting. The query reads almost like English.</p>
+
+
+<h2 id="model"><span class="n">2</span> The document model</h2>
+
+<p>A MongoDB document is a <strong>BSON</strong> (Binary JSON) object. It looks like JSON but supports additional types (dates, ObjectIds, decimal128). Every document has a unique <code>_id</code> field — like a primary key, but auto-generated if you don't provide one.</p>
+
+<h4>What a document can contain</h4>
+<div class="grid3">
+  <div class="card">
+    <div class="card-title">Simple values</div>
+    <p>Strings, numbers, booleans, dates, null. Same types you know from SQL columns.</p>
+    <pre style="font-size:.72rem;"><span class="str">"name"</span>: <span class="str">"Priya Sharma"</span>,
+<span class="str">"age"</span>: 28,
+<span class="str">"active"</span>: true,
+<span class="str">"joined"</span>: ISODate(<span class="str">"2023-03-15"</span>)</pre>
+  </div>
+  <div class="card">
+    <div class="card-title">Nested documents</div>
+    <p>A document inside a document. Like a joined table embedded directly. Accessed with dot notation: <code>address.city</code></p>
+    <pre style="font-size:.72rem;"><span class="str">"address"</span>: {
+  <span class="str">"street"</span>: <span class="str">"100 MG Road"</span>,
+  <span class="str">"city"</span>: <span class="str">"Bangalore"</span>,
+  <span class="str">"state"</span>: <span class="str">"Karnataka"</span>
+}</pre>
+  </div>
+  <div class="card">
+    <div class="card-title">Arrays</div>
+    <p>Ordered lists of values — including arrays of nested documents. Like a one-to-many relationship, but without a second table.</p>
+    <pre style="font-size:.72rem;"><span class="str">"tags"</span>: [<span class="str">"premium"</span>, <span class="str">"new"</span>],
+<span class="str">"reviews"</span>: [
+  { <span class="str">"rating"</span>: 4, <span class="str">"text"</span>: <span class="str">"Good"</span> },
+  { <span class="str">"rating"</span>: 5, <span class="str">"text"</span>: <span class="str">"Great"</span> }
+]</pre>
+  </div>
+</div>
+
+
+<h3 id="terminology">Terminology mapping — what you already know</h3>
+
+<table>
+  <tr><th>Relational (MySQL)</th><th>Document (MongoDB)</th><th>Graph (Neo4j)</th></tr>
+  <tr><td>Database</td><td>Database</td><td>Database</td></tr>
+  <tr><td>Table</td><td><strong>Collection</strong></td><td>Label (node type)</td></tr>
+  <tr><td>Row</td><td><strong>Document</strong></td><td>Node</td></tr>
+  <tr><td>Column</td><td><strong>Field</strong></td><td>Property</td></tr>
+  <tr><td>Primary key</td><td><code>_id</code> field</td><td>Internal node ID</td></tr>
+  <tr><td>Foreign key JOIN</td><td><code>$lookup</code> (or embed)</td><td>Relationship traversal</td></tr>
+  <tr><td>Index</td><td>Index (same concept)</td><td>Index</td></tr>
+  <tr><td>Schema (CREATE TABLE)</td><td><strong>No fixed schema</strong></td><td>No fixed schema</td></tr>
+  <tr><td>SQL</td><td><strong>MongoDB Query Language (MQL)</strong></td><td>Cypher</td></tr>
+  <tr><td>GROUP BY</td><td><code>$group</code> stage</td><td>Aggregation in RETURN</td></tr>
+</table>
+
+<div class="card blue">
+<div class="card-title">The schema difference is the key concept</div>
+<p>In MySQL, you run <code>CREATE TABLE</code> to define columns before inserting any data. Every row must conform. In MongoDB, you just start inserting documents. The first document <em>creates</em> the collection implicitly. The next document can have completely different fields. This is called <strong>schema-on-read</strong> — the application interprets the structure when reading, rather than the database enforcing it on write.</p>
+<p>This doesn't mean "no structure." In practice, most documents in a collection share a common structure. But the flexibility to <em>vary</em> — different specs per product category, different questions per survey, different profile fields per customer type — is the core advantage.</p>
+</div>
+
+
+<h3 id="embedded">Embedded vs referenced — the fundamental design decision</h3>
+
+<p>In relational databases, you normalise: separate tables joined by foreign keys. In MongoDB, you have a choice:</p>
+
+<div class="grid2">
+  <div class="card green">
+    <div class="card-title">Embed (denormalise)</div>
+    <p>Put the related data <em>inside</em> the parent document.</p>
+    <pre style="font-size:.72rem;"><span class="cmt">// Customer with embedded address and orders</span>
+{
+  <span class="str">"name"</span>: <span class="str">"Priya Sharma"</span>,
+  <span class="str">"address"</span>: { <span class="str">"city"</span>: <span class="str">"Bangalore"</span> },
+  <span class="str">"recent_orders"</span>: [
+    { <span class="str">"date"</span>: <span class="str">"2024-12-18"</span>, <span class="str">"total"</span>: 24000 },
+    { <span class="str">"date"</span>: <span class="str">"2024-11-05"</span>, <span class="str">"total"</span>: 65000 }
+  ]
+}</pre>
+    <p><strong>Use when:</strong> the related data is always read together, doesn't grow unboundedly, and is owned by the parent (address belongs to one customer).</p>
+    <p><strong>Advantage:</strong> one read returns everything. No joins.</p>
+  </div>
+  <div class="card amber">
+    <div class="card-title">Reference (normalise)</div>
+    <p>Store related data in a separate collection and link with IDs — like a foreign key.</p>
+    <pre style="font-size:.72rem;"><span class="cmt">// Customer — stores only a reference</span>
+{ <span class="str">"name"</span>: <span class="str">"Priya Sharma"</span>, <span class="str">"city"</span>: <span class="str">"Bangalore"</span> }
+
+<span class="cmt">// Orders — separate collection</span>
+{
+  <span class="str">"customer_id"</span>: <span class="str">"C10042"</span>,
+  <span class="str">"date"</span>: <span class="str">"2024-12-18"</span>,
+  <span class="str">"items"</span>: [<span class="str">"SKU1039"</span>, <span class="str">"SKU1044"</span>],
+  <span class="str">"total"</span>: 89000
+}</pre>
+    <p><strong>Use when:</strong> the related data is large, shared across documents, updated independently, or grows without limit (thousands of orders per customer).</p>
+    <p><strong>Trade-off:</strong> requires <code>$lookup</code> (MongoDB's equivalent of JOIN) at query time.</p>
+  </div>
+</div>
+
+<div class="card blue">
+<div class="card-title">Rule of thumb</div>
+<p><strong>"Data that is accessed together should be stored together."</strong> If the application always needs a customer's profile + address + loyalty status in the same API call, embed them in one document. If orders are only loaded on a separate "order history" screen, keep them in a separate collection and reference.</p>
+</div>
+
+
+<h2 id="crud"><span class="n">3</span> CRUD operations</h2>
+
+<p>MongoDB's operations map directly to what you know from SQL, with one important difference: you work with JSON-like documents instead of rows and columns.</p>
+
+<table>
+  <tr><th>Operation</th><th>SQL</th><th>MongoDB</th></tr>
+  <tr>
+    <td><strong>Insert</strong></td>
+    <td><code>INSERT INTO products VALUES (...)</code></td>
+    <td><code>db.products.insertOne({ name: "...", price: 58000 })</code></td>
+  </tr>
+  <tr>
+    <td><strong>Read</strong></td>
+    <td><code>SELECT * FROM products WHERE price > 50000</code></td>
+    <td><code>db.products.find({ price: { $gt: 50000 } })</code></td>
+  </tr>
+  <tr>
+    <td><strong>Update</strong></td>
+    <td><code>UPDATE products SET price = 55000 WHERE _id = 'SKU1001'</code></td>
+    <td><code>db.products.updateOne({ _id: "SKU1001" }, { $set: { price: 55000 } })</code></td>
+  </tr>
+  <tr>
+    <td><strong>Delete</strong></td>
+    <td><code>DELETE FROM products WHERE _id = 'SKU1001'</code></td>
+    <td><code>db.products.deleteOne({ _id: "SKU1001" })</code></td>
+  </tr>
+</table>
+
+
+<h3 id="queries">Querying documents — comparison operators</h3>
+
+<table>
+  <tr><th>SQL</th><th>MongoDB</th><th>Meaning</th></tr>
+  <tr><td><code>= 50000</code></td><td><code>{ price: 50000 }</code></td><td>Exact match (implicit equality)</td></tr>
+  <tr><td><code>> 50000</code></td><td><code>{ price: { $gt: 50000 } }</code></td><td>Greater than</td></tr>
+  <tr><td><code>>= 50000</code></td><td><code>{ price: { $gte: 50000 } }</code></td><td>Greater than or equal</td></tr>
+  <tr><td><code>IN ('Apple', 'Samsung')</code></td><td><code>{ brand: { $in: ["Apple", "Samsung"] } }</code></td><td>Match any value in list</td></tr>
+  <tr><td><code>AND</code></td><td>Multiple fields in same object (implicit AND)</td><td><code>{ category: "TVs", price: { $lt: 40000 } }</code></td></tr>
+  <tr><td><code>OR</code></td><td><code>{ $or: [ {condition1}, {condition2} ] }</code></td><td>Explicit OR</td></tr>
+  <tr><td><code>LIKE '%samsung%'</code></td><td><code>{ name: { $regex: /samsung/i } }</code></td><td>Pattern matching (case-insensitive)</td></tr>
+  <tr><td><code>IS NOT NULL</code></td><td><code>{ field: { $exists: true } }</code></td><td>Field exists in document</td></tr>
+  <tr><td><code>column.nested</code></td><td><code>{ "specs.ram_gb": { $gte: 16 } }</code></td><td>Query nested document with dot notation</td></tr>
+</table>
+
+<pre><span class="cmt">// Complete example: find premium Samsung products with high ratings</span>
+db.<span class="fn">products</span>.find({
+  <span class="str">"brand"</span>: <span class="str">"Samsung"</span>,
+  <span class="str">"price"</span>: { <span class="kw">$gte</span>: 30000 },
+  <span class="str">"avg_rating"</span>: { <span class="kw">$gte</span>: 4.0 },
+  <span class="str">"category"</span>: { <span class="kw">$in</span>: [<span class="str">"TVs"</span>, <span class="str">"Mobile Phones"</span>, <span class="str">"Computers"</span>] }
+}).sort({ <span class="str">"price"</span>: -1 }).limit(10)</pre>
+
+<p>The <code>.sort()</code> and <code>.limit()</code> methods chain onto the query — like SQL's <code>ORDER BY</code> and <code>LIMIT</code>.</p>
+
+
+<h3 id="pipeline">The aggregation pipeline — MongoDB's analytical engine</h3>
+
+<p>For anything beyond simple find queries — grouping, calculating totals, reshaping data — MongoDB uses the <strong>aggregation pipeline</strong>. Data flows through a sequence of <strong>stages</strong>, each transforming the documents before passing them to the next stage.</p>
+
+<div class="card mongo">
+<div class="card-title">Think of it as a conveyor belt</div>
+<p>Documents enter on one end. Each stage does one transformation: filter, group, reshape, sort, join. The output of one stage is the input of the next. The final stage produces the result.</p>
+</div>
+
+<table>
+  <tr><th>Stage</th><th>SQL equivalent</th><th>What it does</th></tr>
+  <tr><td><code>$match</code></td><td><code>WHERE</code></td><td>Filter documents matching a condition. Put this early — it reduces the number of documents downstream.</td></tr>
+  <tr><td><code>$group</code></td><td><code>GROUP BY</code></td><td>Group documents by one or more fields. Apply accumulators: <code>$sum</code>, <code>$avg</code>, <code>$count</code>, <code>$min</code>, <code>$max</code>, <code>$push</code>.</td></tr>
+  <tr><td><code>$project</code></td><td><code>SELECT</code></td><td>Include/exclude fields. Rename. Compute new fields.</td></tr>
+  <tr><td><code>$sort</code></td><td><code>ORDER BY</code></td><td>Sort documents. <code>1</code> = ascending, <code>-1</code> = descending.</td></tr>
+  <tr><td><code>$limit</code></td><td><code>LIMIT</code></td><td>Return only the first N documents.</td></tr>
+  <tr><td><code>$unwind</code></td><td>(no direct equivalent)</td><td>Deconstruct an array into individual documents. One input document with a 3-element array → three output documents.</td></tr>
+  <tr><td><code>$lookup</code></td><td><code>JOIN</code></td><td>Left outer join with another collection. Use when data is referenced, not embedded.</td></tr>
+  <tr><td><code>$addFields</code></td><td>Computed column</td><td>Add new fields calculated from existing fields.</td></tr>
+</table>
+
+<pre><span class="cmt">// Pipeline: average product price by category, sorted highest first</span>
+db.<span class="fn">products</span>.aggregate([
+  { <span class="kw">$group</span>: {
+      <span class="str">"_id"</span>: <span class="str">"$category"</span>,                    <span class="cmt">// GROUP BY category</span>
+      <span class="str">"avg_price"</span>: { <span class="kw">$avg</span>: <span class="str">"$price"</span> },       <span class="cmt">// AVG(price)</span>
+      <span class="str">"product_count"</span>: { <span class="kw">$sum</span>: 1 },          <span class="cmt">// COUNT(*)</span>
+      <span class="str">"max_price"</span>: { <span class="kw">$max</span>: <span class="str">"$price"</span> }        <span class="cmt">// MAX(price)</span>
+  }},
+  { <span class="kw">$sort</span>: { <span class="str">"avg_price"</span>: -1 } },           <span class="cmt">// ORDER BY avg_price DESC</span>
+  { <span class="kw">$project</span>: {                               <span class="cmt">// SELECT (reshape output)</span>
+      <span class="str">"category"</span>: <span class="str">"$_id"</span>,
+      <span class="str">"avg_price"</span>: { <span class="kw">$round</span>: [<span class="str">"$avg_price"</span>, 0] },
+      <span class="str">"product_count"</span>: 1,
+      <span class="str">"max_price"</span>: 1,
+      <span class="str">"_id"</span>: 0
+  }}
+])</pre>
+
+<p>The equivalent SQL would be: <code>SELECT category, ROUND(AVG(price), 0), COUNT(*), MAX(price) FROM products GROUP BY category ORDER BY AVG(price) DESC</code>. The pipeline syntax is more verbose, but it handles nested and variable-schema data that SQL cannot.</p>
+
+
+<h2 id="three-way"><span class="n">4</span> Three-way routing — relational vs graph vs document</h2>
+
+<p>You now know three database paradigms. The skill is knowing which to apply to which problem:</p>
+
+<table>
+  <tr><th>Question type</th><th>Best paradigm</th><th>Example</th></tr>
+  <tr><td>"What is the total/average/count of X grouped by Y?"</td><td><strong>Relational (star schema)</strong></td><td>Total revenue by category by quarter. Average basket size by customer segment. Promotion ROI.</td></tr>
+  <tr><td>"How are A and B connected? What's the path between them?"</td><td><strong>Graph (Neo4j)</strong></td><td>Trace a damaged product through the supply chain. Find products co-purchased with item X.</td></tr>
+  <tr><td>"Show me all entities matching these variable attributes."</td><td><strong>Document (MongoDB)</strong></td><td>Find all laptops with 16GB RAM under Rs 60K. Retrieve a customer's full profile with embedded preferences.</td></tr>
+</table>
+
+<h3 id="when-mongo">When MongoDB is the right choice</h3>
+
+<div class="grid2">
+  <div class="card green">
+    <div class="card-title">Variable schema across records</div>
+    <p>Products with different attributes per category. Surveys that change format over time. Customer profiles with different fields per segment. If you'd need hundreds of nullable columns in SQL — use MongoDB.</p>
+  </div>
+  <div class="card green">
+    <div class="card-title">Data that's always read together</div>
+    <p>A customer's profile, preferences, loyalty status, and recent activity — all needed in one API call. Embedding in a document eliminates the 5-table JOIN that relational requires.</p>
+  </div>
+  <div class="card green">
+    <div class="card-title">Rapidly evolving data model</div>
+    <p>New fields added weekly as the application evolves. In relational: every change is an ALTER TABLE migration. In MongoDB: new documents simply include the new fields. Old documents still work.</p>
+  </div>
+  <div class="card green">
+    <div class="card-title">High-volume writes</div>
+    <p>Event logs, clickstream, IoT sensors — millions of writes per second. MongoDB's sharding distributes writes across multiple servers. Relational databases hit single-server bottlenecks.</p>
+  </div>
+</div>
+
+<h3 id="when-not">When MongoDB is NOT the right choice</h3>
+
+<div class="grid2">
+  <div class="card red">
+    <div class="card-title">Aggregation across millions of rows</div>
+    <p>"Total revenue by category by quarter across 150 stores." Star schemas on columnar storage (Snowflake, BigQuery) are 10-100x faster for SUM/COUNT/AVG on large datasets. Don't put your fact table in MongoDB.</p>
+  </div>
+  <div class="card red">
+    <div class="card-title">OLAP operations</div>
+    <p>ROLLUP, CUBE, GROUPING SETS, window functions — these are SQL specialities that MongoDB's aggregation pipeline doesn't match in performance or expressiveness.</p>
+  </div>
+  <div class="card red">
+    <div class="card-title">Multi-collection JOINs as the primary pattern</div>
+    <p>MongoDB's <code>$lookup</code> exists but is not optimised for the 5-dimension star schema join. If every query joins 5 collections, you're fighting the data model.</p>
+  </div>
+  <div class="card red">
+    <div class="card-title">Relationship traversal</div>
+    <p>"Trace this product through 5 levels of the supply chain." This is a graph problem. MongoDB can do <code>$graphLookup</code> for simple recursive traversals, but Neo4j is purpose-built for path queries and graph algorithms.</p>
+  </div>
+</div>
+
+<div class="card blue">
+<div class="card-title">The key insight</div>
+<p>MongoDB, Neo4j, and a relational data warehouse are <strong>complementary</strong> — not competing. An enterprise may use all three: the warehouse for OLAP dashboards, Neo4j for supply chain analysis, and MongoDB for the product catalog and customer profiles. They share source data through ETL pipelines. Each serves the queries it handles best.</p>
+</div>
+
+
+<h2 id="atlas"><span class="n">5</span> MongoDB Atlas — the managed platform</h2>
+
+<p>Just as Neo4j AuraDB is Neo4j's cloud service, <strong>MongoDB Atlas</strong> is MongoDB's fully managed cloud platform. It runs on AWS, Azure, or Google Cloud in 125+ regions worldwide.</p>
+
+<div class="grid2">
+  <div class="card">
+    <div class="card-title">Free tier (M0)</div>
+    <p>512 MB storage. Shared cluster. Free forever. Sufficient for learning and small projects. Create an account at <a class="ref" href="https://www.mongodb.com/cloud/atlas/register">mongodb.com/atlas/register</a>.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">Serverless instances</div>
+    <p>Pay only for the reads and writes you perform. Scales from zero to peak automatically. No capacity planning. Ideal for variable workloads.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">Dedicated clusters</div>
+    <p>Production workloads. Choose instance size, region, cloud provider. Auto-scaling available. Enterprise security and compliance (SOC 2, HIPAA, PCI DSS).</p>
+  </div>
+  <div class="card">
+    <div class="card-title">Built-in capabilities</div>
+    <p>Full-text search, vector search (for AI), time-series collections, change streams (real-time notifications), Atlas Charts (visualization), Triggers (serverless functions).</p>
+  </div>
+</div>
+
+
+<h3 id="tools">Tools and ecosystem</h3>
+
+<table>
+  <tr><th>Tool</th><th>What it does</th><th>When to use</th></tr>
+  <tr><td><strong>MongoDB Compass</strong></td><td>Desktop GUI. Browse collections, view documents, build aggregation pipelines visually with drag-and-drop stages. Schema analysis.</td><td>Learning, development, exploring data. The best way to learn aggregation pipelines — build them visually, then export the code.</td></tr>
+  <tr><td><strong>mongosh</strong></td><td>Command-line shell. Execute MQL queries directly. JavaScript environment.</td><td>Quick queries, scripting, automation. Production administration.</td></tr>
+  <tr><td><strong>Atlas Data Explorer</strong></td><td>Web-based interface in Atlas console. Browse, query, and edit documents in the browser.</td><td>Quick exploration without installing anything. Useful in the classroom.</td></tr>
+  <tr><td><strong>MongoDB Drivers</strong></td><td>Official libraries for Python (pymongo), Node.js, Java, C#, Go, and more.</td><td>Building applications. The Python driver is most relevant for data science and analytics.</td></tr>
+  <tr><td><strong>Relational Migrator</strong></td><td>Converts relational databases (MySQL, PostgreSQL, Oracle) to MongoDB. AI-powered schema conversion.</td><td>Migrating existing relational data to the document model. Converts SQL queries to aggregation pipelines.</td></tr>
+  <tr><td><strong>Atlas Charts</strong></td><td>Built-in visualization. Create dashboards directly from MongoDB data without an external BI tool.</td><td>Quick dashboards for MongoDB data without Power BI/Tableau.</td></tr>
+</table>
+
+<p><a class="ref" href="https://www.mongodb.com/products/tools/compass">Download Compass</a> · <a class="ref" href="https://www.mongodb.com/docs/mongodb-shell/">mongosh docs</a> · <a class="ref" href="https://www.mongodb.com/docs/drivers/pymongo/">pymongo (Python driver)</a></p>
+
+
+<h2 id="retail"><span class="n">6</span> Worked example — electronics retail</h2>
+
+<p>Consider an electronics retailer with heterogeneous product data and evolving customer surveys. We'll build two collections and query them.</p>
+
+<h3>Collection 1: products</h3>
+
+<pre><span class="cmt">// Insert three products from different categories</span>
+db.<span class="fn">products</span>.insertMany([
+  {
+    <span class="str">"_id"</span>: <span class="str">"SKU1001"</span>,
+    <span class="str">"name"</span>: <span class="str">"Lenovo ThinkPad T14"</span>,
+    <span class="str">"category"</span>: <span class="str">"Computers"</span>,
+    <span class="str">"brand"</span>: <span class="str">"Lenovo"</span>,
+    <span class="str">"price"</span>: 72000,
+    <span class="str">"specs"</span>: { <span class="str">"ram_gb"</span>: 16, <span class="str">"storage_gb"</span>: 512, <span class="str">"cpu"</span>: <span class="str">"Intel i7"</span>, <span class="str">"screen_inches"</span>: 14 },
+    <span class="str">"avg_rating"</span>: 4.5,
+    <span class="str">"stores"</span>: [1, 2, 3, 7, 10]
+  },
+  {
+    <span class="str">"_id"</span>: <span class="str">"SKU2015"</span>,
+    <span class="str">"name"</span>: <span class="str">"Samsung 253L Double Door"</span>,
+    <span class="str">"category"</span>: <span class="str">"Home Appliances"</span>,
+    <span class="str">"brand"</span>: <span class="str">"Samsung"</span>,
+    <span class="str">"price"</span>: 26000,
+    <span class="str">"specs"</span>: { <span class="str">"capacity_litres"</span>: 253, <span class="str">"energy_rating"</span>: <span class="str">"5 star"</span>, <span class="str">"doors"</span>: 2, <span class="str">"inverter"</span>: true },
+    <span class="str">"avg_rating"</span>: 4.2,
+    <span class="str">"stores"</span>: [1, 2, 3, 4, 5, 6, 7, 8]
+  },
+  {
+    <span class="str">"_id"</span>: <span class="str">"SKU3022"</span>,
+    <span class="str">"name"</span>: <span class="str">"Sony WH-1000XM5"</span>,
+    <span class="str">"category"</span>: <span class="str">"Audio"</span>,
+    <span class="str">"brand"</span>: <span class="str">"Sony"</span>,
+    <span class="str">"price"</span>: 24000,
+    <span class="str">"specs"</span>: { <span class="str">"type"</span>: <span class="str">"Over-ear"</span>, <span class="str">"noise_cancellation"</span>: true, <span class="str">"battery_hrs"</span>: 30, <span class="str">"bluetooth"</span>: <span class="str">"5.3"</span> },
+    <span class="str">"avg_rating"</span>: 4.7,
+    <span class="str">"stores"</span>: [1, 2, 3, 5, 7, 10, 12]
+  }
+])</pre>
+
+<p>Notice: the <code>specs</code> object has completely different fields in each document. A laptop has <code>ram_gb</code> and <code>cpu</code>. A refrigerator has <code>capacity_litres</code> and <code>energy_rating</code>. Headphones have <code>noise_cancellation</code> and <code>bluetooth</code>. All coexist in the same collection.</p>
+
+<h4>Practice queries</h4>
+<pre><span class="cmt">// 1. All products rated 4.5 or above, sorted by price</span>
+db.<span class="fn">products</span>.find(
+  { <span class="str">"avg_rating"</span>: { <span class="kw">$gte</span>: 4.5 } }
+).sort({ <span class="str">"price"</span>: 1 })
+
+<span class="cmt">// 2. All Samsung products available in store 7</span>
+db.<span class="fn">products</span>.find({
+  <span class="str">"brand"</span>: <span class="str">"Samsung"</span>,
+  <span class="str">"stores"</span>: 7    <span class="cmt">// MongoDB automatically matches if 7 is IN the array</span>
+})
+
+<span class="cmt">// 3. All products with noise cancellation (field only exists on audio products)</span>
+db.<span class="fn">products</span>.find({
+  <span class="str">"specs.noise_cancellation"</span>: true
+})</pre>
+
+<p>Query 3 demonstrates a key advantage: <code>specs.noise_cancellation</code> only exists on audio products. In SQL, you'd need to handle the NULL column or use EAV. In MongoDB, you just query the field — documents without it are simply not matched.</p>
+
+
+<h3 id="pipeline-demo">Aggregation pipeline walkthrough</h3>
+
+<p>Task: "Show the number of products and average price per category, but only for categories where the average price exceeds Rs 25,000."</p>
+
+<p>SQL equivalent: <code>SELECT category, COUNT(*), AVG(price) FROM products GROUP BY category HAVING AVG(price) > 25000 ORDER BY AVG(price) DESC</code></p>
+
+<pre>db.<span class="fn">products</span>.aggregate([
+
+  <span class="cmt">// Stage 1: Group by category, calculate aggregates</span>
+  { <span class="kw">$group</span>: {
+      <span class="str">"_id"</span>: <span class="str">"$category"</span>,
+      <span class="str">"product_count"</span>: { <span class="kw">$sum</span>: 1 },
+      <span class="str">"avg_price"</span>: { <span class="kw">$avg</span>: <span class="str">"$price"</span> },
+      <span class="str">"brands"</span>: { <span class="kw">$addToSet</span>: <span class="str">"$brand"</span> }  <span class="cmt">// collect unique brands per category</span>
+  }},
+
+  <span class="cmt">// Stage 2: Filter groups (SQL's HAVING clause)</span>
+  { <span class="kw">$match</span>: {
+      <span class="str">"avg_price"</span>: { <span class="kw">$gt</span>: 25000 }
+  }},
+
+  <span class="cmt">// Stage 3: Sort by average price, descending</span>
+  { <span class="kw">$sort</span>: { <span class="str">"avg_price"</span>: -1 } },
+
+  <span class="cmt">// Stage 4: Reshape output for readability</span>
+  { <span class="kw">$project</span>: {
+      <span class="str">"category"</span>: <span class="str">"$_id"</span>,
+      <span class="str">"product_count"</span>: 1,
+      <span class="str">"avg_price"</span>: { <span class="kw">$round</span>: [<span class="str">"$avg_price"</span>, 0] },
+      <span class="str">"brands"</span>: 1,
+      <span class="str">"_id"</span>: 0
+  }}
+
+])</pre>
+
+<p>This returns something like:</p>
+<pre><span class="cmt">// Output</span>
+[
+  { <span class="str">"category"</span>: <span class="str">"Computers"</span>,       <span class="str">"product_count"</span>: 1, <span class="str">"avg_price"</span>: 72000, <span class="str">"brands"</span>: [<span class="str">"Lenovo"</span>] },
+  { <span class="str">"category"</span>: <span class="str">"Home Appliances"</span>, <span class="str">"product_count"</span>: 1, <span class="str">"avg_price"</span>: 26000, <span class="str">"brands"</span>: [<span class="str">"Samsung"</span>] }
+]</pre>
+
+<p>The <code>$addToSet</code> accumulator is a bonus — it collects unique brand names per category into an array. This has no SQL equivalent without a subquery. It's a natural operation in MongoDB because arrays are first-class values.</p>
+
+<div class="card green">
+<div class="card-title">What you now know — enough for Q6</div>
+<p>You understand: (1) why document databases exist and what problem they solve, (2) how documents, collections, and flexible schemas work, (3) when to embed vs reference, (4) how to write find queries and aggregation pipelines, (5) when MongoDB is the right choice vs relational or graph, and (6) the MongoDB Atlas platform and tooling. This is the foundation needed to design a MongoDB solution for the assessment's case study.</p>
+</div>
+
+</div>
+
+<script>
+const ss=document.querySelectorAll('h2[id],h3[id]');const ls=document.querySelectorAll('.nav a');
+window.addEventListener('scroll',()=>{let c='';ss.forEach(s=>{if(window.scrollY>=s.offsetTop-100)c=s.id});ls.forEach(a=>{a.classList.remove('active');if(a.getAttribute('href')==='#'+c)a.classList.add('active')})});
+</script>
+</body>
+</html>
